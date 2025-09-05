@@ -1,9 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Register() {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Example handler (replace with your registration logic)
+  const handleRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    // You can now use firstName, lastName, email, password for registration
+    // Example: call Appwrite or your API here
+    console.log({ firstName, lastName, email, password });
+  };
+
   return (
     <div className="min-h-screen flex font-sans bg-gray-950">
       {/* Left panel with diagonal cut */}
@@ -28,7 +42,7 @@ export default function Register() {
       </div>
       {/* Right panel with registration form */}
       <div className="w-1/2 flex items-center justify-center bg-gray-950">
-        <form className="flex flex-col gap-6 w-full max-w-lg p-10 rounded-xl shadow-2xl bg-gray-900 border border-gray-800">
+        <div className="flex flex-col gap-6 w-full max-w-lg p-10 rounded-xl shadow-2xl bg-gray-900 border border-gray-800">
           <h1 className="text-4xl font-bold text-emerald-400 mb-2 font-mono">Create an account</h1>
           <h2 className="flex gap-2 text-base font-light text-gray-300 mb-4">
             Already have an account?
@@ -38,26 +52,34 @@ export default function Register() {
             <input
               type="text"
               placeholder="First name"
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
               className="w-full p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
             />
             <input
               type="text"
               placeholder="Last name"
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
               className="w-full p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
             />
           </div>
           <input
             type="email"
             placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
             className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
           />
           <input
             type="password"
             placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
             className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
           />
           <button
-            type="submit"
+            onClick={handleRegister}
             className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2"
           >
             Create account
@@ -77,7 +99,7 @@ export default function Register() {
               <span className="text-gray-300">GitHub</span>
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
