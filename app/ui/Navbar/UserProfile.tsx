@@ -2,7 +2,7 @@
 import { account } from "@/app/Appwrite";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ChevronDown, User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
+import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
 
 interface UserProfileProps {
   name: string;

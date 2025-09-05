@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { account } from "../Appwrite";
 import { useRouter } from "next/navigation";
+import { OAuthProvider } from "appwrite";
 
 export default function Login() {
   const router = useRouter();
@@ -21,6 +22,32 @@ export default function Login() {
     console.log({ email, password });
     console.log(await account.get());
     router.push("/dashboard");
+  };
+
+  // GitHub OAuth login
+  const handleGitHubLogin = async () => {
+    try {
+      await account.createOAuth2Session(
+        OAuthProvider.Github,
+        `/dashboard`, // Success redirect
+        `/login`,     // Failure redirect
+      );
+    } catch (error) {
+      console.error("GitHub login error:", error);
+    }
+  };
+
+  // Google OAuth login
+  const handleGoogleLogin = async () => {
+    try {
+      await account.createOAuth2Session(
+        OAuthProvider.Google,
+        `/dashboard`, // Success redirect
+        `${window.location.origin}/login`,     // Failure redirect
+      );
+    } catch (error) {
+      console.error("Google login error:", error);
+    }
   };
 
   useEffect(() => {
@@ -94,11 +121,17 @@ export default function Login() {
             <div className="h-px bg-gray-700 flex-1" />
           </div>
           <div className="flex gap-4 mt-2">
-            <button className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition">
+            <button 
+              onClick={handleGoogleLogin}
+              className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
+            >
               <Image src="/google.svg" alt="Google logo" width={20} height={20} />
               <span className="text-gray-300">Google</span>
             </button>
-            <button className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition">
+            <button 
+              onClick={handleGitHubLogin}
+              className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
+            >
               <Image src="/github.svg" alt="GitHub logo" width={20} height={20} />
               <span className="text-gray-300">GitHub</span>
             </button>
