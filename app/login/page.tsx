@@ -13,7 +13,7 @@ export default function Login() {
   const [password, setPassword] = useState("");
 
   // Example handler (replace with your login logic)
-  const handleLogin = async (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
 
     await account.createEmailPasswordSession(email, password);
@@ -64,26 +64,30 @@ export default function Login() {
             Don&apos;t have an account?
             <Link href="/register" className="text-emerald-400 hover:underline">Register</Link>
           </h2>
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-            className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
-          />
-          <button
-            onClick={handleLogin}
-            className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2"
-          >
-            Login
-          </button>
+          <form onSubmit={handleLogin} className="flex flex-col gap-6">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              required
+            />
+            <button
+              type="submit"
+              className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2"
+            >
+              Login
+            </button>
+          </form>
           <div className="flex items-center gap-3">
             <div className="h-px bg-gray-700 flex-1" />
             <span className="text-gray-400 text-sm">Or login with</span>

@@ -2,21 +2,10 @@ import { account } from "@/app/Appwrite";
 import { usePathname } from "next/navigation";
 import router from "next/navigation";
 import { useEffect } from "react";
+import UserProfile from "./UserProfile";
 
 export default function Navbar() {
   const path = usePathname();
-
-  function handleLogout() {
-    account.deleteSession("current").then(
-      () => {
-        // Session deleted, redirect to login
-        router.redirect("/login");
-      },
-      (error) => {
-        console.error("Error deleting session:", error);
-      }
-    );
-  }
 
   useEffect(() => {
     account.get().then(
@@ -43,10 +32,7 @@ export default function Navbar() {
       </h1>
       <div className="flex items-center space-x-4">
         {/* You can add user menu, notifications, etc. here */}
-        <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
-          <button onClick={handleLogout} className="text-white font-bold">L</button>
-          {/* <span className="text-white text-sm font-medium">U</span> */}
-        </div>
+        <UserProfile />
       </div>
     </div>
   );
