@@ -18,7 +18,6 @@ export default function Login() {
     e.preventDefault();
 
     await account.createEmailPasswordSession(email, password);
-
     console.log({ email, password });
     console.log(await account.get());
     router.push("/dashboard");
@@ -51,15 +50,21 @@ export default function Login() {
   };
 
   useEffect(() => {
-    account.get().then(
-      () => {
-        router.push("/dashboard");
-      },
-      () => {
-        // No session
-      }
-    );
-  }, [router]);
+
+    const fetchData = async () => {
+      const coucou = await account.getSession("current").then(session => console.log(session));
+      // console.log(coucou);
+    };
+    fetchData();
+    // account.get().then(
+    //   () => {
+    //     router.push("/dashboard");
+    //   },
+    //   () => {
+    //     // No session
+    //   }
+    // );
+  });
 
   return (
     <div className="min-h-screen flex font-sans bg-gray-950">
@@ -121,14 +126,14 @@ export default function Login() {
             <div className="h-px bg-gray-700 flex-1" />
           </div>
           <div className="flex gap-4 mt-2">
-            <button 
+            <button
               onClick={handleGoogleLogin}
               className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
             >
               <Image src="/google.svg" alt="Google logo" width={20} height={20} />
               <span className="text-gray-300">Google</span>
             </button>
-            <button 
+            <button
               onClick={handleGitHubLogin}
               className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
             >
