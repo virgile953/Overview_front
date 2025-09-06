@@ -1,70 +1,35 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { account } from "../Appwrite";
+import { handleLogin } from "./actions";
 import { useRouter } from "next/navigation";
-import { OAuthProvider } from "appwrite";
 
 export default function Login() {
-  const router = useRouter();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
-  // Example handler (replace with your login logic)
-  const handleLogin = async (e: React.FormEvent<HTMLFormElement> | React.MouseEvent<HTMLButtonElement>) => {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(null);
 
-    await account.createEmailPasswordSession(email, password);
-    console.log({ email, password });
-    console.log(await account.get());
-    router.push("/dashboard");
+    startTransition(async () => {
+      const formData = new FormData();
+      formData.append("email", email);
+      formData.append("password", password);
+
+      const result = await handleLogin(formData);
+
+      if (result?.success) {
+        router.push("/dashboard");
+      } else {
+        setError(result?.error || "Login failed");
+      }
+    });
   };
-
-  // GitHub OAuth login
-  const handleGitHubLogin = async () => {
-    try {
-      await account.createOAuth2Session(
-        OAuthProvider.Github,
-        `/dashboard`, // Success redirect
-        `/login`,     // Failure redirect
-      );
-    } catch (error) {
-      console.error("GitHub login error:", error);
-    }
-  };
-
-  // Google OAuth login
-  const handleGoogleLogin = async () => {
-    try {
-      await account.createOAuth2Session(
-        OAuthProvider.Google,
-        `/dashboard`, // Success redirect
-        `${window.location.origin}/login`,     // Failure redirect
-      );
-    } catch (error) {
-      console.error("Google login error:", error);
-    }
-  };
-
-  useEffect(() => {
-
-    const fetchData = async () => {
-      const coucou = await account.getSession("current").then(session => console.log(session));
-      // console.log(coucou);
-    };
-    fetchData();
-    // account.get().then(
-    //   () => {
-    //     router.push("/dashboard");
-    //   },
-    //   () => {
-    //     // No session
-    //   }
-    // );
-  });
 
   return (
     <div className="min-h-screen flex font-sans bg-gray-950">
@@ -96,9 +61,10 @@ export default function Login() {
             Don&apos;t have an account?
             <Link href="/register" className="text-emerald-400 hover:underline">Register</Link>
           </h2>
-          <form onSubmit={handleLogin} className="flex flex-col gap-6">
+          <form onSubmit={onSubmit} className="flex flex-col gap-6">
             <input
               type="email"
+              name="email"
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
@@ -107,6 +73,7 @@ export default function Login() {
             />
             <input
               type="password"
+              name="password"
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -116,9 +83,13 @@ export default function Login() {
             <button
               type="submit"
               className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2"
+              disabled={isPending}
             >
-              Login
+              {isPending ? "Logging in..." : "Login"}
             </button>
+            {error && (
+              <div className="text-red-400 text-sm mt-2">{error}</div>
+            )}
           </form>
           <div className="flex items-center gap-3">
             <div className="h-px bg-gray-700 flex-1" />
@@ -127,14 +98,14 @@ export default function Login() {
           </div>
           <div className="flex gap-4 mt-2">
             <button
-              onClick={handleGoogleLogin}
+              onClick={() => { alert("Google OAuth login not yet implemented."); }}
               className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
             >
               <Image src="/google.svg" alt="Google logo" width={20} height={20} />
               <span className="text-gray-300">Google</span>
             </button>
             <button
-              onClick={handleGitHubLogin}
+              onClick={() => { alert("GitHub OAuth login not yet implemented."); }}
               className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
             >
               <Image src="/github.svg" alt="GitHub logo" width={20} height={20} />

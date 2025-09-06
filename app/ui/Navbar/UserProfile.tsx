@@ -5,32 +5,25 @@ import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
 
 interface UserProfileProps {
-  name: string;
-  email: string;
-  emailVerification: boolean;
+  name?: string;
+  email?: string;
+  emailVerification?: boolean;
 }
 
-export default function UserProfile() {
+export default function UserProfile(props: UserProfileProps) {
   const router = useRouter();
   const [accountInfo, setAccountInfo] = useState<UserProfileProps | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
-  function handleLogout() {
-    account.deleteSession("current").then(
-      () => {
-        // Session deleted, redirect to login
-        router.push("/login");
-      },
-      (error) => {
-        console.error("Error deleting session:", error);
-      }
-    );
+  async function handleLogout() {
+    // Call a server action to delete the session
+    await fetch("/api/auth/logout", { method: "POST" });
+    router.push("/login");
   }
 
   function toggleTheme() {
     setIsDarkMode(!isDarkMode);
-    // You can implement actual theme switching logic here
     document.documentElement.classList.toggle('dark');
   }
 
@@ -44,16 +37,26 @@ export default function UserProfile() {
   }
 
   useEffect(() => {
-    account.get().then(
-      (account) => {
-        console.log(account);
-        setAccountInfo({ name: account.name, email: account.email, emailVerification: account.emailVerification });
-      },
-      () => {
-        router.push("/login");
+    if (props.name || props.email) {
+      setAccountInfo({
+        name: props.name || "",
+        email: props.email || "",
+        emailVerification: props.emailVerification || false,
+      });
+    } else {
+      async function fetchUser() {
+        const res = await fetch("/api/auth/user", { method: "POST" });
+        if (res.ok) {
+          const data = await res.json();
+          setAccountInfo(data.user);
+        } else {
+          setAccountInfo(null);
+        }
       }
-    );
-  }, [router]);
+      fetchUser();
+    }
+  }, [props.name, props.email, props.emailVerification]);
+
 
   return (
     <div className="relative">
@@ -64,7 +67,7 @@ export default function UserProfile() {
       >
         <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
           <span className="text-white text-sm font-medium">
-            {accountInfo ? getInitials(accountInfo.name) : 'U'}
+            {accountInfo ? getInitials(accountInfo.name || "") : 'U'}
           </span>
         </div>
         <div className="hidden md:block text-left">
@@ -92,7 +95,7 @@ export default function UserProfile() {
               <div className="flex items-center space-x-3">
                 <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
                   <span className="text-white text-lg font-medium">
-                    {accountInfo ? getInitials(accountInfo.name) : 'U'}
+                    {accountInfo ? getInitials(accountInfo.name || "") : 'U'}
                   </span>
                 </div>
                 <div className="flex-1 min-w-0">

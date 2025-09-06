@@ -1,24 +1,27 @@
-import { account } from "@/app/Appwrite";
 import { usePathname } from "next/navigation";
-import router from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import UserProfile from "./UserProfile";
 
 export default function Navbar() {
   const path = usePathname();
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    emailVerification: boolean;
+  } | null>(null);
 
   useEffect(() => {
-    account.get().then(
-      () => {
-        // User is authenticated, stay on the dashboard
-        console.log("User is authenticated");
-      },
-      () => {
-        // No session, redirect to login
-        router.redirect("/login");
+    async function fetchUser() {
+      const res = await fetch("/api/auth/user", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
       }
-    );
-  });
+    }
+    fetchUser();
+  }, []);
 
   return (
     <div className="h-16 bg-emerald-950 border border-gray-200 rounded-lg shadow-sm flex items-center justify-between px-6">
@@ -32,7 +35,7 @@ export default function Navbar() {
       </h1>
       <div className="flex items-center space-x-4">
         {/* You can add user menu, notifications, etc. here */}
-        <UserProfile />
+        <UserProfile name={user?.name || ""} email={user?.email || ""} emailVerification={user?.emailVerification || false} />
       </div>
     </div>
   );
