@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import DashboardLayout from "../ui/Layout/DashboardLayout";
-import { account } from "../Appwrite";
 import { useEffect } from "react";
 
 export default function Layout({

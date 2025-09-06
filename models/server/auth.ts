@@ -24,7 +24,7 @@ export async function createSessionClient() {
   };
 }
 
-export async function login(userEmail: string, userPassword: string) {
+export async function login() {
   const client = new Client()
     .setEndpoint(env.appwrite.hostUrl)
     .setProject(env.appwrite.projectId)
@@ -41,6 +41,7 @@ export async function getLoggedInUser() {
     const { account } = await createSessionClient();
     return await account.get();
   } catch (error) {
+    console.log(error);
     return null;
   }
 }

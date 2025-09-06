@@ -1,5 +1,4 @@
 "use client";
-import { account } from "@/app/Appwrite";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";

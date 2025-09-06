@@ -18,7 +18,7 @@ export async function handleLogin(formData: FormData) {
     });
     console.log("Session created:", session);
     return { success: true };
-  } catch (err: any) {
-    return { error: err.message || "Login failed" };
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : "Login failed" };
   }
 }

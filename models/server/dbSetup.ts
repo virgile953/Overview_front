@@ -1,4 +1,4 @@
-import { db, deviceCollection } from '../name';
+import { db } from '../name';
 import createDeviceCollection from './device.collection';
 import { databases } from './config';
 
@@ -7,6 +7,7 @@ export async function getOrCreateDB() {
     await databases.get(db);
     console.log(`Database '${db}' connected.`);
   } catch (error) {
+    console.log(error);
     try {
       await databases.create(db, db);
       console.log(`Database '${db}' created.`);
