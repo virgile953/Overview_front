@@ -8,7 +8,8 @@ import {
   FileText,
   AlertTriangle,
   Settings,
-  User
+  User,
+  Group
 } from "lucide-react";
 import SidebarSection from "./SidebarSection";
 import SidebarLink from "./SidebarLink";
@@ -76,7 +77,13 @@ export default function SidebarNavigation() {
           icon={User}
           label="Profile"
         />
+        <SidebarLink
+          href="/dashboard/groups"
+          icon={Group}
+          label="Groups"
+        />
       </SidebarSection>
+
     </nav>
   );
 }

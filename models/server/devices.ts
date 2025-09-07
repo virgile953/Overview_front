@@ -16,18 +16,7 @@ export interface Device {
   ownerId: string;
 }
 
-export async function getDevices(): Promise<Device[]> {
-  const result = await databases.listDocuments(db, deviceCollection);
-  // Map raw documents to Device type
-  return result.documents.map((doc: unknown) => {
-    if (isDevice(doc)) {
-      return doc;
-    }
-    throw new Error("Invalid device document");
-  });
-}
-
-function isDevice(doc: unknown): doc is Device {
+export async function isDevice(doc: unknown): Promise<boolean> {
   return (
     typeof doc === "object" &&
     doc !== null &&
@@ -45,6 +34,19 @@ function isDevice(doc: unknown): doc is Device {
   );
 }
 
+export async function getDevices(): Promise<Device[]> {
+  const result = await databases.listDocuments(db, deviceCollection);
+  // Map raw documents to Device type
+  const devices = await Promise.all(
+    result.documents.map(async (doc: unknown) => {
+      if (await isDevice(doc)) {
+        return doc as Device;
+      }
+      throw new Error("Invalid device document");
+    })
+  );
+  return devices;
+}
 
 export async function addDevice(device: Omit<Device, '$id'>): Promise<Device> {
   const result = await databases.createDocument(db, deviceCollection, 'unique()', device);
