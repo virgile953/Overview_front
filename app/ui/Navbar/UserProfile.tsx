@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
-import { account } from "@/models/client/config";
 
 interface UserProfileProps {
   name?: string;

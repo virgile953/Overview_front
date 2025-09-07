@@ -33,9 +33,13 @@ function EmailVerification() {
       .then(() => {
         setStatus("success");
       })
-      .catch((error: any) => {
+      .catch((error: unknown) => {
         setStatus("error");
-        setErrorMessage(error.message);
+        if (error instanceof Error) {
+          setErrorMessage(error.message);
+        } else {
+          setErrorMessage("Unknown error");
+        }
       });
   }, [secret, userId]);
 
