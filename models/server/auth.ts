@@ -2,7 +2,6 @@ import { Client, Account } from "node-appwrite";
 import { cookies } from "next/headers";
 import env from "@/app/env";
 
-
 export async function createSessionClient() {
   const client = new Client()
     .setEndpoint(env.appwrite.hostUrl)
@@ -11,7 +10,7 @@ export async function createSessionClient() {
   const cookieStore = await cookies();
   const session = cookieStore.get("a_session");
   if (!session || !session.value) {
-    throw new Error("No session");
+    return null;
   }
 
   // Use the session secret
@@ -38,7 +37,11 @@ export async function login() {
 
 export async function getLoggedInUser() {
   try {
-    const { account } = await createSessionClient();
+    const sessionClient = await createSessionClient();
+    if (!sessionClient) {
+      return null;
+    }
+    const { account } = sessionClient;
     return await account.get();
   } catch (error) {
     console.log(error);
