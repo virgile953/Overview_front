@@ -1,14 +1,16 @@
 "use client";
 import { account } from "@/models/client/config";
 import { useSearchParams } from "next/navigation";
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
 
 export default function VerifyPage() {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
       <h1 className="text-3xl font-bold mb-4">Verifying your email...</h1>
       <p className="text-lg">Please wait while we verify your email address.</p>
-      <EmailVerification />
+      <Suspense fallback={<div>Loading...</div>}>
+        <EmailVerification />
+      </Suspense>
     </div>
   );
 }
