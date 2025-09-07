@@ -1,9 +1,9 @@
+"use server";
 import { Permission } from 'node-appwrite';
 import { db, deviceCollection } from '../name';
 import { databases } from './config';
 
 export default async function createDeviceCollection() {
-
   //creating the table
   await databases.createCollection(db, deviceCollection, deviceCollection, [
     Permission.read("any"),
@@ -29,3 +29,5 @@ export default async function createDeviceCollection() {
   console.log(`Attributes for collection '${deviceCollection}' created successfully.`);
 
 }
+
+

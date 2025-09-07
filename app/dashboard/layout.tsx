@@ -10,12 +10,9 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   // Server-side authentication check
-  // This must be done in a server component or via server actions
-  // For now, we use a redirect in a client effect, but call a server action
   const router = useRouter();
   useEffect(() => {
     async function checkAuth() {
-      // Use a server action to check authentication
       const res = await fetch("/api/auth/check", { method: "POST" });
       const { authenticated } = await res.json();
       if (!authenticated) {
