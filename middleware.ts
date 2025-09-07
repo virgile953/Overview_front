@@ -25,11 +25,6 @@ export async function middleware(request: NextRequest) {
 // See "Matching Paths" below to learn more
 export const config = {
   matcher: [
-    // '/((?!api|_next/static|_next/image|favicon.ico).*)',
-    '/dashboard',
-    '/login',
-    '/',
-    "/((?!api|_next/static|_next/image|favicon.ico|public|images|js|css|fonts).*)",
-
+    "/((?!api|_next/static|_next/image|favicon.ico|public|images|js|css|fonts|robots.txt|manifest.json|sitemap.xml|logo.svg|google.svg|github.svg|.svg|.png|.jpg|.jpeg|.woff2|.ttf|.ico).*)",
   ],
 }
