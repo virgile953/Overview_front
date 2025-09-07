@@ -8,12 +8,12 @@ export async function middleware(request: NextRequest) {
   const user = await getLoggedInUser();
   const url = request.nextUrl.clone()
 
-  if (user && (url.pathname === '/login' || url.pathname === '/')) {
+  if (user && (url.pathname === '/login' || url.pathname === '/' || url.pathname === '/register')) {
     console.log("User logged in, redirecting to dashboard");
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
-  if (!user && url.pathname !== '/login') {
+  if (!user && (url.pathname !== '/login' && url.pathname !== '/register')) {
     console.log("No user, redirecting to login");
     url.pathname = '/login';
     return NextResponse.redirect(url);

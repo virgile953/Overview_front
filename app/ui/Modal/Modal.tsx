@@ -27,14 +27,22 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-      <div className="relative bg-stone-700 rounded-lg shadow-lg p-6 w-full max-w-md">
-        <button className="absolute top-2 right-4 text-gray-400 hover:text-gray-200" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+      onClick={onClose}
+    >
+      <div
+        className="relative bg-black border rounded-lg shadow-lg p-6 w-full max-w-md"
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          className="absolute top-2 right-4 text-gray-400 hover:text-gray-200"
+          onClick={onClose}
+        >
           <X />
         </button>
         <h2 className="text-xl font-bold mb-4">{title}</h2>
         {children}
-
       </div>
     </div>
   );

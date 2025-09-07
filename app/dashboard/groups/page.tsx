@@ -39,14 +39,15 @@ export default function Groups() {
         groups.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups.map((group) => (
-              <div key={group.$id} className="border border-red-700">
+              <div key={group.$id} className="">
+                <GroupCard group={group} onEdit={setSelectedGroup} />
+              </div>
+            ))}{groups.map((group) => (
+              <div key={group.$id} className="">
                 <GroupCard group={group} onEdit={setSelectedGroup} />
               </div>
             ))}
-            <GroupCard group={groups[0]} onEdit={setSelectedGroup} />
-            <GroupCard group={groups[0]} onEdit={setSelectedGroup} />
-            <GroupCard group={groups[0]} onEdit={setSelectedGroup} />
-
+    
           </div>
         ) : (
           <div>No groups found.
