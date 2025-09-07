@@ -2,11 +2,11 @@ import { Client, Account } from "node-appwrite";
 import { cookies } from "next/headers";
 import env from "@/app/env";
 
-export async function createSessionClient() {
-  const client = new Client()
-    .setEndpoint(env.appwrite.hostUrl)
-    .setProject(env.appwrite.projectId);
+const client = new Client()
+  .setEndpoint(env.appwrite.hostUrl)
+  .setProject(env.appwrite.projectId)
 
+export async function createSessionClient() {
   const cookieStore = await cookies();
   const session = cookieStore.get("a_session");
   if (!session || !session.value) {
@@ -24,10 +24,6 @@ export async function createSessionClient() {
 }
 
 export async function login() {
-  const client = new Client()
-    .setEndpoint(env.appwrite.hostUrl)
-    .setProject(env.appwrite.projectId)
-
   return {
     get account() {
       return new Account(client);
@@ -47,6 +43,23 @@ export async function getLoggedInUser() {
     console.log(error);
     return null;
   }
+}
+
+export async function verifyEmail() {
+  try {
+    const sessionClient = await createSessionClient();
+    if (!sessionClient) {
+      return { status: "no session" };
+    }
+    const { account } = sessionClient;
+    const promise = await account.createVerification(env.appwrite.emailUrl);
+    console.log("verification promise created");
+    return { status: "ok", promise };
+  } catch (error) {
+    console.log(error);
+    return { status: "error" };
+  }
+
 }
 
 

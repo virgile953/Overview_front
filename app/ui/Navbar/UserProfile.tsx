@@ -2,6 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
+import { account } from "@/models/client/config";
 
 interface UserProfileProps {
   name?: string;
@@ -56,6 +57,11 @@ export default function UserProfile(props: UserProfileProps) {
     }
   }, [props.name, props.email, props.emailVerification]);
 
+  //mail verification
+  async function verifyEmail() {
+    const ret = await fetch("/api/auth/user/verify-mail", { method: "POST" });
+    console.log(ret);
+  }
 
   return (
     <div className="relative">
@@ -100,6 +106,12 @@ export default function UserProfile(props: UserProfileProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-100 truncate">{accountInfo?.name || 'Loading...'}</p>
                   <p className="text-sm text-gray-400 truncate">{accountInfo?.email || ''}</p>
+                  {!accountInfo?.emailVerification && (
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-red-400 mt-1">Email not verified</p>
+                      <button className="text-xs underline text-yellow-400 mt-1 cursor-pointer" onClick={verifyEmail}>verify</button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
