@@ -11,9 +11,10 @@ export default function Dashboard() {
         <DevicesDashboard className="col-span-4 md:col-span-4 lg:col-span-5" />
         <GroupsComponent className="col-span-2 md:col-span-2 lg:col-span-2" />
         <UsersComponent className="col-span-2 md:col-span-2 lg:col-span-3" />
-        <DevicesDashboard className="col-span-4 md:col-span-4 lg:col-span-3" />
-        <DevicesDashboard className="col-span-4 md:col-span-4 lg:col-span-3" />
-        <DevicesDashboard className="col-span-4 md:col-span-4 lg:col-span-6" />
+        <GroupsComponent className="col-span-2 md:col-span-2 lg:col-span-2" />
+        <DevicesDashboard className="col-span-4 md:col-span-4 lg:col-span-5" />
+        <GroupsComponent className="col-span-2 md:col-span-2 lg:col-span-2" />
+        <DevicesDashboard className="col-span-4 md:col-span-4 lg:col-span-5" />
       </div>
     </div>
   );
