@@ -4,11 +4,13 @@ import { SquarePlus } from "lucide-react";
 import { useEffect, useState } from "react";
 import UserCard from "./UserCard";
 import NewUserModal from "./NewUserModal";
+import UserModal from "./UserModal";
 
 export default function Users() {
 
   const [users, setUsers] = useState<User[] | null>(null);
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   async function fetchUsers() {
     const response = await fetch('/api/users');
@@ -38,7 +40,7 @@ export default function Users() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {users.map((user) => (
               <div key={user.$id} className="">
-                <UserCard user={user} /> {/* onUserUpdated={fetchUsers} */}
+                <UserCard user={user} onEdit={setSelectedUser} /> {/* onUserUpdated={fetchUsers} */}
               </div>
             ))}
 
@@ -49,7 +51,17 @@ export default function Users() {
           <div>Loading...</div>
         )}
       {/* NewUserModal component would go here */}
-      <NewUserModal isOpen={isNewUserModalOpen} onClose={() => setIsNewUserModalOpen(false)} onUserCreated={fetchUsers} />
-    </div >
+      <NewUserModal
+        isOpen={isNewUserModalOpen}
+        onClose={() => setIsNewUserModalOpen(false)}
+        onUserCreated={fetchUsers} />
+      {selectedUser && (
+        <UserModal
+          isOpen={selectedUser !== null}
+          onClose={() => setSelectedUser(null)}
+          onSave={fetchUsers}
+          user={selectedUser!} />
+      )}
+    </div>
   );
 }

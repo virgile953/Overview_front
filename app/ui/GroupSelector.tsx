@@ -3,7 +3,12 @@ import { Group } from "@/models/server/groups";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
-export default function GroupSelector() {
+interface GroupSelectorProps {
+  onChange?: (selected: Group[]) => void;
+  initialValue?: Group[]; // Added initialValue prop to set selected groups from outside
+}
+
+export default function GroupSelector({ onChange, initialValue }: GroupSelectorProps) {
 
   const [groups, setGroups] = useState<Group[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +50,21 @@ export default function GroupSelector() {
             label: group.name,
           })) : []
         }
+        value={
+          initialValue ? initialValue.map(group => ({
+            value: group.$id,
+            label: group.name,
+          })) : null
+        }
+        onChange={(selectedOptions) => {
+          if (onChange) {
+            const selectedGroups = (selectedOptions as { value: string; label: string }[]).map(option => {
+              const group = groups?.find(g => g.$id === option.value);
+              return group!;
+            });
+            onChange(selectedGroups);
+          }
+        }}
         isMulti
         isLoading={loading}
         isDisabled={loading || !!error}

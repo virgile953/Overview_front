@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroups, addGroup, updateGroup, deleteGroup } from "@/models/server/groups";
+import { getGroups, addGroup, deleteGroup } from "@/models/server/groups";
 
 
 export async function GET() {

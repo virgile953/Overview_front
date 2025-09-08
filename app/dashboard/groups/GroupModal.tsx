@@ -16,11 +16,6 @@ interface groupModalProps {
 export default function GroupModal({ isOpen, onClose, onSave, group }: groupModalProps) {
 
   const [localGroup, setLocalGroup] = useState<Group>(group);
-  if (!isOpen) return null;
-  if (!group) return null;
-  useEffect(() => {
-    setLocalGroup(group);
-  }, [group]);
 
   async function saveGroup() {
     const res = await fetch(`/api/groups/${localGroup.$id}`, {
@@ -36,6 +31,13 @@ export default function GroupModal({ isOpen, onClose, onSave, group }: groupModa
     onSave(updatedGroup);
     onClose();
   }
+
+  useEffect(() => {
+    setLocalGroup(group);
+  }, [group]);
+
+  if (!isOpen) return null;
+  if (!group) return null;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Group Details">
