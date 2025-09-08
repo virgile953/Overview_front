@@ -1,5 +1,5 @@
 import { twMerge } from 'tailwind-merge';
-import { ChangeEvent, useState } from 'react';
+import { ChangeEvent, useState, useId } from 'react';
 
 interface InputFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'onChange'> {
   type?: 'textarea' | React.HTMLInputTypeAttribute;
@@ -14,13 +14,15 @@ export default function InputField({
   className,
   type = 'text',
   rows = 3,
+  id,
   ...rest
 }: InputFieldProps) {
   const [hasValue, setHasValue] = useState(value !== undefined && String(value).length > 0);
+  const generatedId = useId();
+  const fieldId = id || generatedId;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     if (onChange) onChange(e as ChangeEvent<HTMLInputElement> | ChangeEvent<HTMLTextAreaElement>);
-    console.log(e.target.value);
     setHasValue(Boolean(e.target.value && e.target.value.length > 0));
   };
 
@@ -31,6 +33,7 @@ export default function InputField({
     <div className="relative w-full">
       {type === 'textarea' ? (
         <textarea
+          id={fieldId}
           value={value}
           onChange={handleChange}
           rows={rows}
@@ -39,6 +42,7 @@ export default function InputField({
         />
       ) : (
         <input
+          id={fieldId}
           type={type}
           value={value}
           onChange={handleChange}
@@ -48,6 +52,7 @@ export default function InputField({
       )}
       {placeholder && (
         <label
+          htmlFor={fieldId}
           className={twMerge(
             "absolute left-3 top-2 text-gray-400 pointer-events-none transition-transform duration-200",
             `peer-focus:text-xs peer-focus:-top-2 peer-focus:left-2

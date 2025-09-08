@@ -1,8 +1,9 @@
 import Modal from "@/app/ui/Modal/Modal";
 import InputField from "@/app/ui/InputField";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Group } from "@/models/server/groups";
-import GroupSelector from "@/app/ui/GroupSelector";
+import UserSelector from "@/app/ui/UserSelector";
+import DeviceSelector from "@/app/ui/DeviceSelector";
 
 interface NewGroupModalProps {
   isOpen: boolean;
@@ -63,6 +64,11 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
     }
   }
 
+  useEffect(() => {
+    console.log("Form data changed:", formData);
+  }, [formData]);
+
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Group">
       <div className="flex flex-col gap-4">
@@ -88,7 +94,8 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
           onChange={e => setFormData({ ...formData, description: e.target.value })}
           rows={4}
         />
-        <GroupSelector />
+        <UserSelector onChange={(selected) => setFormData({ ...formData, users: selected })} />
+        <DeviceSelector onChange={(selected) => setFormData({ ...formData, devices: selected })} />
         {/* <InputField
           type="text"
           placeholder="User IDs (comma separated)"
