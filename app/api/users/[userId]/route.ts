@@ -6,12 +6,19 @@ export async function PUT(
   { params }: { params: Promise<{ userId: string }> }
 ) {
   const { userId } = await params;
-  const body = await request.json();
+  console.log(userId);
 
   try {
-    const updatedUser = await updateUser(body);
+    const user = await request.json();
+    if (!user.$id || typeof user.$id !== 'string') {
+      return NextResponse.json({ error: 'Invalid user ID' }, { status: 400 });
+    }
+    const updatedUser = await updateUser(user);
+    if (!updatedUser) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
     return NextResponse.json(updatedUser);
   } catch (error) {
-    return NextResponse.error();
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }
 }
