@@ -1,6 +1,8 @@
 import Modal from "@/app/ui/Modal/Modal";
+import InputField from "@/app/ui/InputField";
 import { useState } from "react";
 import { Group } from "@/models/server/groups";
+import GroupSelector from "@/app/ui/GroupSelector";
 
 interface NewGroupModalProps {
   isOpen: boolean;
@@ -11,25 +13,45 @@ interface NewGroupModalProps {
 export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [newGroup, setNewGroup] = useState<Partial<Group>>({
+
+  // Form state with string arrays for easier form handling
+  const [formData, setFormData] = useState<Partial<Group>>({
     name: "",
     localisation: "",
     description: "",
     users: [],
     devices: [],
   });
+
   async function handleCreate() {
     setLoading(true);
     setError(null);
     try {
+      // Convert form data to proper Group format for API
+      const groupData = {
+        name: formData.name,
+        localisation: formData.localisation,
+        description: formData.description,
+        users: (formData.users ?? []).map(user => user && user.$id ? user.$id.trim() : "").filter(Boolean),
+        devices: (formData.devices ?? []).map(device => device && device.$id ? device.$id.trim() : "").filter(Boolean),
+      };
+
       const res = await fetch("/api/groups", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newGroup),
+        body: JSON.stringify(groupData),
       });
       if (!res.ok) throw new Error("Failed to create group");
       onGroupCreated();
       onClose();
+      // Reset form
+      setFormData({
+        name: "",
+        localisation: "",
+        description: "",
+        users: [],
+        devices: [],
+      });
     } catch (e: unknown) {
       if (e instanceof Error) {
         setError(e.message);
@@ -44,49 +66,74 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Create New Group">
       <div className="flex flex-col gap-4">
-        <input
+        <InputField
           type="text"
-          className="border border-gray-300 rounded px-3 py-2"
-          placeholder="Group name"
-          value={newGroup.name}
-          onChange={e => setNewGroup({ ...newGroup, name: e.target.value })}
+          placeholder="Group Name *"
+          value={formData.name}
+          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          required
         />
-        <input
+
+        <InputField
           type="text"
-          className="border border-gray-300 rounded px-3 py-2"
-          placeholder="Localisation"
-          value={newGroup.localisation}
-          onChange={e => setNewGroup({ ...newGroup, localisation: e.target.value })}
+          placeholder="Location"
+          value={formData.localisation}
+          onChange={e => setFormData({ ...formData, localisation: e.target.value })}
         />
-        <textarea
-          className="border border-gray-300 rounded px-3 py-2"
+
+        <InputField
+          type="textarea"
           placeholder="Description"
-          value={newGroup.description}
-          onChange={e => setNewGroup({ ...newGroup, description: e.target.value })}
+          value={formData.description}
+          onChange={e => setFormData({ ...formData, description: e.target.value })}
+          rows={4}
         />
-        <input
+        <GroupSelector />
+        {/* <InputField
           type="text"
-          className="border border-gray-300 rounded px-3 py-2"
           placeholder="User IDs (comma separated)"
-          value={newGroup.users?.join(",")}
-          onChange={e => setNewGroup({ ...newGroup, users: e.target.value.split(",").map(id => id.trim()).filter(Boolean) })}
-        />
-        <input
-          readOnly
+          value={
+            Array.isArray(formData.users)
+              ? formData.users.map(user => typeof user === "string" ? user : user?.$id ?? "").filter(Boolean).join(", ")
+              : ""
+          }
+          onChange={e =>
+            setFormData({
+              ...formData,
+              users: e.target.value
+                .split(",")
+                .map(id => id.trim())
+                .filter(Boolean)
+            })
+          }
+        /> */}
+
+        {/* <InputField
           type="text"
-          className="border border-gray-300 rounded px-3 py-2"
           placeholder="Device IDs (comma separated)"
-          value={newGroup.devices?.join(",")}
-        // onChange={e => setNewGroup({ ...newGroup, devices: e.target.value.split(",").map(id => id.trim()).filter(Boolean) })}
-        />
-        {error && <div className="text-red-600 text-sm">{error}</div>}
-        <button
-          className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
-          onClick={handleCreate}
-          disabled={loading || !newGroup.name?.trim()}
-        >
-          {loading ? "Creating..." : "Create"}
-        </button>
+          value={formData.deviceIds}
+          onChange={e => setFormData({ ...formData, deviceIds: e.target.value })}
+        /> */}
+
+        {error && <div className="text-red-600 text-sm bg-red-50 p-2 rounded">{error}</div>}
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <button
+            type="button"
+            className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition-colors"
+            onClick={onClose}
+            disabled={loading}
+          >
+            Cancel
+          </button>
+          <button
+            className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700 transition-colors disabled:opacity-50"
+            onClick={handleCreate}
+            disabled={loading || !formData.name?.trim()}
+          >
+            {loading ? "Creating..." : "Create Group"}
+          </button>
+        </div>
       </div>
     </Modal>
   );

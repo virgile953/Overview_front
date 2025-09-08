@@ -34,7 +34,7 @@ export default function Navbar() {
         ))}
       </h1>
       <div className="flex items-center space-x-4">
-        {/* You can add user menu, notifications, etc. here */}
+        {/* user menu, notifications, etc. */}
         <UserProfile name={user?.name || ""} email={user?.email || ""} emailVerification={user?.emailVerification || false} />
       </div>
     </div>

@@ -1,5 +1,6 @@
 import { Device } from "@/models/server/devices";
 import { Group } from "@/models/server/groups";
+import { User } from "@/models/server/users";
 import { SquarePen } from "lucide-react";
 
 
@@ -17,8 +18,8 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
       <div className="mt-2">
         <span className="text-sm font-semibold">Users:</span>
         <ul className="list-disc list-inside">
-          {group.users.map((user: string) => (
-            <li key={user}>{user}</li>
+          {group.users.map((user: User) => (
+            <li key={user.$id}>{user.name}</li>
           ))}
         </ul>
       </div>

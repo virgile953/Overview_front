@@ -2,10 +2,9 @@
 import { useEffect, useState } from "react";
 import { Group } from "@/models/server/groups";
 import NewGroupModal from "./NewGroupModal";
-import GroupCard from "./groupCard";
+import GroupCard from "./GroupCard";
 import { SquarePlus } from "lucide-react";
 import GroupModal from "./GroupModal";
-
 
 
 export default function Groups() {
@@ -16,7 +15,6 @@ export default function Groups() {
   async function fetchGroups() {
     const response = await fetch('/api/groups');
     const data = await response.json();
-    console.log(data);
     setGroups(data);
   }
   useEffect(() => {
@@ -39,10 +37,6 @@ export default function Groups() {
         groups.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {groups.map((group) => (
-              <div key={group.$id} className="">
-                <GroupCard group={group} onEdit={setSelectedGroup} />
-              </div>
-            ))}{groups.map((group) => (
               <div key={group.$id} className="">
                 <GroupCard group={group} onEdit={setSelectedGroup} />
               </div>
