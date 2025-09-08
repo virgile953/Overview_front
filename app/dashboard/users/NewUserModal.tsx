@@ -11,6 +11,7 @@ interface NewUserModalProps {
 }
 
 export default function NewUserModal({ isOpen, onClose, onUserCreated }: NewUserModalProps) {
+
   const [newUser, setNewUser] = useState<Omit<User, '$id'>>({
     name: "",
     last_name: "",
@@ -28,8 +29,17 @@ export default function NewUserModal({ isOpen, onClose, onUserCreated }: NewUser
     setIsSubmitting(true);
 
     try {
-      // TODO: Implement user creation API call
-      console.log("Creating user:", newUser);
+      const res = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newUser),
+      });
+
+      if (!res.ok) {
+        throw new Error("Failed to create user");
+      }
       onUserCreated();
       onClose();
       // Reset form
@@ -132,7 +142,10 @@ export default function NewUserModal({ isOpen, onClose, onUserCreated }: NewUser
           />
         </div> */}
 
-        <GroupSelector />
+        <GroupSelector 
+          initialValue={newUser.groups}
+          onChange={(groups) => setNewUser({ ...newUser, groups })}
+        />
 
         <div className="flex justify-end space-x-2 pt-4">
           <button

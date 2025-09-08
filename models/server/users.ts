@@ -38,7 +38,7 @@ export async function addUser(user: Omit<User, '$id'>): Promise<User> {
     function: user.function,
     last_name: user.last_name,
     email: user.email,
-    groups: user.groups || [],
+    groups: user.groups,
   };
   const result = await databases.createDocument(db, userCollection, 'unique()', {
     name: newUser.name,
