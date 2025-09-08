@@ -5,9 +5,10 @@ import Select from "react-select";
 
 interface UserSelectorProps {
   onChange?: (selected: User[]) => void;
+  initialValue?: User[];
 }
 
-export default function UserSelector({ onChange }: UserSelectorProps) {
+export default function UserSelector({ onChange, initialValue }: UserSelectorProps) {
 
   const [users, setUsers] = useState<User[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +46,12 @@ export default function UserSelector({ onChange }: UserSelectorProps) {
       <Select
         options={
           users ? users.map((user) => ({
+            value: user.$id,
+            label: user.name,
+          })) : []
+        }
+        value={
+          initialValue ? initialValue.map(user => ({
             value: user.$id,
             label: user.name,
           })) : []
@@ -132,10 +139,10 @@ export default function UserSelector({ onChange }: UserSelectorProps) {
         onChange={(selected) => {
           if (onChange && users) {
             // Map selected options back to full User objects
-            const selectedUsers = (selected as Array<{value: string, label: string}>)
+            const selectedUsers = (selected as Array<{ value: string, label: string }>)
               .map(option => users.find(user => user.$id === option.value))
               .filter((user): user is User => user !== undefined);
-            
+
             onChange(selectedUsers);
           }
         }}

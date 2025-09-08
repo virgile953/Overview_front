@@ -5,10 +5,11 @@ import Select from "react-select";
 
 interface DeviceSelectorProps {
   onChange?: (selected: Device[]) => void;
+  initialValue?: Device[]; // Added initialValue prop to set selected devices from outside
 }
 
 
-export default function DeviceSelector({ onChange }: DeviceSelectorProps) {
+export default function DeviceSelector({ onChange, initialValue }: DeviceSelectorProps) {
 
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,12 @@ export default function DeviceSelector({ onChange }: DeviceSelectorProps) {
       <Select
         options={
           devices ? devices.map((device) => ({
+            value: device.$id,
+            label: device.name,
+          })) : []
+        }
+        value={
+          initialValue ? initialValue.map(device => ({
             value: device.$id,
             label: device.name,
           })) : []
