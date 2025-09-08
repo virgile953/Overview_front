@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getGroups, addGroup } from "@/models/server/groups";
+import { getGroups, addGroup, updateGroup, deleteGroup } from "@/models/server/groups";
 
 
 export async function GET() {
@@ -15,6 +15,22 @@ export async function POST(request: Request) {
     }
     const newGroup = await addGroup({ name, localisation, description, users, devices });
     return NextResponse.json(newGroup, { status: 201 });
+  } catch (error) {
+    return NextResponse.json({ error: (error as Error).message }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { $id } = await request.json();
+    if (!$id || typeof $id !== 'string') {
+      return NextResponse.json({ error: 'Invalid group ID' }, { status: 400 });
+    }
+    const deletedGroup = await deleteGroup($id);
+    if (!deletedGroup) {
+      return NextResponse.json({ error: 'Group not found' }, { status: 404 });
+    }
+    return NextResponse.json(deletedGroup);
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });
   }

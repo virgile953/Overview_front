@@ -61,7 +61,7 @@ export default function Groups() {
           group={selectedGroup}
           isOpen={selectedGroup !== null}
           onClose={() => setSelectedGroup(null)}
-          onSave={() => console.log("Group saved:", selectedGroup)}
+          onSave={fetchGroups}
         />
       )}
     </div>

@@ -60,6 +60,7 @@ export async function getGroups(): Promise<Group[]> {
     throw new Error("Invalid group document");
   }));
 }
+
 export async function getGroup(name?: string, id?: string): Promise<Group | null> {
   try {
     const result = await databases.listDocuments(db, groupCollection,
@@ -74,6 +75,41 @@ export async function getGroup(name?: string, id?: string): Promise<Group | null
     return null;
   } catch (error) {
     console.error("Error fetching group:", error);
+    return null;
+  }
+}
+
+export async function updateGroup(group: Group): Promise<Group | null> {
+  try {
+    const existingGroup = await getGroup(undefined, group.$id);
+    if (!existingGroup) {
+      throw new Error("Group not found");
+    }
+    const updatedGroup = { ...existingGroup, ...group };
+    await databases.updateDocument(db, groupCollection, group.$id!, {
+      description: updatedGroup.description,
+      localisation: updatedGroup.localisation,
+      name: updatedGroup.name,
+      users: updatedGroup.users.map(u => u.$id),
+      devices: updatedGroup.devices.map(d => d.$id)
+    });
+    return updatedGroup;
+  } catch (error) {
+    console.error("Error updating group:", error);
+    return null;
+  }
+}
+
+export async function deleteGroup(id: string): Promise<Group | null> {
+  try {
+    const existingGroup = await getGroup(undefined, id);
+    if (!existingGroup) {
+      throw new Error("Group not found");
+    }
+    await databases.deleteDocument(db, groupCollection, id);
+    return existingGroup;
+  } catch (error) {
+    console.error("Error deleting group:", error);
     return null;
   }
 }
