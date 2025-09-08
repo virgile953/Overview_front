@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+
+@config "../tailwind.config.ts";
+
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -26,6 +30,7 @@ body {
 }
 
 @layer utilities {
+
   /* Custom scrollbar for sidebar */
   .sidebar-scrollbar::-webkit-scrollbar {
     width: 6px;
@@ -36,12 +41,14 @@ body {
   }
 
   .sidebar-scrollbar::-webkit-scrollbar-thumb {
-    background: #4b5563; /* gray-600 */
+    background: #4b5563;
+    /* gray-600 */
     border-radius: 3px;
   }
 
   .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #6b7280; /* gray-500 */
+    background: #6b7280;
+    /* gray-500 */
   }
 
   /* General dark scrollbar */
@@ -50,17 +57,20 @@ body {
   }
 
   .dark-scrollbar::-webkit-scrollbar-track {
-    background: #1f2937; /* gray-800 */
+    background: #1f2937;
+    /* gray-800 */
     border-radius: 4px;
   }
 
   .dark-scrollbar::-webkit-scrollbar-thumb {
-    background: #4b5563; /* gray-600 */
+    background: #4b5563;
+    /* gray-600 */
     border-radius: 4px;
   }
 
   .dark-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #10b981; /* emerald-500 */
+    background: #10b981;
+    /* emerald-500 */
   }
 
   /* Light scrollbar */
@@ -69,20 +79,22 @@ body {
   }
 
   .light-scrollbar::-webkit-scrollbar-track {
-    background: #f3f4f6; /* gray-100 */
+    background: #f3f4f6;
+    /* gray-100 */
     border-radius: 4px;
   }
 
   .light-scrollbar::-webkit-scrollbar-thumb {
-    background: #d1d5db; /* gray-300 */
+    background: #d1d5db;
+    /* gray-300 */
     border-radius: 4px;
   }
 
   .light-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #10b981; /* emerald-500 */
+    background: #10b981;
+    /* emerald-500 */
   }
 
-  /* Legacy scrollbar (keeping your original) */
   .scrollbar::-webkit-scrollbar {
     width: 10px;
     height: 20px;
@@ -102,4 +114,11 @@ body {
   .scrollbar::-webkit-scrollbar-thumb:hover {
     background: #7a7575;
   }
+}
+
+
+@theme {
+  --border: #27272a;
+  --color-avocado-400: oklch(0.92 0.19 114.08);
+
 }

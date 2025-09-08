@@ -32,7 +32,7 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
       onClick={onClose}
     >
       <div
-        className="relative bg-black border border-[#27272a] rounded-lg shadow-lg p-6 w-full 
+        className="relative bg-black border border-border rounded-lg shadow-lg p-6 w-full
         max-w-lg overflow-auto scrollbar max-h-[80vh]"
         onClick={e => e.stopPropagation()}
       >

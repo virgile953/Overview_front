@@ -1,20 +1,13 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge'
-import { DeviceStatusResponse } from '@/app/api/dashboard/devices/route';
 import { SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
-
-
-
-// export interface DeviceStatusResponse {
-//   online: number;
-//   offline: number;
-//   error: number;
-// }
+import { DeviceStatusResponse } from '@/models/server/dashboard';
 
 export default function DevicesDashboard({ className }: { className?: string }) {
   const [devicesStatus, setDevicesStatus] = useState<DeviceStatusResponse | null>(null);
+
   useEffect(() => {
     async function fetchStatus() {
       const res = await fetch('/api/dashboard/devices');
@@ -25,48 +18,57 @@ export default function DevicesDashboard({ className }: { className?: string }) 
     }
     fetchStatus();
   }, []);
+
+  const totalDevices = devicesStatus
+    ? devicesStatus.online + devicesStatus.offline + devicesStatus.error
+    : 0;
+
   return (
-    <div
-      className={twMerge(
-        "h-full w-full p-2 border border-gray-300 rounded-lg shadow-sm",
-        className)}
-    >
-      <div className="flex items-center mb-2 justify-between">
-        <div className="text-xl">Devices status</div>
-        <SquareActivity size={36} />
+    <div className={twMerge("p-4 bg-gray-900 rounded-lg shadow-md", className)}>
+      <div className="flex items-center mb-4">
+        <SquareActivity className="text-emerald-400 mr-2" />
+        <h2 className="text-lg font-semibold text-white">Devices</h2>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        {/* Online */}
-        <Link className="bg-green-100 p-4 rounded-lg flex flex-col items-center"
-          href={'/dashboard/devices?status=online'}>
-          <SquareArrowOutUpRight color='green' className='place-self-end -mb-5' size={16} />
-          <span className="text-2xl font-bold text-green-700">
-            {devicesStatus ? devicesStatus.online :
-              <span className="animate-pulse bg-green-300 rounded w-10 h-8 block" />}
+      <div className="text-3xl font-bold text-white">{totalDevices}</div>
+      <div className="mt-2 text-sm text-gray-400 mb-4">Total Devices</div>
+
+      {/* Status breakdown */}
+      <div className="grid grid-cols-3 gap-2 mb-4">
+        <Link
+          href="/dashboard/devices?status=online"
+          className="relative bg-green-600/20 border border-green-600/30 p-2 rounded flex flex-col items-center hover:bg-green-600/30 transition-colors"
+        >
+          <span className="text-lg font-bold text-green-400">
+            {devicesStatus ? devicesStatus.online : 0}
           </span>
-          <span className="text-sm text-green-600">Online</span>
+          <span className="text-xs text-green-300">Online</span>
+          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-green-300" size={12} />
+
         </Link>
-        {/* Offline */}
-        <Link className="bg-red-100 p-4 rounded-lg flex flex-col items-center"
-          href={'/dashboard/devices?status=offline'}>
-          <SquareArrowOutUpRight color='red' className='place-self-end -mb-5' size={16} />
-          <span className="text-2xl font-bold text-red-700">
-            {devicesStatus ? devicesStatus.offline :
-              <span className="animate-pulse bg-red-300 rounded w-10 h-8 block" />}
+
+        <Link
+          href="/dashboard/devices?status=offline"
+          className="relative bg-red-600/20 border border-red-600/30 p-2 rounded flex flex-col items-center hover:bg-red-600/30 transition-colors"
+        >
+          <span className="text-lg font-bold text-red-400">
+            {devicesStatus ? devicesStatus.offline : 0}
           </span>
-          <span className="text-sm text-red-600">Offline</span>
+          <span className="text-xs text-red-300">Offline</span>
+          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-red-300" size={12} />
         </Link>
-        {/* Error */}
-        <Link className="bg-yellow-100 p-4 rounded-lg flex flex-col items-center"
-          href={'/dashboard/devices?status=error'}>
-          <SquareArrowOutUpRight color='orange' className='place-self-end -mb-5' size={16} />
-          <span className="text-2xl font-bold text-yellow-700">
-            {devicesStatus ? devicesStatus.error :
-              <span className="animate-pulse bg-yellow-300 rounded w-10 h-8 block" />}
+
+        <Link
+          href="/dashboard/devices?status=error"
+          className="relative bg-yellow-600/20 border border-yellow-600/30 p-2 rounded flex flex-col items-center hover:bg-yellow-600/30 transition-colors"
+        >
+          <span className="text-lg font-bold text-yellow-400">
+            {devicesStatus ? devicesStatus.error : 0}
           </span>
-          <span className="text-sm text-yellow-600">Error</span>
+          <span className="text-xs text-yellow-300">Error</span>
+          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-yellow-300" size={12} />
         </Link>
       </div>
+
     </div>
   );
 }

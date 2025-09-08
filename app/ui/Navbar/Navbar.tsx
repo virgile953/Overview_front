@@ -24,7 +24,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <div className="h-16 bg-emerald-950 border border-gray-200 rounded-lg shadow-sm flex items-center justify-between px-6">
+    <div className="h-16 bg-emerald-950 border border-border rounded-lg shadow-sm flex items-center justify-between px-6">
       <h1 className="text-gray-300 text-lg font-semibold">
         {path.slice(1).split("/").map((segment, index) => (
           <span key={index} className="text-gray-300">
