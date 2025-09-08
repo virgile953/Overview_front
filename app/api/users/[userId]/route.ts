@@ -1,3 +1,4 @@
+import { updateUser } from "@/models/server/users";
 import { NextResponse } from "next/server";
 
 export async function PUT(
@@ -8,7 +9,7 @@ export async function PUT(
   const body = await request.json();
 
   try {
-    const updatedUser = await updateUser(userId, body);
+    const updatedUser = await updateUser(body);
     return NextResponse.json(updatedUser);
   } catch (error) {
     return NextResponse.error();

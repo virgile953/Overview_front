@@ -15,6 +15,23 @@ export default function UserModal({ isOpen, onClose, onSave, user }: UserModalPr
 
   const [localUser, setLocalUser] = useState<User>(user);
 
+  async function handleSave() {
+    const ret = await fetch(`/api/users/${localUser.$id}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(localUser),
+    });
+    if (ret.ok) {
+      const data = await ret.json();
+      onSave(data);
+      onClose();
+    } else {
+      console.error("Failed to save user");
+    }
+  }
+
 
   useEffect(() => {
     setLocalUser(user);
@@ -85,12 +102,12 @@ export default function UserModal({ isOpen, onClose, onSave, user }: UserModalPr
             Close
           </button>
           {/* Future edit functionality can be added here */}
-          {/* <button
-              className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
-              onClick={() => onSave(user)}
-            >
-              Save
-            </button> */}
+          <button
+            className="px-4 py-2 bg-emerald-600 text-white rounded hover:bg-emerald-700"
+            onClick={handleSave}
+          >
+            Save
+          </button>
         </div>
       </div>
     </Modal>

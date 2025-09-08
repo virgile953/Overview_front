@@ -85,3 +85,27 @@ export async function getUser(email?: string, id?: string): Promise<User | null>
     return null;
   }
 }
+
+
+export async function updateUser(user: User): Promise<User | null> {
+  try {
+    const existingUser = await getUser(undefined, user.$id);
+    if (!existingUser) {
+      throw new Error("User not found");
+    }
+    const updatedUser = { ...existingUser, ...user };
+    await databases.updateDocument(db, userCollection, user.$id!, {
+      name: updatedUser.name,
+      last_name: updatedUser.last_name,
+      email: updatedUser.email,
+      service: updatedUser.service,
+      function: updatedUser.function,
+      title: updatedUser.title,
+      groups: updatedUser.groups.map(g => g.$id)
+    });
+    return updatedUser;
+  } catch (error) {
+    console.error("Error updating user:", error);
+    return null;
+  }
+}
