@@ -94,34 +94,14 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
           onChange={e => setFormData({ ...formData, description: e.target.value })}
           rows={4}
         />
-        <UserSelector onChange={(selected) => setFormData({ ...formData, users: selected })} />
-        <DeviceSelector onChange={(selected) => setFormData({ ...formData, devices: selected })} />
-        {/* <InputField
-          type="text"
-          placeholder="User IDs (comma separated)"
-          value={
-            Array.isArray(formData.users)
-              ? formData.users.map(user => typeof user === "string" ? user : user?.$id ?? "").filter(Boolean).join(", ")
-              : ""
-          }
-          onChange={e =>
-            setFormData({
-              ...formData,
-              users: e.target.value
-                .split(",")
-                .map(id => id.trim())
-                .filter(Boolean)
-            })
-          }
-        /> */}
-
-        {/* <InputField
-          type="text"
-          placeholder="Device IDs (comma separated)"
-          value={formData.deviceIds}
-          onChange={e => setFormData({ ...formData, deviceIds: e.target.value })}
-        /> */}
-
+        <UserSelector
+          onChange={(selected) => setFormData({ ...formData, users: selected })}
+          initialValue={formData.users}
+        />
+        <DeviceSelector
+          onChange={(selected) => setFormData({ ...formData, devices: selected })}
+          initialValue={formData.devices}
+        />
         {error && <div className="text-red-600 text-sm bg-red-50 p-2 rounded">{error}</div>}
 
         <div className="flex justify-end space-x-2 pt-4">

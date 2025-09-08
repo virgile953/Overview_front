@@ -2,7 +2,7 @@
 import { Query } from "node-appwrite";
 import { db, userCollection } from "../name";
 import { databases } from "./config";
-import { isGroup } from "./groups";
+import { Group, isGroup } from "./groups";
 
 
 export interface User {
@@ -13,7 +13,7 @@ export interface User {
   service?: string;
   function?: string;
   title?: string;
-  groups: string[];
+  groups: Group[];
 }
 
 export async function isUser(doc: unknown): Promise<boolean> {
@@ -37,10 +37,17 @@ export async function addUser(user: Omit<User, '$id'>): Promise<User> {
     service: user.service,
     function: user.function,
     last_name: user.last_name,
+    email: user.email,
     groups: user.groups || [],
-    email: user.email
   };
-  const result = await databases.createDocument(db, userCollection, 'unique()', newUser);
+  const result = await databases.createDocument(db, userCollection, 'unique()', {
+    name: newUser.name,
+    service: newUser.service,
+    function: newUser.function,
+    last_name: newUser.last_name,
+    email: newUser.email,
+    groups: newUser.groups.map(g => g.$id)
+  });
   return {
     $id: result.$id,
     name: result.name,
