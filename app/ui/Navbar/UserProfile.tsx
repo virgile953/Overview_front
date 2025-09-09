@@ -3,7 +3,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
 import { Md5 } from 'ts-md5';
-import Image from 'next/image';
 import Avatar from "@/app/ui/Avatar";
 
 interface UserProfileProps {
@@ -32,15 +31,6 @@ export default function UserProfile(props: UserProfileProps) {
   function toggleTheme() {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle('dark');
-  }
-
-  function getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
   }
 
   useEffect(() => {
