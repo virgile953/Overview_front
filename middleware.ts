@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 // import { getOrCreateDB } from './models/server/dbSetup'
 import { getLoggedInUser } from './models/server/auth';
-import { isResolvedLazyResult } from 'next/dist/server/lib/lazy-result';
 
 export async function middleware(request: NextRequest) {
   // await getOrCreateDB();
