@@ -13,7 +13,7 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
-  if (!user && (url.pathname !== '/login' && url.pathname !== '/register')) {
+  if (!user && (url.pathname !== '/login' && url.pathname !== '/register' && !url.pathname.startsWith('/api/auth'))) {
     console.log("No user, redirecting to login");
     url.pathname = '/login';
     return NextResponse.redirect(url);

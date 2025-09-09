@@ -62,4 +62,14 @@ export async function verifyEmail() {
 
 }
 
+export async function createAccount(email: string, password: string, name: string) {
+  try {
+    const { account } = await login();
+    return await account.create("unique()", email, password, name);
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
 

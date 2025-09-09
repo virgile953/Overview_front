@@ -9,13 +9,27 @@ export default function Register() {
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  // Example handler (replace with your registration logic)
-  const handleRegister = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const handleRegister = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    // You can now use firstName, lastName, email, password for registration
-    // Example: call Appwrite or your API here
-    console.log({ firstName, lastName, email, password });
+    setIsSubmitting(true);
+    const response = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email, password, name: `${firstName} ${lastName.toUpperCase()}` }),
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setSuccess("Registration successful!");
+    } else {
+      console.error("Registration failed:", data);
+      setError("Registration failed. Please try again.");
+    }
+    setIsSubmitting(false);
   };
 
   return (
@@ -81,9 +95,16 @@ export default function Register() {
           <button
             onClick={handleRegister}
             className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2"
+            disabled={isSubmitting}
           >
             Create account
           </button>
+          {error && (
+            <div className="text-red-400 text-sm mt-2">{error}</div>
+          )}
+          {success && (
+            <div className="text-green-400 text-sm mt-2">{success}</div>
+          )}
           <div className="flex items-center gap-3">
             <div className="h-px bg-gray-700 flex-1" />
             <span className="text-gray-400 text-sm">Or register with</span>
