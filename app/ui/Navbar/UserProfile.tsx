@@ -2,6 +2,9 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
+import { Md5 } from 'ts-md5';
+import Image from 'next/image';
+import Avatar from "@/app/ui/Avatar";
 
 interface UserProfileProps {
   name?: string;
@@ -14,9 +17,14 @@ export default function UserProfile(props: UserProfileProps) {
   const [accountInfo, setAccountInfo] = useState<UserProfileProps | null>(null);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+  
+  // Gravatar state managed here
+  const [gravatarUrl, setGravatarUrl] = useState<string | null>(null);
+  const [gravatarExists, setGravatarExists] = useState<boolean>(false);
+  const [gravatarLoading, setGravatarLoading] = useState<boolean>(false);
 
   async function handleLogout() {
-    // Call a server action to delete the session
     await fetch("/api/auth/logout", { method: "POST" });
     router.push("/login");
   }
@@ -56,24 +64,54 @@ export default function UserProfile(props: UserProfileProps) {
     }
   }, [props.name, props.email, props.emailVerification]);
 
+  useEffect(() => {
+    if (accountInfo?.email) {
+      setGravatarLoading(true);
+      const emailHash = Md5.hashStr(accountInfo.email.trim().toLowerCase());
+      const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=404&s=200`;
+      
+      setGravatarUrl(gravatarUrl);
+      
+      // Check if Gravatar exists
+      checkGravatarExists(gravatarUrl).then(exists => {
+        setGravatarExists(exists);
+        setGravatarLoading(false);
+      });
+    }
+  }, [accountInfo?.email]);
+
+  const checkGravatarExists = async (url: string): Promise<boolean> => {
+    try {
+      const response = await fetch(url, { method: 'HEAD' });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  };
+
   //mail verification
   async function verifyEmail() {
-    const ret = await fetch("/api/auth/user/verify-mail", { method: "POST" });
-    console.log(ret);
+    if (verifyEmailSent) return; // prevent multiple clicks
+    const res = await fetch("/api/auth/user/verify-mail", { method: "POST" });
+    if (res.ok) {
+      setVerifyEmailSent(true);
+    }
+    console.log(res);
   }
 
   return (
     <div className="relative">
-      {/* Profile Trigger Button */}
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex items-center space-x-3 p-2 rounded-lg hover:bg-emerald-700 transition-colors"
       >
-        <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center">
-          <span className="text-white text-sm font-medium">
-            {accountInfo ? getInitials(accountInfo.name || "") : 'U'}
-          </span>
-        </div>
+        <Avatar 
+          email={accountInfo?.email} 
+          name={accountInfo?.name}
+          gravatarUrl={gravatarUrl}
+          gravatarExists={gravatarExists}
+          gravatarLoading={gravatarLoading}
+        />
         <div className="hidden md:block text-left">
           <p className="text-sm font-medium text-stone-300">{accountInfo?.name || 'Loading...'}</p>
           <p className="text-xs text-stone-400">{accountInfo?.email || ''}</p>
@@ -97,11 +135,15 @@ export default function UserProfile(props: UserProfileProps) {
             {/* User Info Header */}
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-emerald-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-lg font-medium">
-                    {accountInfo ? getInitials(accountInfo.name || "") : 'U'}
-                  </span>
-                </div>
+                <Avatar 
+                  size="w-12 h-12" 
+                  textSize="text-lg" 
+                  email={accountInfo?.email} 
+                  name={accountInfo?.name}
+                  gravatarUrl={gravatarUrl}
+                  gravatarExists={gravatarExists}
+                  gravatarLoading={gravatarLoading}
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-100 truncate">{accountInfo?.name || 'Loading...'}</p>
                   <p className="text-sm text-gray-400 truncate">{accountInfo?.email || ''}</p>
@@ -176,3 +218,4 @@ export default function UserProfile(props: UserProfileProps) {
     </div>
   );
 }
+
