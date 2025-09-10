@@ -25,7 +25,7 @@ export async function getGroupsStats() {
 
 export async function getDevicesStats(): Promise<DeviceStatusResponse> {
   const online = await databases.listDocuments(db, deviceCollection,
-    [Query.equal('status', 'online')]
+    [Query.equal('status', ['online', 'active'])]
   );
   const offline = await databases.listDocuments(db, deviceCollection, [
     Query.equal('status', 'offline')

@@ -4,5 +4,5 @@ import { NextResponse } from "next/server";
 
 export async function GET() {
   const devices = await getDevices();
-  return NextResponse.json(devices); 
+  return NextResponse.json(devices);
 }

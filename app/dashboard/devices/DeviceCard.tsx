@@ -1,7 +1,18 @@
-import { ApiDevice } from "./page";
+import { ApiDevice } from "@/app/api/device/route";
+import { Device } from "@/models/server/devices";
+import { useState } from "react";
 
 // Device Card Component
-export default function DeviceCard({ device }: { device: ApiDevice }) {
+export default function DeviceCard({
+  device,
+  onDeviceAdded
+}: {
+  device: ApiDevice | Device;
+  onDeviceAdded?: () => void;
+}) {
+  const [isAdding, setIsAdding] = useState(false);
+  const [addMessage, setAddMessage] = useState('');
+  const [addStatus, setAddStatus] = useState<'success' | 'error' | ''>('');
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'online':
@@ -27,15 +38,100 @@ export default function DeviceCard({ device }: { device: ApiDevice }) {
     return `${Math.floor(diffInSeconds / 86400)}d ago`;
   };
 
+  function getConnectionStatus(device: ApiDevice | Device): string {
+    if ('connectionStatus' in device) {
+      return device.connectionStatus;
+    }
+    return 'unknown';
+  }
+
+  function getLastSeenTime(device: ApiDevice | Device): string {
+    if ('lastSeen' in device) {
+      // Handle both Date and string types
+      const lastSeen = typeof device.lastSeen === 'string' ? device.lastSeen : device.lastSeen.toISOString();
+      return formatLastSeen(lastSeen);
+    }
+    return formatLastSeen(device.lastActive);
+  }
+
+  function isDeviceInDatabase(device: ApiDevice | Device): boolean {
+    if ('source' in device) {
+      return device.source !== 'cache-only';
+    }
+    // If no source info, assume it's in database (fallback)
+    return true;
+  }
+
+  async function addDeviceToDb() {
+    if (isAdding) return;
+
+    setIsAdding(true);
+    setAddMessage('');
+
+    try {
+      const response = await fetch('/api/device/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(device),
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setAddStatus('success');
+        setAddMessage('✅ Device added to database!');
+        // Call the callback to refresh the devices list
+        onDeviceAdded?.();
+      } else {
+        setAddStatus('error');
+        setAddMessage(`❌ Failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      setAddMessage(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setAddStatus('error');
+    } finally {
+      setIsAdding(false);
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setAddMessage('');
+        setAddStatus('');
+      }, 3000);
+    }
+  }
+
+
+  const getSourceColor = (device: ApiDevice | Device): string => {
+    if ('source' in device) {
+      switch (device.source) {
+        case 'database+cache':
+          return 'border-emerald-600/50';
+        case 'database':
+          return 'border-blue-600/50';
+        case 'cache-only':
+          return 'border-yellow-600/50';
+        default:
+          return 'border-border';
+      }
+    }
+    return 'border-border';
+  };
+
   return (
-    <div className="bg-gray-900 border border-border rounded-lg p-4 hover:shadow-md transition-shadow">
+    <div className={`bg-gray-900 border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-gray-200">{device.name}</h3>
           <p className="text-sm text-gray-500">{device.type}</p>
+          {'source' in device && (
+            <p className="text-xs text-gray-400 mt-1">
+              Source: {device.source}
+            </p>
+          )}
         </div>
-        <span className={`px-3 py-2 rounded-full text-xs font-medium border ${getStatusColor(device.connectionStatus)}`}>
-          {device.connectionStatus}
+        <span className={`px-3 py-2 rounded-full text-xs font-medium border ${getStatusColor(getConnectionStatus(device))}`}>
+          {getConnectionStatus(device)}
         </span>
       </div>
 
@@ -64,8 +160,26 @@ export default function DeviceCard({ device }: { device: ApiDevice }) {
 
         <div>
           <span className="text-gray-500">Last seen:</span>
-          <span className="ml-2 text-gray-200">{formatLastSeen(device.lastSeen)}</span>
+          <span className="ml-2 text-gray-200">{getLastSeenTime(device)}</span>
         </div>
+
+        {/* Show "Add to Database" button only for cache-only devices */}
+        {!isDeviceInDatabase(device) && (
+          <div className="pt-2 border-t border-gray-700">
+            <button
+              className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              onClick={addDeviceToDb}
+              disabled={isAdding}
+            >
+              {isAdding ? 'Adding...' : 'Add to Database'}
+            </button>
+            {addMessage && (
+              <p className={`text-xs mt-2 ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                {addMessage}
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

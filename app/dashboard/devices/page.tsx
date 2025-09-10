@@ -1,35 +1,28 @@
 "use client";
-import { Device } from "@/models/server/devices";
 import { useEffect, useState } from "react";
 import DeviceCard from "./DeviceCard";
-
-// Extended device type that includes additional API response fields
-export interface ApiDevice extends Device {
-  deviceId: string;
-  lastSeen: string;
-  connectionStatus: string;
-}
-
-interface DeviceResponse {
-  devices?: ApiDevice[];
-  totalDevices?: number;
-}
+import { ApiDevice, DeviceResponse } from "@/app/api/device/route";
 
 export default function Devices() {
-  const [deviceData, setDeviceData] = useState<DeviceResponse | ApiDevice[] | null>(null);
+  const [deviceData, setDeviceData] = useState<DeviceResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchDevices = async ( ) => {
+  const fetchDevices = async (isRefresh = false) => {
     try {
+      if (isRefresh) {
+        setRefreshing(true);
+      } else {
+        setLoading(true);
+      }
       const res = await fetch("/api/device");
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
       setDeviceData(data);
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch devices');
     } finally {
@@ -39,8 +32,8 @@ export default function Devices() {
   };
 
   useEffect(() => {
-    const intervalId = setInterval(fetchDevices, 5 * 1000); // Refresh every 5 seconds
-    fetchDevices(); // Initial load
+    const intervalId = setInterval(() => fetchDevices(true), 5 * 1000); // Refresh every 5 seconds
+    fetchDevices(false); // Initial load
     return () => clearInterval(intervalId);
   }, []);
 
@@ -64,13 +57,9 @@ export default function Devices() {
     );
   }
 
-  // Handle both array response and object response
-  let devices: ApiDevice[] = [];
-  if (Array.isArray(deviceData)) {
-    devices = deviceData;
-  } else if (deviceData && 'devices' in deviceData && deviceData.devices) {
-    devices = deviceData.devices;
-  }
+  // Handle the response structure correctly
+  const devices: ApiDevice[] = deviceData?.devices || [];
+  const stats = deviceData?.stats;
 
   return (
     <div className="space-y-6">
@@ -84,9 +73,14 @@ export default function Devices() {
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-500">
             Total: {devices.length} devices
+            {stats && (
+              <span className="ml-2">
+                (Online: {stats.online}, Cache-only: {stats.cacheOnly})
+              </span>
+            )}
           </div>
           <button
-            onClick={fetchDevices}
+            onClick={() => fetchDevices(true)}
             disabled={refreshing}
             className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
@@ -100,11 +94,36 @@ export default function Devices() {
           <p className="text-gray-500">No devices found</p>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {devices.map((device) => (
-            <DeviceCard key={device.deviceId || device.$id} device={device} />
-          ))}
-        </div>
+        <>
+          {/* Legend */}
+          <div className="bg-gray-800 border border-border rounded-lg p-4 mb-4">
+            <h3 className="text-sm font-medium text-gray-200 mb-2">Device Status Legend:</h3>
+            <div className="flex flex-wrap gap-4 text-xs">
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 border border-emerald-600/50 rounded"></div>
+                <span className="text-gray-400">Database + Live (Recently active)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 border border-blue-600/50 rounded"></div>
+                <span className="text-gray-400">Database only (Offline)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 border border-yellow-600/50 rounded"></div>
+                <span className="text-gray-400">Cache only (Not in database)</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {devices.map((device) => (
+              <DeviceCard 
+                key={device.deviceId || device.$id} 
+                device={device} 
+                onDeviceAdded={() => fetchDevices(true)}
+              />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
