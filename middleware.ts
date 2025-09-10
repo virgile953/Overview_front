@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
   if (!user && (url.pathname !== '/login' && url.pathname !== '/register' && !url.pathname.startsWith('/api/auth'))) {
-    console.log("No user, redirecting to login");
+    console.log("No user, redirecting to login", url.pathname);
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
@@ -29,7 +29,6 @@ export async function middleware(request: NextRequest) {
 export const config = {
   matcher: [
     '/((?!_next/static|_next/image|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$).*)',
-    '/((?!api\\/device).*)',
   ],
 }
 
