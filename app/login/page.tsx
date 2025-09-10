@@ -32,9 +32,9 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex font-sans bg-gray-950">
-      {/* Left panel with diagonal cut */}
-      <div className="relative w-1/2 flex items-center justify-center overflow-hidden">
+    <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-gray-950">
+      {/* Left panel with diagonal cut - hidden on mobile, shown on large screens */}
+      <div className="hidden lg:flex relative lg:w-1/2 items-center justify-center overflow-hidden">
         <div
           className="absolute inset-0 bg-gray-900"
           style={{
@@ -53,22 +53,30 @@ export default function Login() {
           <p className="text-2xl font-light">Welcome back</p>
         </div>
       </div>
+
+      {/* Mobile header - only shown on small screens */}
+      <div className="lg:hidden text-center py-8 px-4 ">
+        <h1 className="text-4xl md:text-5xl font-extrabold text-emerald-400 mb-2">Overview</h1>
+        <p className="text-lg text-gray-300">Welcome back</p>
+      </div>
+
       {/* Right panel with login form */}
-      <div className="w-1/2 flex items-center justify-center bg-gray-950">
-        <div className="flex flex-col gap-6 w-full max-w-lg p-10 rounded-xl shadow-2xl bg-gray-900 border border-gray-800">
-          <h1 className="text-4xl font-bold text-emerald-400 mb-2 font-mono">Login</h1>
-          <h2 className="flex gap-2 text-base font-light text-gray-300 mb-4">
-            Don&apos;t have an account?
+      <div className="flex-1 lg:w-1/2 flex items-center justify-center bg-gray-950 px-4 py-8 lg:py-0">
+        <div className="flex flex-col gap-4 md:gap-6 w-full max-w-sm md:max-w-lg p-6 md:p-10 rounded-xl shadow-2xl bg-gray-900 border border-gray-800">
+          <h1 className="text-2xl md:text-4xl font-bold text-emerald-400 mb-2 font-mono">Login</h1>
+          <h2 className="flex flex-col sm:flex-row sm:gap-2 text-sm md:text-base font-light text-gray-300 mb-2 md:mb-4">
+            <span>Don&apos;t have an account?</span>
             <Link href="/register" className="text-emerald-400 hover:underline">Register</Link>
           </h2>
-          <form onSubmit={onSubmit} className="flex flex-col gap-6">
+
+          <form onSubmit={onSubmit} className="flex flex-col gap-4 md:gap-6">
             <input
               type="email"
               name="email"
               placeholder="Email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400 text-sm md:text-base"
               required
             />
             <input
@@ -77,12 +85,12 @@ export default function Login() {
               placeholder="Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400"
+              className="p-3 bg-gray-800 rounded focus:outline-none focus:ring-1 focus:ring-emerald-400 text-sm md:text-base"
               required
             />
             <button
               type="submit"
-              className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2"
+              className="bg-emerald-600 text-white py-3 rounded font-semibold hover:bg-emerald-700 transition mb-2 text-sm md:text-base"
               disabled={isPending}
             >
               {isPending ? "Logging in..." : "Login"}
@@ -91,25 +99,27 @@ export default function Login() {
               <div className="text-red-400 text-sm mt-2">{error}</div>
             )}
           </form>
+
           <div className="flex items-center gap-3">
             <div className="h-px bg-gray-700 flex-1" />
-            <span className="text-gray-400 text-sm">Or login with</span>
+            <span className="text-gray-400 text-xs md:text-sm">Or login with</span>
             <div className="h-px bg-gray-700 flex-1" />
           </div>
-          <div className="flex gap-4 mt-2">
+
+          <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-2">
             <button
               onClick={() => { alert("Google OAuth login not yet implemented."); }}
-              className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
+              className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-3 md:px-4 py-2.5 md:py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
             >
-              <Image src="/google.svg" alt="Google logo" width={20} height={20} />
-              <span className="text-gray-300">Google</span>
+              <Image src="/google.svg" alt="Google logo" width={18} height={18} className="md:w-5 md:h-5" />
+              <span className="text-gray-300 text-sm md:text-base">Google</span>
             </button>
             <button
               onClick={() => { alert("GitHub OAuth login not yet implemented."); }}
-              className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-4 py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
+              className="flex justify-center gap-2 w-full border border-gray-700 hover:border-gray-500 px-3 md:px-4 py-2.5 md:py-3 rounded-lg bg-gray-800 hover:bg-gray-700 transition"
             >
-              <Image src="/github.svg" alt="GitHub logo" width={20} height={20} />
-              <span className="text-gray-300">GitHub</span>
+              <Image src="/github.svg" alt="GitHub logo" width={18} height={18} className="md:w-5 md:h-5" />
+              <span className="text-gray-300 text-sm md:text-base">GitHub</span>
             </button>
           </div>
         </div>
