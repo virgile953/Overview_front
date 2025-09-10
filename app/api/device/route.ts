@@ -51,16 +51,13 @@ setInterval(() => {
 
 
 export async function POST(request: Request) {
-  // Handle POST request to create a new device or update existing one
   const requestData = await request.json();
   const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, ownerId } = requestData;
 
-  // Validate required fields
   if (!name || !type || !status || !ownerId || !macAddress) {
     return new Response(JSON.stringify({ error: "Missing required fields (name, type, status, ownerId, macAddress are required)" }), { status: 400 });
   }
 
-  // Create unique device identifier using MAC address
   const deviceId: string = macAddress;
   const currentTime = new Date().toISOString();
 
@@ -73,7 +70,6 @@ export async function POST(request: Request) {
     let dbAction: string = 'cache-only';
 
     if (existingDbDevice) {
-      // Update existing device in database
       const updatedDevice = await updateDevice(existingDbDevice.$id, {
         name,
         type,
@@ -89,7 +85,6 @@ export async function POST(request: Request) {
       dbAction = 'updated';
     }
     // If device doesn't exist in DB, we only cache it (don't create new DB entry)
-
     // Update device cache using DeviceCacheManager
     DeviceCacheManager.updateDevice(deviceId, {
       device: {

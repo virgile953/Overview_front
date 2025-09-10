@@ -10,7 +10,7 @@ export async function GET(request: Request) {
       case 'stats':
         const stats = DeviceCacheManager.getStats();
         const allDevices = DeviceCacheManager.getAllDevices();
-        
+
         return new Response(JSON.stringify({
           stats,
           devices: Array.from(allDevices.entries()).map(([macAddress, data]) => ({
@@ -22,7 +22,6 @@ export async function GET(request: Request) {
             dbId: data.dbId
           }))
         }), { status: 200 });
-
       case 'clear':
         DeviceCacheManager.clearAll();
         return new Response(JSON.stringify({
@@ -60,7 +59,7 @@ export async function POST(request: Request) {
         if (!Array.isArray(macAddresses)) {
           return new Response(JSON.stringify({ error: "macAddresses array is required" }), { status: 400 });
         }
-        
+
         results = macAddresses.map(mac => ({
           macAddress: mac,
           success: DeviceCacheManager.markOffline(mac)
@@ -71,7 +70,7 @@ export async function POST(request: Request) {
         if (!Array.isArray(macAddresses)) {
           return new Response(JSON.stringify({ error: "macAddresses array is required" }), { status: 400 });
         }
-        
+
         results = macAddresses.map(mac => ({
           macAddress: mac,
           success: DeviceCacheManager.markOnline(mac)
@@ -82,7 +81,7 @@ export async function POST(request: Request) {
         if (!Array.isArray(macAddresses)) {
           return new Response(JSON.stringify({ error: "macAddresses array is required" }), { status: 400 });
         }
-        
+
         results = macAddresses.map(mac => ({
           macAddress: mac,
           success: DeviceCacheManager.removeDevice(mac)
