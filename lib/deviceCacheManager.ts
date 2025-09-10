@@ -1,4 +1,3 @@
-import { deviceCache } from "../app/api/device/route";
 import { Device } from "@/models/server/devices";
 
 export interface CacheDevice {
@@ -7,6 +6,17 @@ export interface CacheDevice {
   status: 'online' | 'offline';
   dbId?: string;
 }
+
+export interface CacheStats {
+  total: number;
+  online: number;
+  offline: number;
+  linkedToDb: number;
+  cacheOnly: number;
+}
+
+// In-memory cache for device status (use Redis in production)
+export const deviceCache = new Map<string, CacheDevice>();
 
 // Utility functions to manage device cache from anywhere in the app
 export class DeviceCacheManager {
@@ -58,8 +68,9 @@ export class DeviceCacheManager {
     return false;
   }
 
-  static getStats() {
+  static getStats(): CacheStats {
     const devices = Array.from(deviceCache.values()) as CacheDevice[];
+
     return {
       total: devices.length,
       online: devices.filter(d => d.status === 'online').length,

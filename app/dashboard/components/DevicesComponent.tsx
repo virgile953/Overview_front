@@ -3,25 +3,24 @@ import { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge'
 import { SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { DeviceStatusResponse } from '@/models/server/dashboard';
+import { CacheStats } from '@/lib/deviceCacheManager';
 
 export default function DevicesDashboard({ className }: { className?: string }) {
-  const [devicesStatus, setDevicesStatus] = useState<DeviceStatusResponse | null>(null);
+  const [stats, setStats] = useState<CacheStats | null>(null);
 
   useEffect(() => {
     async function fetchStatus() {
       const res = await fetch('/api/dashboard/devices');
       if (res.ok) {
         const data = await res.json();
-        setDevicesStatus(data);
+        setStats(data);
+        console.log('Fetched device stats:', data);
       }
     }
     fetchStatus();
   }, []);
 
-  const totalDevices = devicesStatus
-    ? devicesStatus.online + devicesStatus.offline + devicesStatus.error
-    : 0;
+
 
   return (
     <div className={twMerge("p-4 bg-gray-900 rounded-lg shadow-md", className)}>
@@ -29,7 +28,7 @@ export default function DevicesDashboard({ className }: { className?: string }) 
         <SquareActivity className="text-emerald-400 mr-2" />
         <h2 className="text-lg font-semibold text-white">Devices</h2>
       </div>
-      <div className="text-3xl font-bold text-white">{totalDevices}</div>
+      <div className="text-3xl font-bold text-white">{stats?.total}</div>
       <div className="mt-2 text-sm text-gray-400 mb-4">Total Devices</div>
 
       {/* Status breakdown */}
@@ -39,7 +38,7 @@ export default function DevicesDashboard({ className }: { className?: string }) 
           className="relative bg-green-600/20 border border-green-600/30 p-2 rounded flex flex-col items-center hover:bg-green-600/30 transition-colors"
         >
           <span className="text-lg font-bold text-green-400">
-            {devicesStatus ? devicesStatus.online : 0}
+            {stats ? stats.online : 0}
           </span>
           <span className="text-xs text-green-300">Online</span>
           <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-green-300" size={12} />
@@ -51,7 +50,7 @@ export default function DevicesDashboard({ className }: { className?: string }) 
           className="relative bg-red-600/20 border border-red-600/30 p-2 rounded flex flex-col items-center hover:bg-red-600/30 transition-colors"
         >
           <span className="text-lg font-bold text-red-400">
-            {devicesStatus ? devicesStatus.offline : 0}
+            {stats ? stats.offline : 0}
           </span>
           <span className="text-xs text-red-300">Offline</span>
           <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-red-300" size={12} />
@@ -62,9 +61,9 @@ export default function DevicesDashboard({ className }: { className?: string }) 
           className="relative bg-yellow-600/20 border border-yellow-600/30 p-2 rounded flex flex-col items-center hover:bg-yellow-600/30 transition-colors"
         >
           <span className="text-lg font-bold text-yellow-400">
-            {devicesStatus ? devicesStatus.error : 0}
+            {stats ? stats.cacheOnly : 0}
           </span>
-          <span className="text-xs text-yellow-300">Error</span>
+          <span className="text-xs text-yellow-300">Cache Only</span>
           <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-yellow-300" size={12} />
         </Link>
       </div>

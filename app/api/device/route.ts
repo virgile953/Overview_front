@@ -1,4 +1,4 @@
-import { CacheDevice, DeviceCacheManager } from "@/lib/deviceCacheManager";
+import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 import { Device, getDevices, updateDevice } from "@/models/server/devices";
 
 export interface ApiDevice extends Device {
@@ -23,9 +23,6 @@ export interface DeviceResponse {
   };
 }
 
-
-// In-memory cache for device status (use Redis in production)
-export const deviceCache = new Map<string, CacheDevice>();
 
 // Cleanup interval to mark devices as offline after inactivity
 const OFFLINE_THRESHOLD = 1 * 60 * 1000; // 1 minute
