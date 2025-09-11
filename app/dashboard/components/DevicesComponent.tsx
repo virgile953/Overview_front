@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge'
-import { SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
+import { EllipsisVertical, SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { CacheStats } from '@/lib/deviceCacheManager';
 
@@ -27,6 +27,8 @@ export default function DevicesDashboard({ className }: { className?: string }) 
       <div className="flex items-center mb-4">
         <SquareActivity className="text-emerald-400 mr-2" />
         <h2 className="text-lg font-semibold text-foreground">Devices</h2>
+        <EllipsisVertical className="ml-auto text-foreground" />
+
       </div>
       <div className="text-3xl font-bold text-foreground">{stats?.total}</div>
       <div className="mt-2 text-sm text-muted-foreground mb-4">Total Devices</div>
