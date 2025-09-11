@@ -129,7 +129,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="overflow-x-hidden">
         {navigation.map((section) => (
           <SidebarGroup key={section.title}>
             <Separator orientation="horizontal" className="my-2 h-px bg-border" />
@@ -157,11 +157,11 @@ export function AppSidebar() {
       </SidebarContent>
       <Separator orientation="horizontal" className="my-2 h-px bg-border" />
 
-      <SidebarFooter>
+      <SidebarFooter className="overflow-x-hidden">
         <div className="flex items-center gap-2 p-2">
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-green-500" />
-            {sidebar.open && <span className="text-sm text-sidebar-foreground">System Online</span>}
+            {sidebar.open && <span className="text-sm text-sidebar-foreground w-full">System Online</span>}
           </div>
         </div>
       </SidebarFooter>

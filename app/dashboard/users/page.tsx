@@ -24,7 +24,7 @@ export default function Users() {
   }, []);
 
   return (
-    <div>
+    <div className="relative">
       <div className="border-b border-gray-300 pb-4 mb-6">
         <p>List of users:</p>
       </div>
