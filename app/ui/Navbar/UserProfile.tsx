@@ -17,7 +17,7 @@ export default function UserProfile(props: UserProfileProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
-  
+
   // Gravatar state managed here
   const [gravatarUrl, setGravatarUrl] = useState<string | null>(null);
   const [gravatarExists, setGravatarExists] = useState<boolean>(false);
@@ -59,9 +59,9 @@ export default function UserProfile(props: UserProfileProps) {
       setGravatarLoading(true);
       const emailHash = Md5.hashStr(accountInfo.email.trim().toLowerCase());
       const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=404&s=200`;
-      
+
       setGravatarUrl(gravatarUrl);
-      
+
       // Check if Gravatar exists
       checkGravatarExists(gravatarUrl).then(exists => {
         setGravatarExists(exists);
@@ -95,8 +95,8 @@ export default function UserProfile(props: UserProfileProps) {
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
         className="flex items-center space-x-3 p-2 rounded-lg hover:bg-emerald-700 transition-colors"
       >
-        <Avatar 
-          email={accountInfo?.email} 
+        <Avatar
+          email={accountInfo?.email}
           name={accountInfo?.name}
           gravatarUrl={gravatarUrl}
           gravatarExists={gravatarExists}
@@ -125,10 +125,10 @@ export default function UserProfile(props: UserProfileProps) {
             {/* User Info Header */}
             <div className="p-4 border-b border-gray-700">
               <div className="flex items-center space-x-3">
-                <Avatar 
-                  size="w-12 h-12" 
-                  textSize="text-lg" 
-                  email={accountInfo?.email} 
+                <Avatar
+                  size="w-12 h-12"
+                  textSize="text-lg"
+                  email={accountInfo?.email}
                   name={accountInfo?.name}
                   gravatarUrl={gravatarUrl}
                   gravatarExists={gravatarExists}
