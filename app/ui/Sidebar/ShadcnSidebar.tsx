@@ -169,7 +169,7 @@ export function AppSidebar() {
   );
 }
 
-function NavbarContent({ user, loading }: { user?: { name: string; email: string; emailVerification: boolean; } | null; loading?: boolean; }) {
+function NavbarContent({ user }: { user?: { name: string; email: string; emailVerification: boolean; } | null; }) {
   const path = usePathname();
   return (
     <>
@@ -210,7 +210,7 @@ export function SidebarLayout({
             <SidebarTrigger className="-ml-1" />
           </div>
           <div className="flex-1 flex items-center justify-between">
-            <NavbarContent user={user} loading={loading} />
+            <NavbarContent user={user} />
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4">
