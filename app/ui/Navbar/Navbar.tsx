@@ -1,6 +1,7 @@
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import UserProfile from "./UserProfile";
+import { account } from "@/models/client/config";
 
 export default function Navbar() {
   const path = usePathname();
@@ -10,18 +11,37 @@ export default function Navbar() {
     emailVerification: boolean;
   } | null>(null);
 
+
   useEffect(() => {
-    async function fetchUser() {
-      const res = await fetch("/api/auth/user", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      } else {
+    const user = account;
+    user.get().then(
+      (res) => {
+        if (res) {
+          setUser({
+            name: res.name || "",
+            email: res.email || "",
+            emailVerification: res.emailVerification || false,
+          });
+        } else {
+          setUser(null);
+        }
+      },
+      (err) => {
         setUser(null);
       }
-    }
-    fetchUser();
+    );
   }, []);
+  //   async function fetchUser() {
+  //     const res = await fetch("/api/auth/user", { method: "POST" });
+  //     if (res.ok) {
+  //       const data = await res.json();
+  //       setUser(data.user);
+  //     } else {
+  //       setUser(null);
+  //     }
+  //   }
+  //   fetchUser();
+  // }, []);
 
   return (
     <div className="h-16 bg-emerald-950 border border-border rounded-lg shadow-sm flex items-center justify-between px-6">

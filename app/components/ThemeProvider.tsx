@@ -3,16 +3,16 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<string>('dark');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    
     // Get theme from cookie
     const cookieTheme = document.cookie
       .split('; ')
       .find(row => row.startsWith('theme='))
       ?.split('=')[1] || 'dark';
-    
-    setTheme(cookieTheme);
     
     // Apply theme to document
     document.documentElement.className = cookieTheme;
@@ -24,7 +24,6 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
         .find(row => row.startsWith('theme='))
         ?.split('=')[1] || 'dark';
       
-      setTheme(newTheme);
       document.documentElement.className = newTheme;
     };
 
@@ -40,28 +39,10 @@ export default function ThemeProvider({ children }: { children: React.ReactNode 
     };
   }, []);
 
-  return (
-    <html lang="en" className={theme} suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  var theme = document.cookie
-                    .split('; ')
-                    .find(row => row.startsWith('theme='))
-                    ?.split('=')[1] || 'dark';
-                  document.documentElement.className = theme;
-                } catch (e) {
-                  document.documentElement.className = 'dark';
-                }
-              })();
-            `,
-          }}
-        />
-      </head>
-      {children}
-    </html>
-  );
+  // Don't render anything until mounted to prevent hydration issues
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return <>{children}</>;
 }

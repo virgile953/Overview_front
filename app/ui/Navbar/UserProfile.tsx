@@ -8,9 +8,9 @@ import { Separator } from "@/components/ui/separator";
 import { changeTheme } from "../actions/themeSwitcher";
 
 interface UserProfileProps {
-  name?: string;
-  email?: string;
-  emailVerification?: boolean;
+  name: string;
+  email: string;
+  emailVerification: boolean;
 }
 
 export default function UserProfile(props: UserProfileProps) {
@@ -39,24 +39,12 @@ export default function UserProfile(props: UserProfileProps) {
   }
 
   useEffect(() => {
-    if (props.name || props.email) {
-      setAccountInfo({
-        name: props.name || "",
-        email: props.email || "",
-        emailVerification: props.emailVerification || false,
-      });
-    } else {
-      async function fetchUser() {
-        const res = await fetch("/api/auth/user", { method: "POST" });
-        if (res.ok) {
-          const data = await res.json();
-          setAccountInfo(data.user);
-        } else {
-          setAccountInfo(null);
-        }
-      }
-      fetchUser();
-    }
+    // Always use props data - no fallback fetching needed
+    setAccountInfo({
+      name: props.name,
+      email: props.email,
+      emailVerification: props.emailVerification,
+    });
   }, [props.name, props.email, props.emailVerification]);
 
   useEffect(() => {

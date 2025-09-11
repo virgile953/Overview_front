@@ -1,7 +1,6 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import {
   LayoutDashboard,
   BarChart3,
@@ -170,27 +169,8 @@ export function AppSidebar() {
   );
 }
 
-function NavbarContent() {
+function NavbarContent({ user, loading }: { user?: { name: string; email: string; emailVerification: boolean; } | null; loading?: boolean; }) {
   const path = usePathname();
-  const [user, setUser] = useState<{
-    name: string;
-    email: string;
-    emailVerification: boolean;
-  } | null>(null);
-
-  useEffect(() => {
-    async function fetchUser() {
-      const res = await fetch("/api/auth/user", { method: "POST" });
-      if (res.ok) {
-        const data = await res.json();
-        setUser(data.user);
-      } else {
-        setUser(null);
-      }
-    }
-    fetchUser();
-  }, []);
-
   return (
     <>
       <h1 className="text-foreground text-lg font-semibold">
@@ -212,7 +192,15 @@ function NavbarContent() {
   );
 }
 
-export function SidebarLayout({ children }: { children: React.ReactNode }) {
+export function SidebarLayout({
+  children,
+  user,
+  loading
+}: {
+  children: React.ReactNode;
+  user?: { name: string; email: string; emailVerification: boolean; } | null;
+  loading: boolean;
+}) {
   return (
     <div className="flex h-screen w-full">
       <AppSidebar />
@@ -222,7 +210,7 @@ export function SidebarLayout({ children }: { children: React.ReactNode }) {
             <SidebarTrigger className="-ml-1" />
           </div>
           <div className="flex-1 flex items-center justify-between">
-            <NavbarContent />
+            <NavbarContent user={user} loading={loading} />
           </div>
         </header>
         <main className="flex-1 overflow-auto p-4">
