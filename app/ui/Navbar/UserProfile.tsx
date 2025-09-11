@@ -92,7 +92,10 @@ export default function UserProfile(props: UserProfileProps) {
     <div className="relative">
       <button
         onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-        className="flex items-center space-x-3 p-2 rounded-lg hover:bg-emerald-700 transition-colors"
+        className={
+          "flex items-center space-x-3 p-2 rounded-lg hover:bg-emerald-400 dark:hover:bg-emerald-700 transition-colors" +
+          (isDropdownOpen ? " bg-emerald-400 dark:bg-emerald-700" : "")
+        }
       >
         <Avatar
           email={accountInfo?.email}
@@ -192,7 +195,7 @@ export default function UserProfile(props: UserProfileProps) {
               {/* Logout */}
               <button
                 className="w-full flex items-center px-4 py-3 text-sm text-red-500 
-                hover:bg-red-900/20 hover:text-red-300 "
+                hover:bg-red-900/20 dark:hover:text-red-400 "
                 onClick={() => {
                   setIsDropdownOpen(false);
                   handleLogout();
