@@ -115,7 +115,7 @@ export function AppSidebar() {
   const sidebar = useSidebar();
 
   return (
-    <Sidebar variant="floating" collapsible="icon">
+    <Sidebar variant="floating" collapsible="icon" className="relative w-56">
       <SidebarHeader>
         <div className="flex flex-col gap-2 py-2 text-sidebar-foreground">
           <div className="flex items-center gap-2">
@@ -155,7 +155,7 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-              <Separator orientation="horizontal" className="my-2 h-px bg-border" />
+      <Separator orientation="horizontal" className="my-2 h-px bg-border" />
 
       <SidebarFooter>
         <div className="flex items-center gap-2 p-2">
