@@ -1,21 +1,19 @@
-"use client";
-import Navbar from "../Navbar/Navbar";
-import Sidebar from "../Sidebar/Sidebar";
+import { cookies } from "next/headers";
+import { SidebarLayout, SidebarProvider } from "../Sidebar/ShadcnSidebar";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default async function DashboardLayout({ children }: DashboardLayoutProps) {
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+
   return (
-    <div className="">
-      <Sidebar />
-      <div className="fixed top-2 left-72 right-2 z-5">
-        <Navbar />
-      </div>
-      <main className="ml-72 mr-2 mt-20 mb-2 p-6 rounded-lg shadow-sm">
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <SidebarLayout>
         {children}
-      </main>
-    </div>
+      </SidebarLayout>
+    </SidebarProvider>
   );
 }

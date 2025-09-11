@@ -1,0 +1,230 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import {
+  LayoutDashboard,
+  BarChart3,
+  Monitor,
+  CheckCircle,
+  Zap,
+  Wifi,
+  FileText,
+  AlertTriangle,
+  Settings,
+  Group,
+  BookUser,
+} from "lucide-react";
+
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarRail,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+
+// Export SidebarProvider for use in layout
+export { SidebarProvider } from "@/components/ui/sidebar";
+import UserProfile from "../Navbar/UserProfile";
+
+const navigation = [
+  {
+    title: "Home",
+    items: [
+      {
+        title: "Dashboard",
+        url: "/dashboard",
+        icon: LayoutDashboard,
+      },
+      {
+        title: "Overview",
+        url: "/dashboard/overview",
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    title: "Monitoring",
+    items: [
+      {
+        title: "Devices",
+        url: "/dashboard/devices",
+        icon: Monitor,
+      },
+      {
+        title: "System Status",
+        url: "/dashboard/system-status",
+        icon: CheckCircle,
+      },
+      {
+        title: "Performance",
+        url: "/dashboard/performance",
+        icon: Zap,
+      },
+      {
+        title: "Network Status",
+        url: "/dashboard/network",
+        icon: Wifi,
+      },
+      {
+        title: "Logs",
+        url: "/dashboard/logs",
+        icon: FileText,
+      },
+      {
+        title: "Alerts",
+        url: "/dashboard/alerts",
+        icon: AlertTriangle,
+      },
+    ],
+  },
+  {
+    title: "Settings",
+    items: [
+      {
+        title: "Settings",
+        url: "/dashboard/settings",
+        icon: Settings,
+      },
+      {
+        title: "Users",
+        url: "/dashboard/users",
+        icon: BookUser,
+      },
+      {
+        title: "Groups",
+        url: "/dashboard/groups",
+        icon: Group,
+      },
+    ],
+  },
+];
+
+export function AppSidebar() {
+  const pathname = usePathname();
+  return (
+    <Sidebar variant="floating" collapsible="icon">
+      <SidebarHeader>
+        <div className="flex flex-col gap-2 py-2 text-sidebar-foreground">
+          <div className="flex items-center gap-2">
+            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+              <Monitor className="size-4" />
+            </div>
+            <div className="grid flex-1 text-left text-sm leading-tight">
+              <span className="truncate font-semibold">Pi Overview</span>
+              <span className="truncate text-xs">Raspberry Pi Monitor</span>
+            </div>
+          </div>
+        </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
+        {navigation.map((section) => (
+          <SidebarGroup key={section.title}>
+            <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {section.items.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton 
+                      asChild 
+                      isActive={pathname === item.url}
+                      tooltip={item.title}
+                    >
+                      <a href={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </a>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ))}
+      </SidebarContent>
+      
+      <SidebarFooter>
+        <div className="flex items-center gap-2 p-2">
+          <div className="flex items-center gap-2">
+            <div className="size-2 rounded-full bg-green-500" />
+            <span className="text-sm text-sidebar-foreground">System Online</span>
+          </div>
+        </div>
+      </SidebarFooter>
+      
+      <SidebarRail />
+    </Sidebar>
+  );
+}
+
+function NavbarContent() {
+  const path = usePathname();
+  const [user, setUser] = useState<{
+    name: string;
+    email: string;
+    emailVerification: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    async function fetchUser() {
+      const res = await fetch("/api/auth/user", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    }
+    fetchUser();
+  }, []);
+
+  return (
+    <>
+      <h1 className="text-foreground text-lg font-semibold">
+        {path.slice(1).split("/").map((segment, index) => (
+          <span key={index} className="text-foreground">
+            {segment}
+            {index < path.split("/").length - 2 && " - "}
+          </span>
+        ))}
+      </h1>
+      <div className="flex items-center space-x-4">
+        <UserProfile 
+          name={user?.name || ""} 
+          email={user?.email || ""} 
+          emailVerification={user?.emailVerification || false} 
+        />
+      </div>
+    </>
+  );
+}
+
+export function SidebarLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <AppSidebar />
+      <main className="flex flex-1 flex-col transition-all duration-300 ease-in-out">
+        <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background">
+          <div className="flex items-center gap-2">
+            <SidebarTrigger className="-ml-1" />
+          </div>
+          <div className="flex-1 flex items-center justify-between">
+            <NavbarContent />
+          </div>
+        </div>
+        <div className="flex-1 p-4">
+          {children}
+        </div>
+      </main>
+    </>
+  );
+}
