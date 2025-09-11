@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
 import { Md5 } from 'ts-md5';
 import Avatar from "@/app/ui/Avatar";
+import { Separator } from "@/components/ui/separator";
+import { changeTheme } from "../actions/themeSwitcher";
 
 interface UserProfileProps {
   name?: string;
@@ -29,8 +31,11 @@ export default function UserProfile(props: UserProfileProps) {
   }
 
   function toggleTheme() {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle('dark');
+    const newIsDarkMode = !isDarkMode;
+    setIsDarkMode(newIsDarkMode);
+    document.documentElement.classList.toggle('dark', newIsDarkMode);
+    localStorage.setItem('theme', newIsDarkMode ? 'dark' : 'light');
+    changeTheme(newIsDarkMode ? 'dark' : 'light');
   }
 
   useEffect(() => {
@@ -70,6 +75,12 @@ export default function UserProfile(props: UserProfileProps) {
     }
   }, [accountInfo?.email]);
 
+  useEffect(() => {
+    const localTheme = localStorage.getItem('theme');
+    const isDark = localTheme === 'dark';
+    setIsDarkMode(isDark);
+  }, []);
+
   const checkGravatarExists = async (url: string): Promise<boolean> => {
     try {
       const response = await fetch(url, { method: 'HEAD' });
@@ -103,11 +114,11 @@ export default function UserProfile(props: UserProfileProps) {
           gravatarLoading={gravatarLoading}
         />
         <div className="hidden md:block text-left">
-          <p className="text-sm font-medium text-stone-300">{accountInfo?.name || 'Loading...'}</p>
-          <p className="text-xs text-stone-400">{accountInfo?.email || ''}</p>
+          <p className="text-sm font-medium text-foreground">{accountInfo?.name || 'Loading...'}</p>
+          <p className="text-xs text-muted-foreground">{accountInfo?.email || ''}</p>
         </div>
         <ChevronRight
-          className={`w-4 h-4 text-gray-600 duration-200 ease-in-out transition-transform ${isDropdownOpen ? 'rotate-90' : ''}`}
+          className={`w-4 h-4 text-accent-foreground duration-200 ease-in-out transition-transform ${isDropdownOpen ? 'rotate-90' : ''}`}
         />
       </button>
 
@@ -121,9 +132,9 @@ export default function UserProfile(props: UserProfileProps) {
           />
 
           {/* Dropdown Content */}
-          <div className="absolute right-0 mt-2 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-20">
+          <div className="absolute right-0 mt-2 w-72 bg-transparent rounded-lg shadow-lg z-20">
             {/* User Info Header */}
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-x border-t border-border rounded-t-lg bg-popover">
               <div className="flex items-center space-x-3">
                 <Avatar
                   size="w-12 h-12"
@@ -135,8 +146,8 @@ export default function UserProfile(props: UserProfileProps) {
                   gravatarLoading={gravatarLoading}
                 />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-100 truncate">{accountInfo?.name || 'Loading...'}</p>
-                  <p className="text-sm text-gray-400 truncate">{accountInfo?.email || ''}</p>
+                  <p className="text-sm font-medium text-foreground truncate">{accountInfo?.name || 'Loading...'}</p>
+                  <p className="text-sm text-muted-foreground truncate">{accountInfo?.email || ''}</p>
                   {!accountInfo?.emailVerification && (
                     <div className="flex items-center gap-2">
                       <p className="text-xs text-red-400 mt-1">Email not verified</p>
@@ -146,12 +157,13 @@ export default function UserProfile(props: UserProfileProps) {
                 </div>
               </div>
             </div>
-
+            <Separator orientation="horizontal" className="h-px bg-border" />
             {/* Menu Items */}
-            <div className="py-2">
+            <div className="pt-2 bg-popover border-x border-b border-border rounded-b-lg overflow-hidden">
               {/* Profile */}
               <button
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                className="w-full flex items-center px-4 py-2 text-sm text-foreground
+                 hover:bg-accent "
                 onClick={() => {
                   setIsDropdownOpen(false);
                   router.push('/dashboard/profile');
@@ -163,7 +175,8 @@ export default function UserProfile(props: UserProfileProps) {
 
               {/* Settings */}
               <button
-                className="w-full flex items-center px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                className="w-full flex items-center px-4 py-2 text-sm text-foreground
+                 hover:bg-accent "
                 onClick={() => {
                   setIsDropdownOpen(false);
                   router.push('/dashboard/settings');
@@ -175,24 +188,23 @@ export default function UserProfile(props: UserProfileProps) {
 
               {/* Theme Toggle */}
               <button
-                className="w-full flex items-center justify-between px-4 py-2 text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition-colors"
+                className="w-full flex items-center justify-between px-4 py-2 text-sm text-foreground
+                 hover:bg-accent mb-2"
                 onClick={toggleTheme}
               >
                 <div className="flex items-center">
                   {isDarkMode ? <Sun className="w-4 h-4 mr-3" /> : <Moon className="w-4 h-4 mr-3" />}
                   Theme
                 </div>
-                <span className="text-xs text-gray-500">
-                  {isDarkMode ? 'Light' : 'Dark'}
+                <span className="text-xs text-foreground">
+                  {isDarkMode ? 'Dark' : 'Light'}
                 </span>
               </button>
-
-              {/* Divider */}
-              <div className="border-t border-gray-700 my-2" />
-
+              <Separator orientation="horizontal" className="bg-border" />
               {/* Logout */}
               <button
-                className="w-full flex items-center px-4 py-2 text-sm text-red-400 hover:bg-red-900/20 hover:text-red-300 transition-colors"
+                className="w-full flex items-center px-4 py-3 text-sm text-red-500 
+                hover:bg-red-900/20 hover:text-red-300 "
                 onClick={() => {
                   setIsDropdownOpen(false);
                   handleLogout();
@@ -202,6 +214,7 @@ export default function UserProfile(props: UserProfileProps) {
                 Sign Out
               </button>
             </div>
+
           </div>
         </>
       )}

@@ -119,13 +119,13 @@ export default function DeviceCard({
   };
 
   return (
-    <div className={`bg-gray-900 border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
+    <div className={`bg-sidebar-accent border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-gray-200">{device.name}</h3>
-          <p className="text-sm text-gray-500">{device.type}</p>
+          <h3 className="font-semibold text-foreground">{device.name}</h3>
+          <p className="text-sm text-muted-foreground">{device.type}</p>
           {'source' in device && (
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Source: {device.source}
             </p>
           )}
@@ -137,30 +137,30 @@ export default function DeviceCard({
 
       <div className="space-y-2 text-sm">
         <div>
-          <span className="text-gray-500">Location:</span>
-          <span className="ml-2 text-gray-200">{device.location}</span>
+          <span className="text-foreground">Location:</span>
+          <span className="ml-2 text-muted-foreground">{device.location}</span>
         </div>
 
         <div>
-          <span className="text-gray-500">IP:</span>
-          <span className="ml-2 text-gray-200 font-mono">{device.ipAddress}</span>
+          <span className="text-foreground">IP:</span>
+          <span className="ml-2 text-muted-foreground font-mono">{device.ipAddress}</span>
         </div>
 
         <div>
-          <span className="text-gray-500">MAC:</span>
-          <span className="ml-2 text-gray-200 font-mono">{device.macAddress}</span>
+          <span className="text-foreground">MAC:</span>
+          <span className="ml-2 text-muted-foreground font-mono">{device.macAddress}</span>
         </div>
 
         {device.firmwareVersion && (
           <div>
-            <span className="text-gray-500">OS:</span>
-            <span className="ml-2 text-gray-200">{device.firmwareVersion}</span>
+            <span className="text-foreground">OS:</span>
+            <span className="ml-2 text-muted-foreground">{device.firmwareVersion}</span>
           </div>
         )}
 
         <div>
-          <span className="text-gray-500">Last seen:</span>
-          <span className="ml-2 text-gray-200">{getLastSeenTime(device)}</span>
+          <span className="text-foreground">Last seen:</span>
+          <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
         </div>
 
         {/* Show "Add to Database" button only for cache-only devices */}

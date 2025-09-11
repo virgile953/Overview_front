@@ -1,16 +1,19 @@
-import DashboardLayout from "../ui/Layout/DashboardLayout";
+import { cookies } from "next/headers";
+import { SidebarLayout, SidebarProvider } from "../ui/Sidebar/ShadcnSidebar";
 
-export default function Layout({
+export default async function Layout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Server-side authentication check
- 
-
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
+  
   return (
-    <DashboardLayout>
-      {children}
-    </DashboardLayout>
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <SidebarLayout>
+        {children}
+      </SidebarLayout>
+    </SidebarProvider>
   );
 }

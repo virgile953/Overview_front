@@ -19,14 +19,14 @@ export function UsersComponent({ className }: { className?: string }) {
   }, []);
 
   return (
-    <div className={twMerge("p-4 bg-gray-900 rounded-lg shadow-md", className)}>
+    <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>
       <div className="flex items-center mb-4">
         <SquareActivity className="text-emerald-400 mr-2" />
-        <h2 className="text-lg font-semibold text-white">Users</h2>
+        <h2 className="text-lg font-semibold text-foreground">Users</h2>
       </div>
-      <div className="text-3xl font-bold text-white">{userCount !== null ? userCount : 0}</div>
-      <div className="mt-2 text-sm text-gray-400">Total Users</div>
-      <Link href="/dashboard/users" className="mt-4 inline-flex items-center text-sm text-emerald-400 hover:underline">
+      <div className="text-3xl font-bold text-foreground">{userCount !== null ? userCount : 0}</div>
+      <div className="mt-2 text-sm text-muted-foreground">Total Users</div>
+      <Link href="/dashboard/users" className="mt-4 inline-flex items-center text-sm text-emerald-600 dark:text-emerald-400 hover:underline">
         View Details <SquareArrowOutUpRight className="ml-1" size={14} />
       </Link>
     </div>

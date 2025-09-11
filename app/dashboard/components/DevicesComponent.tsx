@@ -23,13 +23,13 @@ export default function DevicesDashboard({ className }: { className?: string }) 
 
 
   return (
-    <div className={twMerge("p-4 bg-gray-900 rounded-lg shadow-md", className)}>
+    <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>
       <div className="flex items-center mb-4">
         <SquareActivity className="text-emerald-400 mr-2" />
-        <h2 className="text-lg font-semibold text-white">Devices</h2>
+        <h2 className="text-lg font-semibold text-foreground">Devices</h2>
       </div>
-      <div className="text-3xl font-bold text-white">{stats?.total}</div>
-      <div className="mt-2 text-sm text-gray-400 mb-4">Total Devices</div>
+      <div className="text-3xl font-bold text-foreground">{stats?.total}</div>
+      <div className="mt-2 text-sm text-muted-foreground mb-4">Total Devices</div>
 
       {/* Status breakdown */}
       <div className="grid grid-cols-3 gap-2 mb-4">
@@ -37,11 +37,11 @@ export default function DevicesDashboard({ className }: { className?: string }) 
           href="/dashboard/devices?status=online"
           className="relative bg-green-600/20 border border-green-600/30 p-2 rounded flex flex-col items-center hover:bg-green-600/30 transition-colors"
         >
-          <span className="text-lg font-bold text-green-400">
+          <span className="text-lg font-bold text-green-600 dark:text-green-400">
             {stats ? stats.online : 0}
           </span>
-          <span className="text-xs text-green-300">Online</span>
-          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-green-300" size={12} />
+          <span className="text-xs text-green-600 dark:text-green-400">Online</span>
+          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-green-600 dark:text-green-300" size={12} />
 
         </Link>
 
@@ -49,22 +49,22 @@ export default function DevicesDashboard({ className }: { className?: string }) 
           href="/dashboard/devices?status=offline"
           className="relative bg-red-600/20 border border-red-600/30 p-2 rounded flex flex-col items-center hover:bg-red-600/30 transition-colors"
         >
-          <span className="text-lg font-bold text-red-400">
+          <span className="text-lg font-bold text-red-600 dark:text-red-400">
             {stats ? stats.offline : 0}
           </span>
-          <span className="text-xs text-red-300">Offline</span>
-          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-red-300" size={12} />
+          <span className="text-xs text-red-500 dark:text-red-400">Offline</span>
+          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-red-600 dark:text-red-300" size={12} />
         </Link>
 
         <Link
           href="/dashboard/devices?status=error"
           className="relative bg-yellow-600/20 border border-yellow-600/30 p-2 rounded flex flex-col items-center hover:bg-yellow-600/30 transition-colors"
         >
-          <span className="text-lg font-bold text-yellow-400">
+          <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
             {stats ? stats.cacheOnly : 0}
           </span>
-          <span className="text-xs text-yellow-300">Cache Only</span>
-          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-yellow-300" size={12} />
+          <span className="text-xs text-yellow-500 dark:text-yellow-400">Cache Only</span>
+          <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-yellow-600 dark:text-yellow-300" size={12} />
         </Link>
       </div>
 

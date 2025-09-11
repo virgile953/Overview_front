@@ -42,7 +42,7 @@ export default function Devices() {
       <div className="flex items-center justify-center min-h-64">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading devices...</p>
+          <p className="text-foreground">Loading devices...</p>
         </div>
       </div>
     );
@@ -69,9 +69,9 @@ export default function Devices() {
       </div>
 
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-200">Devices</h1>
+        <h1 className="text-2xl font-bold text-foreground">Devices</h1>
         <div className="flex items-center gap-4">
-          <div className="text-sm text-gray-500">
+          <div className="text-sm text-muted-foreground">
             Total: {devices.length} devices
             {stats && (
               <span className="ml-2">
@@ -96,29 +96,29 @@ export default function Devices() {
       ) : (
         <>
           {/* Legend */}
-          <div className="bg-gray-800 border border-border rounded-lg p-4 mb-4">
-            <h3 className="text-sm font-medium text-gray-200 mb-2">Device Status Legend:</h3>
+          <div className="bg-sidebar-accent border border-border rounded-lg p-4 mb-4">
+            <h3 className="text-sm font-medium text-foreground mb-2">Device Status Legend:</h3>
             <div className="flex flex-wrap gap-4 text-xs">
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border border-emerald-600/50 rounded"></div>
-                <span className="text-gray-400">Database + Live (Recently active)</span>
+                <div className="w-3 h-3 border bg-emerald-600/50 border-emerald-600 rounded"></div>
+                <span className="text-muted-foreground">Database + Live (Recently active)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border border-blue-600/50 rounded"></div>
-                <span className="text-gray-400">Database only (Offline)</span>
+                <div className="w-3 h-3 border bg-blue-600/50 border-blue-600 rounded"></div>
+                <span className="text-muted-foreground">Database only (Offline)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border border-yellow-600/50 rounded"></div>
-                <span className="text-gray-400">Cache only (Not in database)</span>
+                <div className="w-3 h-3 border bg-yellow-600/50 border-yellow-600 rounded"></div>
+                <span className="text-muted-foreground">Cache only (Not in database)</span>
               </div>
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {devices.map((device) => (
-              <DeviceCard 
-                key={device.deviceId || device.$id} 
-                device={device} 
+              <DeviceCard
+                key={device.deviceId || device.$id}
+                device={device}
                 onDeviceAdded={() => fetchDevices(true)}
               />
             ))}

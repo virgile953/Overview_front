@@ -32,7 +32,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-// Export SidebarProvider for use in layout
 export { SidebarProvider } from "@/components/ui/sidebar";
 import UserProfile from "../Navbar/UserProfile";
 import { Separator } from "@radix-ui/react-separator";
