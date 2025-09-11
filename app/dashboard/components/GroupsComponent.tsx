@@ -1,5 +1,5 @@
 "use client";
-import { EllipsisVertical, Group, SquareActivity, SquareArrowOutUpRight } from "lucide-react";
+import { EllipsisVertical, Group, SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
