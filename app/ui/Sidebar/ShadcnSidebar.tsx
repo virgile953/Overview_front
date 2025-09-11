@@ -29,11 +29,13 @@ import {
   SidebarMenuItem,
   SidebarRail,
   SidebarTrigger,
+  useSidebar,
 } from "@/components/ui/sidebar";
 
 // Export SidebarProvider for use in layout
 export { SidebarProvider } from "@/components/ui/sidebar";
 import UserProfile from "../Navbar/UserProfile";
+import { Separator } from "@radix-ui/react-separator";
 
 const navigation = [
   {
@@ -110,6 +112,8 @@ const navigation = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const sidebar = useSidebar();
+
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader>
@@ -125,17 +129,17 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      
       <SidebarContent>
         {navigation.map((section) => (
           <SidebarGroup key={section.title}>
+            <Separator orientation="horizontal" className="my-2 h-px bg-border" />
             <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {section.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton 
-                      asChild 
+                    <SidebarMenuButton
+                      asChild
                       isActive={pathname === item.url}
                       tooltip={item.title}
                     >
@@ -151,16 +155,17 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      
+              <Separator orientation="horizontal" className="my-2 h-px bg-border" />
+
       <SidebarFooter>
         <div className="flex items-center gap-2 p-2">
           <div className="flex items-center gap-2">
             <div className="size-2 rounded-full bg-green-500" />
-            <span className="text-sm text-sidebar-foreground">System Online</span>
+            {sidebar.open && <span className="text-sm text-sidebar-foreground">System Online</span>}
           </div>
         </div>
       </SidebarFooter>
-      
+
       <SidebarRail />
     </Sidebar>
   );
@@ -198,10 +203,10 @@ function NavbarContent() {
         ))}
       </h1>
       <div className="flex items-center space-x-4">
-        <UserProfile 
-          name={user?.name || ""} 
-          email={user?.email || ""} 
-          emailVerification={user?.emailVerification || false} 
+        <UserProfile
+          name={user?.name || ""}
+          email={user?.email || ""}
+          emailVerification={user?.emailVerification || false}
         />
       </div>
     </>
@@ -210,21 +215,21 @@ function NavbarContent() {
 
 export function SidebarLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="flex h-screen w-full">
       <AppSidebar />
-      <main className="flex flex-1 flex-col transition-all duration-300 ease-in-out">
-        <div className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background">
+      <div className="flex flex-1 flex-col overflow-hidden">
+        <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
           </div>
           <div className="flex-1 flex items-center justify-between">
             <NavbarContent />
           </div>
-        </div>
-        <div className="flex-1 p-4">
+        </header>
+        <main className="flex-1 overflow-auto p-4">
           {children}
-        </div>
-      </main>
-    </>
+        </main>
+      </div>
+    </div>
   );
 }
