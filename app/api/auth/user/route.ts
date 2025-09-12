@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getLoggedInUser, createSessionClient } from "@/models/server/auth";
 
+
 export async function GET() {
   const user = await getLoggedInUser();
   if (!user) {
@@ -25,7 +26,7 @@ export async function PUT(request: Request) {
 
     const { account } = sessionClient;
     const updatedUser = await account.updatePrefs(prefs);
-    
+
     return NextResponse.json({ user: updatedUser });
   } catch (error) {
     console.error("Error updating preferences:", error);
