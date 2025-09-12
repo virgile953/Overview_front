@@ -1,13 +1,11 @@
-"use client";
 import { User } from "@/models/server/users";
-import { SquarePen } from "lucide-react";
+import EditUserButton from "./EditUserButton";
 
 interface UserCardProps {
   user: User;
-  onEdit: (user: User) => void;
 }
 
-export default function UserCard({ user, onEdit }: UserCardProps) {
+export default function UserCard({ user }: UserCardProps) {
   return (
     <div className="border relative border-gray-300 rounded p-4 h-full w-full">
       <h3 className="text-lg font-semibold">{user.name}</h3>
@@ -46,13 +44,7 @@ export default function UserCard({ user, onEdit }: UserCardProps) {
         </div>
       )}
       
-      <button 
-        onClick={() => onEdit(user)} 
-        aria-label="Edit User"
-        className="absolute bottom-2 right-2"
-      >
-        <SquarePen className="w-5 h-5 place-self-end text-gray-600 mt-2 cursor-pointer hover:text-gray-800" />
-      </button> 
+      <EditUserButton user={user} />
     </div>
   );
 }
