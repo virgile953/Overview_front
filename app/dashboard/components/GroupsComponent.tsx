@@ -1,24 +1,11 @@
-"use client";
+import { getGroupsStats } from "@/models/server/dashboard";
 import { EllipsisVertical, Group, SquareArrowOutUpRight } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-// export default function DevicesDashboard({ className }: { className?: string }) {
 
-export function GroupsComponent({ className }: { className?: string }) {
-
-  const [groupCount, setGroupCount] = useState<number | null>(null);
-  useEffect(() => {
-    async function fetchStatus() {
-      const res = await fetch('/api/dashboard/groups');
-      if (res.ok) {
-        const data = await res.json();
-        setGroupCount(data);
-      }
-    }
-    fetchStatus();
-  }, []);
+export async function GroupsComponent({ className }: { className?: string }) {
+  const groupCount = await getGroupsStats();
 
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>

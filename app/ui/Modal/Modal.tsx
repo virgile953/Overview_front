@@ -1,7 +1,6 @@
 import { X } from "lucide-react";
 import { useEffect } from "react";
 
-
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -28,16 +27,16 @@ export default function Modal({ isOpen, onClose, title, children }: ModalProps) 
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-background/30 flex items-center justify-center z-50"
       onClick={onClose}
     >
       <div
-        className="relative bg-black border border-border rounded-lg shadow-lg p-6 w-full
+        className="relative bg-background border border-border rounded-lg shadow-lg p-6 w-full
         max-w-lg overflow-auto scrollbar max-h-[80vh]"
         onClick={e => e.stopPropagation()}
       >
         <button
-          className="absolute top-2 right-4 text-gray-400 hover:text-gray-200"
+          className="absolute top-2 right-4 text-foreground hover:text-muted-foreground"
           onClick={onClose}
         >
           <X />

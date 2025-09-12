@@ -2,8 +2,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { User, Settings, Moon, Sun, LogOut, ChevronRight } from "lucide-react";
-import { Md5 } from 'ts-md5';
-import Avatar from "@/app/ui/Avatar";
+import AvatarClient from "@/app/ui/AvatarClient";
 import { Separator } from "@/components/ui/separator";
 import { changeTheme } from "../actions/themeSwitcher";
 import Link from "next/link";
@@ -20,11 +19,6 @@ export default function UserProfile(props: UserProfileProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
-
-  // Gravatar state managed here
-  const [gravatarUrl, setGravatarUrl] = useState<string | null>(null);
-  const [gravatarExists, setGravatarExists] = useState<boolean>(false);
-  const [gravatarLoading, setGravatarLoading] = useState<boolean>(false);
 
   async function handleLogout() {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -49,35 +43,10 @@ export default function UserProfile(props: UserProfileProps) {
   }, [props.name, props.email, props.emailVerification]);
 
   useEffect(() => {
-    if (accountInfo?.email) {
-      setGravatarLoading(true);
-      const emailHash = Md5.hashStr(accountInfo.email.trim().toLowerCase());
-      const gravatarUrl = `https://www.gravatar.com/avatar/${emailHash}?d=404&s=200`;
-
-      setGravatarUrl(gravatarUrl);
-
-      // Check if Gravatar exists
-      checkGravatarExists(gravatarUrl).then(exists => {
-        setGravatarExists(exists);
-        setGravatarLoading(false);
-      });
-    }
-  }, [accountInfo?.email]);
-
-  useEffect(() => {
     const localTheme = localStorage.getItem('theme');
     const isDark = localTheme === 'dark';
     setIsDarkMode(isDark);
   }, []);
-
-  const checkGravatarExists = async (url: string): Promise<boolean> => {
-    try {
-      const response = await fetch(url, { method: 'HEAD' });
-      return response.ok;
-    } catch {
-      return false;
-    }
-  };
 
   //mail verification
   async function verifyEmail() {
@@ -98,12 +67,9 @@ export default function UserProfile(props: UserProfileProps) {
           (isDropdownOpen ? " bg-emerald-400 dark:bg-emerald-700" : "")
         }
       >
-        <Avatar
+        <AvatarClient
           email={accountInfo?.email}
           name={accountInfo?.name}
-          gravatarUrl={gravatarUrl}
-          gravatarExists={gravatarExists}
-          gravatarLoading={gravatarLoading}
         />
         <div className="hidden md:block text-left">
           <p className="text-sm font-medium text-foreground">{accountInfo?.name || 'Loading...'}</p>
@@ -128,14 +94,11 @@ export default function UserProfile(props: UserProfileProps) {
             {/* User Info Header */}
             <div className="p-4 border-x border-t border-border rounded-t-lg bg-popover">
               <div className="flex items-center space-x-3">
-                <Avatar
+                <AvatarClient
                   size="w-12 h-12"
                   textSize="text-lg"
                   email={accountInfo?.email}
                   name={accountInfo?.name}
-                  gravatarUrl={gravatarUrl}
-                  gravatarExists={gravatarExists}
-                  gravatarLoading={gravatarLoading}
                 />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-foreground truncate">{accountInfo?.name || 'Loading...'}</p>

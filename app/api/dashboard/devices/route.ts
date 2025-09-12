@@ -5,17 +5,10 @@ import { getDevices } from "@/models/server/devices";
 
 export async function GET() {
   try {
-    // Get devices from cache
     const allCacheDevices = DeviceCacheManager.getAllDevices();
-
-    // Get devices from database
     const dbDevices = await getDevices();
-
-    // Find DB devices that are not in cache (by MAC address)
     const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
     const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
-
-    // Get cache stats and add DB-only count
     const stats = {
       ...DeviceCacheManager.getStats(),
       dbOnly: dbOnlyDevices.length

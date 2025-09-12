@@ -1,22 +1,10 @@
-"use client";
+import { getUsersStats } from "@/models/server/dashboard";
 import { EllipsisVertical, SquareArrowOutUpRight, Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-export function UsersComponent({ className }: { className?: string }) {
-
-  const [userCount, setUserCount] = useState<number | null>(null);
-  useEffect(() => {
-    async function fetchStatus() {
-      const res = await fetch('/api/dashboard/users');
-      if (res.ok) {
-        const data = await res.json();
-        setUserCount(data);
-      }
-    }
-    fetchStatus();
-  }, []);
+export async function UsersComponent({ className }: { className?: string }) {
+  const userCount = await getUsersStats();
 
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>

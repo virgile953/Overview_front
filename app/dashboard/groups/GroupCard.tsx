@@ -1,15 +1,13 @@
 import { Device } from "@/models/server/devices";
 import { Group } from "@/models/server/groups";
 import { User } from "@/models/server/users";
-import { SquarePen } from "lucide-react";
-
+import EditGroupButton from "./EditGroupButton";
 
 interface GroupCardProps {
   group: Group;
-  onEdit: (group: Group) => void;
 }
 
-export default function GroupCard({ group, onEdit }: GroupCardProps) {
+export default function GroupCard({ group }: GroupCardProps) {
   return (
     <div className="border relative border-gray-300 rounded p-4 h-full w-full">
       <h3 className="text-lg font-semibold">{group.name}</h3>
@@ -31,10 +29,7 @@ export default function GroupCard({ group, onEdit }: GroupCardProps) {
           ))}
         </ul>
       </div>
-      <button onClick={() => onEdit(group)} aria-label="Edit Group"
-        className="absolute bottom-2 right-2">
-        <SquarePen className="w-5 h-5 place-self-end text-gray-600 mt-2 cursor-pointer hover:text-gray-800" />
-      </button> 
+      <EditGroupButton group={group} />
     </div>
   );
 }

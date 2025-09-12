@@ -1,26 +1,21 @@
-"use client";
-import { useEffect, useState } from 'react';
 import { twMerge } from 'tailwind-merge'
 import { EllipsisVertical, SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
-import { CacheStats } from '@/lib/deviceCacheManager';
+import { DeviceCacheManager } from '@/lib/deviceCacheManager';
+import { getDevices } from '@/models/server/devices';
 
-export default function DevicesDashboard({ className }: { className?: string }) {
-  const [stats, setStats] = useState<CacheStats | null>(null);
+export default async function DevicesDashboard({ className }: { className?: string }) {
 
-  useEffect(() => {
-    async function fetchStatus() {
-      const res = await fetch('/api/dashboard/devices');
-      if (res.ok) {
-        const data = await res.json();
-        setStats(data);
-        console.log('Fetched device stats:', data);
-      }
-    }
-    fetchStatus();
-  }, []);
-
-
+    const allCacheDevices = DeviceCacheManager.getAllDevices();
+    const dbDevices = await getDevices();
+    const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
+    const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
+    const stats = {
+      ...DeviceCacheManager.getStats(),
+      dbOnly: dbOnlyDevices.length
+    };
+    stats.total += dbOnlyDevices.length;
+    stats.offline += dbOnlyDevices.length;
 
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>
