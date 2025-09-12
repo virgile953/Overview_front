@@ -33,7 +33,7 @@ interface User {
 export default function ProfilePage() {
   const [data, setData] = useState<User | null>(null);
   const [isEditingPrefs, setIsEditingPrefs] = useState(false);
-  const [editedPrefs, setEditedPrefs] = useState<Record<string, any>>({});
+  const [editedPrefs, setEditedPrefs] = useState<Record<string, string>>({});
   const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
