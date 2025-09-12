@@ -6,6 +6,7 @@ import { Md5 } from 'ts-md5';
 import Avatar from "@/app/ui/Avatar";
 import { Separator } from "@/components/ui/separator";
 import { changeTheme } from "../actions/themeSwitcher";
+import Link from "next/link";
 
 interface UserProfileProps {
   name: string;
@@ -152,17 +153,17 @@ export default function UserProfile(props: UserProfileProps) {
             {/* Menu Items */}
             <div className="pt-2 bg-popover border-x border-b border-border rounded-b-lg overflow-hidden">
               {/* Profile */}
-              <button
+              <Link
+                href="/dashboard/profile"
                 className="w-full flex items-center px-4 py-2 text-sm text-foreground
                  hover:bg-accent "
                 onClick={() => {
                   setIsDropdownOpen(false);
-                  router.push('/dashboard/profile');
                 }}
               >
                 <User className="w-4 h-4 mr-3" />
                 View Profile
-              </button>
+              </Link>
 
               {/* Settings */}
               <button

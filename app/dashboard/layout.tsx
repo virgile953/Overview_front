@@ -1,9 +1,8 @@
 "use client";
 
 import { SidebarLayout, SidebarProvider } from "../ui/Sidebar/ShadcnSidebar";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
-// Create a user context for the dashboard
 interface User {
   name: string;
   email: string;
@@ -12,12 +11,11 @@ interface User {
 
 interface UserContextType {
   user: User | null;
-  loading: boolean;
 }
 
 import { createContext, useContext } from "react";
 
-const UserContext = createContext<UserContextType>({ user: null, loading: true });
+const UserContext = createContext<UserContextType>({ user: null });
 
 export const useUser = () => useContext(UserContext);
 
@@ -27,32 +25,24 @@ export default function Layout({
   children: React.ReactNode;
 }>) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchUser() {
-      try {
-        const res = await fetch("/api/auth/user", { method: "POST" });
-        if (res.ok) {
-          const data = await res.json();
-          setUser(data.user);
-        } else {
-          setUser(null);
-        }
-      } catch (error) {
-        console.error("Failed to fetch user:", error);
+      const user = await fetch("/api/auth/user").then(res => res.json());
+      if (!user || user.status === 401) {
         setUser(null);
-      } finally {
-        setLoading(false);
+        return;
       }
+      console.log("Fetched user:", user);
+      setUser({ name: user.user.name, email: user.user.email, emailVerification: user.user.emailVerification });
     }
     fetchUser();
   }, []);
 
   return (
-    <UserContext.Provider value={{ user, loading }}>
+    <UserContext.Provider value={{ user }}>
       <SidebarProvider>
-        <SidebarLayout user={user} loading={loading}>
+        <SidebarLayout user={user}>
           {children}
         </SidebarLayout>
       </SidebarProvider>

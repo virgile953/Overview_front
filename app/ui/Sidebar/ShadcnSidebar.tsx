@@ -195,11 +195,9 @@ function NavbarContent({ user }: { user?: { name: string; email: string; emailVe
 export function SidebarLayout({
   children,
   user,
-  loading
 }: {
   children: React.ReactNode;
   user?: { name: string; email: string; emailVerification: boolean; } | null;
-  loading: boolean;
 }) {
   return (
     <div className="flex h-screen w-full">
