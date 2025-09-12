@@ -1,13 +1,11 @@
 import { getLoggedInUser } from "@/models/server/auth";
 import { redirect } from "next/navigation";
-import {
-  PersonalInformation,
-  SecurityVerification,
-  AccountTimeline,
-  UserPreferences,
-  AuthenticationTargets,
-  AccountLabels
-} from "./components";
+import PersonalInformation from "./components/PersonalInformation";
+import SecurityVerification from "./components/SecurityVerification";
+import AccountTimeline from "./components/AccountTimeline";
+import UserPreferences from "./components/UserPreferences";
+import AuthenticationTargets from "./components/AuthenticationTargets";
+import AccountLabels from "./components/AccountLabels";
 import { User } from "./types";
 
 export default async function ProfilePage() {
