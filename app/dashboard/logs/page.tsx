@@ -1,24 +1,48 @@
 "use client";
 
-export default function Logs() {
+import { useEffect, useState } from "react";
+import { io } from "socket.io-client";  
+export const socket = io("http://localhost:3000");
+
+
+export default function Home() {
+
+
+  const [isConnected, setIsConnected] = useState(false);
+  const [transport, setTransport] = useState("N/A");
+
+  useEffect(() => {
+    if (socket.connected) {
+      onConnect();
+    }
+
+    function onConnect() {
+      setIsConnected(true);
+      setTransport(socket.io.engine.transport.name);
+
+      socket.io.engine.on("upgrade", (transport) => {
+        setTransport(transport.name);
+      });
+    }
+
+    function onDisconnect() {
+      setIsConnected(false);
+      setTransport("N/A");
+    }
+
+    socket.on("connect", onConnect);
+    socket.on("disconnect", onDisconnect);
+
+    return () => {
+      socket.off("connect", onConnect);
+      socket.off("disconnect", onDisconnect);
+    };
+  }, []);
+
   return (
-    <div className="flex flex-col">
-      Logs Page - Protected Content
-      <button className="border p-2 rounded-lg m-2" onClick={() => {
-        fetch('/api/send-mail', {
-          method: 'POST',
-          headers: {  'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: 'virgile.barbera@gmail.com',
-            subject: 'Test Email',
-          }),
-        })
-          .then(res => res.json())
-          .then(data => console.log(data))
-          .catch(err => console.error(err));
-      }}>
-        Test MJ API
-      </button>
+    <div>
+      <p>Status: {isConnected ? "connected" : "disconnected"}</p>
+      <p>Transport: {transport}</p>
     </div>
   );
 }
