@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ userId: string }> }
+  { }: { params: Promise<{ userId: string }> }
 ) {
-  const { userId } = await params;
-  console.log(userId);
-
   try {
     const user = await request.json();
     if (!user.$id || typeof user.$id !== 'string') {

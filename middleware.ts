@@ -15,17 +15,14 @@ export async function middleware(request: NextRequest) {
 
   const clientDevice = cookieStore.get('client-device');
   if (!clientDevice) {
-    console.log("Client-side mobile navigation detected");
     await setClientDeviceCookie(request);
   }
 
   if (user && (url.pathname === '/login' || url.pathname === '/' || url.pathname === '/register')) {
-    console.log("User logged in, redirecting to dashboard");
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
   if (!user && (url.pathname !== '/login' && url.pathname !== '/register' && !url.pathname.startsWith('/api/auth'))) {
-    console.log("No user, redirecting to login", url.pathname);
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }

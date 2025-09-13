@@ -5,8 +5,6 @@ import connect from 'node-mailjet'
 export async function POST(request: Request) {
   const { email, subject } = await request.json();
 
-  console.log(`Sending email to: ${email}`);
-  console.log(`Subject: ${subject}`);
   const res = await sendMail(email, subject, null);
   return NextResponse.json(res.body);
 }

@@ -12,7 +12,6 @@ export default async function createDeviceCollection() {
     Permission.update("users"),
     Permission.delete("users"),
   ]);
-  console.log(`Collection '${deviceCollection}' created successfully.`);
 
   await Promise.all([
     databases.createStringAttribute(db, deviceCollection, 'name', 255, true),
@@ -26,8 +25,6 @@ export default async function createDeviceCollection() {
     databases.createStringAttribute(db, deviceCollection, 'lastActive', 255, true),
     databases.createStringAttribute(db, deviceCollection, 'ownerId', 255, true),
   ]);
-  console.log(`Attributes for collection '${deviceCollection}' created successfully.`);
-
 }
 
 

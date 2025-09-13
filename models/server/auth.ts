@@ -39,8 +39,7 @@ export async function getLoggedInUser() {
     }
     const { account } = sessionClient;
     return await account.get();
-  } catch (error) {
-    console.log(error);
+  } catch {
     return null;
   }
 }
@@ -53,11 +52,9 @@ export async function verifyEmail() {
     }
     const { account } = sessionClient;
     const promise = await account.createVerification(env.appwrite.emailUrl);
-    console.log("verification promise created");
     return { status: "ok", promise };
   } catch (error) {
-    console.log(error);
-    return { status: "error" };
+    return { status: "error", error: error as Error };
   }
 
 }
@@ -67,7 +64,6 @@ export async function createAccount(email: string, password: string, name: strin
     const { account } = await login();
     return await account.create("unique()", email, password, name);
   } catch (error) {
-    console.log(error);
     throw error;
   }
 }

@@ -3,11 +3,8 @@ import { NextResponse } from "next/server";
 
 export async function PUT(
   request: Request,
-  { params }: { params: Promise<{ groupId: string }> }
+  { }: { params: Promise<{ groupId: string }> }
 ) {
-
-  const { groupId } = await params;
-  console.log(groupId);
 
   try {
     const { $id, name, localisation, description, users, devices } = await request.json();

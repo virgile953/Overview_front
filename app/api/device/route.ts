@@ -1,5 +1,6 @@
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 import { Device, getDevices, updateDevice } from "@/models/server/devices";
+import { emitDeviceUpdate } from "@/lib/socketUtils";
 
 export interface ApiDevice extends Device {
   deviceId: string;
@@ -26,29 +27,119 @@ export interface DeviceResponse {
 
 // Cleanup interval to mark devices as offline after inactivity
 const OFFLINE_THRESHOLD = 1 * 60 * 1000; // 1 minute
-setInterval(() => {
+setInterval(async () => {
   const now = new Date();
   const devices = DeviceCacheManager.getAllDevices();
+  let hasChanges = false;
+  
   for (const [macAddress, data] of devices.entries()) {
-    if (now.getTime() - data.lastSeen.getTime() > OFFLINE_THRESHOLD) {
+    if (now.getTime() - data.lastSeen.getTime() > OFFLINE_THRESHOLD && data.status === 'online') {
       DeviceCacheManager.markOffline(macAddress);
+      hasChanges = true;
+    }
+  }
+  
+  // Emit update if any devices were marked offline
+  if (hasChanges) {
+    try {
+      const deviceData = await getCurrentDeviceData();
+      emitDeviceUpdate('devicesUpdated', deviceData);
+    } catch (error) {
+      console.warn('Failed to emit device offline update:', error);
     }
   }
 }, 60 * 1000); // Check every minute
 
 // Cleanup interval to remove devices after prolonged inactivity
 const REMOVE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
-setInterval(() => {
+setInterval(async () => {
   const now = new Date();
   const devices = DeviceCacheManager.getAllDevices();
+  let hasChanges = false;
+  
   for (const [macAddress, data] of devices.entries()) {
     if (now.getTime() - data.lastSeen.getTime() > REMOVE_THRESHOLD) {
       DeviceCacheManager.removeDevice(macAddress);
+      hasChanges = true;
+    }
+  }
+  
+  // Emit update if any devices were removed
+  if (hasChanges) {
+    try {
+      const deviceData = await getCurrentDeviceData();
+      emitDeviceUpdate('devicesUpdated', deviceData);
+    } catch (error) {
+      console.warn('Failed to emit device removal update:', error);
     }
   }
 }, 60 * 1000); // Check every minute
 
 
+async function getCurrentDeviceData(): Promise<DeviceResponse> {
+  try {
+    const dbDevices = await getDevices();
+    const allDevices = new Map<string, ApiDevice>();
+
+    // Add database devices
+    dbDevices.forEach(device => {
+      allDevices.set(device.macAddress, {
+        deviceId: device.macAddress,
+        ...device,
+        lastSeen: new Date(device.lastActive),
+        connectionStatus: 'offline',
+        source: 'database'
+      });
+    });
+
+    // Add/update with cached devices
+    const cachedDevices = DeviceCacheManager.getAllDevices();
+    cachedDevices.forEach((data, macAddress) => {
+      const existingDevice = allDevices.get(macAddress);
+      allDevices.set(macAddress, {
+        deviceId: macAddress,
+        $id: data.dbId || existingDevice?.$id || "",
+        ...data.device,
+        lastSeen: data.lastSeen,
+        connectionStatus: data.status,
+        source: data.dbId ? 'database+cache' : 'cache-only',
+        dbId: data.dbId
+      });
+    });
+
+    const devices = Array.from(allDevices.values());
+    const stats = DeviceCacheManager.getStats();
+
+    return {
+      devices,
+      totalDevices: devices.length,
+      cacheCount: stats.total,
+      dbCount: dbDevices.length,
+      stats
+    };
+  } catch {
+    // Fallback to cache-only
+    const cachedDevices = DeviceCacheManager.getAllDevices();
+    const devices = Array.from(cachedDevices.entries()).map(([id, data]) => ({
+      deviceId: id,
+      $id: data.dbId || "",
+      ...data.device,
+      lastSeen: data.lastSeen,
+      connectionStatus: data.status,
+      source: 'cache-only' as const,
+      dbId: data.dbId
+    }));
+
+    const stats = DeviceCacheManager.getStats();
+    return {
+      devices,
+      totalDevices: devices.length,
+      cacheCount: stats.total,
+      dbCount: 0,
+      stats
+    };
+  }
+}
 
 export async function POST(request: Request) {
   const requestData = await request.json();
@@ -106,6 +197,14 @@ export async function POST(request: Request) {
 
     const stats = DeviceCacheManager.getStats();
 
+    // Emit Socket.IO update with current device data
+    try {
+      const deviceData = await getCurrentDeviceData();
+      emitDeviceUpdate('devicesUpdated', deviceData);
+    } catch (socketError) {
+      console.warn('Failed to emit device update via Socket.IO:', socketError);
+    }
+
     return new Response(JSON.stringify({
       success: true,
       deviceId,
@@ -139,6 +238,14 @@ export async function POST(request: Request) {
     });
 
     const stats = DeviceCacheManager.getStats();
+
+    // Emit Socket.IO update even in error case
+    try {
+      const deviceData = await getCurrentDeviceData();
+      emitDeviceUpdate('devicesUpdated', deviceData);
+    } catch (socketError) {
+      console.warn('Failed to emit device update via Socket.IO:', socketError);
+    }
 
     return new Response(JSON.stringify({
       success: true,

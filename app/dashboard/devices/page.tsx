@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { io } from "socket.io-client";
 import DeviceCard from "./DeviceCard";
 import { ApiDevice, DeviceResponse } from "@/app/api/device/route";
 
@@ -8,6 +9,7 @@ export default function Devices() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isSocketConnected, setIsSocketConnected] = useState(false);
 
   const fetchDevices = async (isRefresh = false) => {
     try {
@@ -32,9 +34,26 @@ export default function Devices() {
   };
 
   useEffect(() => {
-    const intervalId = setInterval(() => fetchDevices(true), 5 * 1000); // Refresh every 5 seconds
-    fetchDevices(false); // Initial load
-    return () => clearInterval(intervalId);
+    fetchDevices(false);
+
+    const newSocket = io("http://localhost:3000");
+
+    newSocket.on('devicesUpdated', (data: DeviceResponse) => {
+      setDeviceData(data);
+      setError(null);
+    });
+
+    newSocket.on('connect', () => {
+      setIsSocketConnected(true);
+    });
+    newSocket.on('disconnect', () => {
+      setIsSocketConnected(false);
+    });
+
+    // Cleanup on unmount
+    return () => {
+      newSocket.disconnect();
+    };
   }, []);
 
   if (loading) {
@@ -57,7 +76,6 @@ export default function Devices() {
     );
   }
 
-  // Handle the response structure correctly
   const devices: ApiDevice[] = deviceData?.devices || [];
   const stats = deviceData?.stats;
 
@@ -71,6 +89,12 @@ export default function Devices() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-foreground">Devices</h1>
         <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className={`w-2 h-2 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+            <span className="text-xs text-muted-foreground">
+              {isSocketConnected ? 'Real-time updates' : 'Disconnected'}
+            </span>
+          </div>
           <div className="text-sm text-muted-foreground">
             Total: {devices.length} devices
             {stats && (

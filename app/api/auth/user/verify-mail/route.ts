@@ -6,10 +6,7 @@ import { NextResponse } from "next/server";
 
 export async function POST() {
   try {
-    console.log("verify-mail called");
-    const coucou = await verifyEmail();
-    console.log(coucou);
-    //
+    await verifyEmail();
     const user = await account.get();
     return NextResponse.json({ user }, { status: 200 });
   } catch (error) {

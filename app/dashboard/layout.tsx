@@ -33,7 +33,6 @@ export default function Layout({
         setUser(null);
         return;
       }
-      console.log("Fetched user:", user);
       setUser({ name: user.user.name, email: user.user.email, emailVerification: user.user.emailVerification });
     }
     fetchUser();

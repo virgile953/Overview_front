@@ -55,7 +55,6 @@ export default function UserProfile(props: UserProfileProps) {
     if (res.ok) {
       setVerifyEmailSent(true);
     }
-    console.log(res);
   }
 
   return (

@@ -4,7 +4,8 @@ import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
 const hostname = "localhost";
-const port = process.env.PORT || 3000;
+const port = 3000;
+
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
 const handler = app.getRequestHandler();
@@ -14,19 +15,17 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: dev ? "http://localhost:3000" : false,
+      origin: dev ? "http://localhost:3000" : "http://overview.management",
       methods: ["GET", "POST"]
     }
   });
 
+  // Make io globally accessible
+  global.io = io;
+
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
-    
     socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
     });
-    
-    // Add your custom socket events here
   });
 
   httpServer
