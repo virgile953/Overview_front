@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { getSocketUrl } from "@/lib/socketConfig";
 import DeviceCard from "./DeviceCard";
 import { ApiDevice, DeviceResponse } from "@/app/api/device/route";
 
@@ -36,7 +37,8 @@ export default function Devices() {
   useEffect(() => {
     fetchDevices(false);
 
-    const newSocket = io("http://localhost:3000");
+    // Use the utility function for consistent Socket.IO URL
+    const newSocket = io(getSocketUrl());
 
     newSocket.on('devicesUpdated', (data: DeviceResponse) => {
       setDeviceData(data);

@@ -3,8 +3,13 @@ import next from "next";
 import { Server } from "socket.io";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
-const port = 3000;
+const hostname = dev ? "localhost" : "0.0.0.0"; // Listen on all interfaces in production
+const port = process.env.PORT || 3000;
+
+// CORS origins for development and production
+const allowedOrigins = dev 
+  ? ["http://localhost:3000"]
+  : ["https://overview.management"];
 
 // when using middleware `hostname` and `port` must be provided below
 const app = next({ dev, hostname, port });
@@ -15,8 +20,9 @@ app.prepare().then(() => {
 
   const io = new Server(httpServer, {
     cors: {
-      origin: dev ? "http://localhost:3000" : "http://overview.management",
-      methods: ["GET", "POST"]
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
+      credentials: true
     }
   });
 

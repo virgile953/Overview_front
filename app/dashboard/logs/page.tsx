@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { io } from "socket.io-client";  
-export const socket = io("http://localhost:3000");
+import { io } from "socket.io-client";
+import { getSocketUrl } from "@/lib/socketConfig";
 
+export const socket = io(getSocketUrl());
 
 export default function Home() {
-
-
   const [isConnected, setIsConnected] = useState(false);
   const [transport, setTransport] = useState("N/A");
 
