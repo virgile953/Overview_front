@@ -48,10 +48,10 @@ export default function Devices() {
 
     newSocket.on('deviceUpdated', (data: singleDeviceResponse) => {
       console.log('Received single device update:', data);
-      
+
       // Add device to recently updated set for visual feedback
       setRecentlyUpdatedDevices(prev => new Set([...prev, data.deviceId]));
-      
+
       // Remove from recently updated after 3 seconds
       setTimeout(() => {
         setRecentlyUpdatedDevices(prev => {
@@ -60,16 +60,16 @@ export default function Devices() {
           return newSet;
         });
       }, 150);
-      
+
       // Update the specific device in the existing device list
       setDeviceData(prevData => {
         if (!prevData) return prevData;
-        
+
         const updatedDevices = [...prevData.devices];
         const deviceIndex = updatedDevices.findIndex(
           device => device.deviceId === data.deviceId || device.macAddress === data.macAddress
         );
-        
+
         if (deviceIndex !== -1) {
           // Update existing device
           updatedDevices[deviceIndex] = {
@@ -101,12 +101,12 @@ export default function Devices() {
           };
           updatedDevices.push(newDevice);
         }
-        
+
         // Update stats - recalculate online/offline counts
         const onlineCount = updatedDevices.filter(d => d.connectionStatus === 'online').length;
         const cacheOnlyCount = updatedDevices.filter(d => d.source === 'cache-only').length;
         const linkedToDbCount = updatedDevices.filter(d => d.dbId).length;
-        
+
         return {
           ...prevData,
           devices: updatedDevices,
@@ -121,7 +121,7 @@ export default function Devices() {
           }
         };
       });
-      
+
       setError(null);
     });
 
@@ -163,25 +163,10 @@ export default function Devices() {
 
   return (
     <div className="space-y-6">
-      {/* Loading Bar */}
-      <div className={`h-1 bg-gray-200 rounded-full overflow-hidden transition-opacity duration-300 ${refreshing ? 'opacity-100' : 'opacity-0'}`}>
-        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 rounded-full animate-loading-bar"></div>
-      </div>
-
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-foreground">Devices</h1>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
-            <span className="text-xs text-muted-foreground">
-              {isSocketConnected ? 'Real-time updates' : 'Disconnected'}
-            </span>
-            {recentlyUpdatedDevices.size > 0 && (
-              <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">
-                {recentlyUpdatedDevices.size} updating
-              </span>
-            )}
-          </div>
+
           <div className="text-sm text-muted-foreground">
             Total: {devices.length} devices
             {stats && (
@@ -190,13 +175,21 @@ export default function Devices() {
               </span>
             )}
           </div>
-          <button
-            onClick={() => fetchDevices(true)}
-            disabled={refreshing}
-            className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            {refreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
+          <div className="flex flex-col  sm:items-center ">
+            <button
+              onClick={() => fetchDevices(true)}
+              disabled={refreshing}
+              className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${isSocketConnected ? 'bg-green-500' : 'bg-red-500'}`}></div>
+              <span className="text-xs text-muted-foreground">
+                {isSocketConnected ? 'Real-time' : 'Disconnected'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -229,11 +222,10 @@ export default function Devices() {
             {devices.map((device) => (
               <div
                 key={device.deviceId || device.$id}
-                className={`transition-all duration-100 ${
-                  recentlyUpdatedDevices.has(device.deviceId) 
-                    ? 'ring-2 ring-emerald-400 rounded-lg ring-opacity-75 shadow-lg' 
-                    : ''
-                }`}
+                className={`transition-all duration-100 ${recentlyUpdatedDevices.has(device.deviceId)
+                  ? 'ring-2 ring-emerald-400 rounded-lg ring-opacity-75 shadow-lg'
+                  : ''
+                  }`}
               >
                 <DeviceCard
                   device={device}
