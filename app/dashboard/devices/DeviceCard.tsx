@@ -1,4 +1,5 @@
 import { ApiDevice } from "@/app/api/device/route";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Device } from "@/models/server/devices";
 import { useState } from "react";
 
@@ -7,8 +8,8 @@ export default function DeviceCard({
   device,
   onDeviceAdded
 }: {
-  device: ApiDevice | Device;
-  onDeviceAdded?: () => void;
+  device: ApiDevice;
+  onDeviceAdded: () => void;
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [addMessage, setAddMessage] = useState('');
@@ -64,7 +65,6 @@ export default function DeviceCard({
 
   async function addDeviceToDb() {
     if (isAdding) return;
-
     setIsAdding(true);
     setAddMessage('');
 
@@ -76,14 +76,12 @@ export default function DeviceCard({
         },
         body: JSON.stringify(device),
       });
-
       const result = await response.json();
-
       if (response.ok && result.success) {
         setAddStatus('success');
         setAddMessage('✅ Device added to database!');
         // Call the callback to refresh the devices list
-        onDeviceAdded?.();
+        onDeviceAdded();
       } else {
         setAddStatus('error');
         setAddMessage(`❌ Failed: ${result.error || 'Unknown error'}`);
@@ -122,7 +120,26 @@ export default function DeviceCard({
     <div className={`bg-sidebar-accent border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-foreground">{device.name}</h3>
+          <h3 className="font-semibold text-foreground flex flex-row">{device.name}
+             {
+          !isDeviceInDatabase(device) && (
+            <div className="ml-4">
+              <button
+                className="w-full px-2 py-1 text-xs bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                onClick={addDeviceToDb}
+                disabled={isAdding}
+              >
+                {isAdding ? 'Adding...' : 'Add to Database'}
+              </button>
+              {addMessage && (
+                <p className={`text-xs mt-2 ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                  {addMessage}
+                </p>
+              )}
+            </div>
+          )
+        }
+          </h3>
           <p className="text-sm text-muted-foreground">{device.type}</p>
           {'source' in device && (
             <p className="text-xs text-muted-foreground mt-1">
@@ -160,27 +177,19 @@ export default function DeviceCard({
 
         <div>
           <span className="text-foreground">Last seen:</span>
-          <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
+          <Tooltip >
+            <TooltipTrigger>
+              <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
+            </TooltipTrigger>
+            <TooltipContent className="text-sm">
+              <span>{new Date(device.lastActive).toLocaleTimeString('fr-FR')}</span>
+            </TooltipContent>
+          </Tooltip>
         </div>
 
         {/* Show "Add to Database" button only for cache-only devices */}
-        {!isDeviceInDatabase(device) && (
-          <div className="pt-2 border-t border-gray-700">
-            <button
-              className="w-full px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              onClick={addDeviceToDb}
-              disabled={isAdding}
-            >
-              {isAdding ? 'Adding...' : 'Add to Database'}
-            </button>
-            {addMessage && (
-              <p className={`text-xs mt-2 ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                {addMessage}
-              </p>
-            )}
-          </div>
-        )}
-      </div>
-    </div>
+       
+      </div >
+    </div >
   );
 }

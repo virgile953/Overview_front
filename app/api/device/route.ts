@@ -1,6 +1,6 @@
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 import { Device, getDevices, updateDevice } from "@/models/server/devices";
-import { emitDeviceUpdate } from "@/lib/socketUtils";
+import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
 
 export interface ApiDevice extends Device {
   deviceId: string;
@@ -24,6 +24,22 @@ export interface DeviceResponse {
   };
 }
 
+export interface singleDeviceResponse {
+  deviceId: string;
+  name: string;
+  type: string;
+  status: string;
+  location?: string;
+  ipAddress?: string;
+  macAddress: string;
+  serialNumber?: string;
+  firmwareVersion?: string;
+  lastActive: string;
+  ownerId: string;
+  lastSeen: Date | string;
+  connectionStatus: string;
+  dbId?: string;
+} 
 
 // Cleanup interval to mark devices as offline after inactivity
 const OFFLINE_THRESHOLD = 1 * 60 * 1000; // 1 minute
@@ -31,19 +47,19 @@ setInterval(async () => {
   const now = new Date();
   const devices = DeviceCacheManager.getAllDevices();
   let hasChanges = false;
-  
+
   for (const [macAddress, data] of devices.entries()) {
     if (now.getTime() - data.lastSeen.getTime() > OFFLINE_THRESHOLD && data.status === 'online') {
       DeviceCacheManager.markOffline(macAddress);
       hasChanges = true;
     }
   }
-  
+
   // Emit update if any devices were marked offline
   if (hasChanges) {
     try {
       const deviceData = await getCurrentDeviceData();
-      emitDeviceUpdate('devicesUpdated', deviceData);
+      emitDevicesUpdate('devicesUpdated', deviceData);
     } catch (error) {
       console.warn('Failed to emit device offline update:', error);
     }
@@ -56,19 +72,19 @@ setInterval(async () => {
   const now = new Date();
   const devices = DeviceCacheManager.getAllDevices();
   let hasChanges = false;
-  
+
   for (const [macAddress, data] of devices.entries()) {
     if (now.getTime() - data.lastSeen.getTime() > REMOVE_THRESHOLD) {
       DeviceCacheManager.removeDevice(macAddress);
       hasChanges = true;
     }
   }
-  
+
   // Emit update if any devices were removed
   if (hasChanges) {
     try {
       const deviceData = await getCurrentDeviceData();
-      emitDeviceUpdate('devicesUpdated', deviceData);
+      emitDevicesUpdate('devicesUpdated', deviceData);
     } catch (error) {
       console.warn('Failed to emit device removal update:', error);
     }
@@ -156,6 +172,9 @@ export async function POST(request: Request) {
     // Check if device already exists in database by MAC address
     const dbDevices = await getDevices();
     const existingDbDevice = dbDevices.find(device => device.macAddress === macAddress);
+    
+    // Check if device exists in cache before update
+    const existingCacheDevice = DeviceCacheManager.getDevice(deviceId);
 
     let dbId: string | undefined;
     let dbAction: string = 'cache-only';
@@ -197,12 +216,38 @@ export async function POST(request: Request) {
 
     const stats = DeviceCacheManager.getStats();
 
-    // Emit Socket.IO update with current device data
+    // Emit individual device update for real-time UI updates
     try {
-      const deviceData = await getCurrentDeviceData();
-      emitDeviceUpdate('devicesUpdated', deviceData);
+      const deviceData: singleDeviceResponse = {
+        deviceId,
+        name,
+        type,
+        status,
+        location,
+        ipAddress,
+        macAddress,
+        serialNumber,
+        firmwareVersion,
+        lastActive: currentTime,
+        ownerId,
+        lastSeen: new Date(),
+        connectionStatus: 'online',
+        dbId
+      };
+
+      emitDeviceUpdate('deviceUpdated', deviceData);
     } catch (socketError) {
-      console.warn('Failed to emit device update via Socket.IO:', socketError);
+      console.warn('Failed to emit single device update via Socket.IO:', socketError);
+    }
+
+    // Also emit full devices update if this is a new device (for stats update)
+    if (!existingDbDevice && !existingCacheDevice) {
+      try {
+        const fullDeviceData = await getCurrentDeviceData();
+        emitDevicesUpdate('devicesUpdated', fullDeviceData);
+      } catch (socketError) {
+        console.warn('Failed to emit full devices update via Socket.IO:', socketError);
+      }
     }
 
     return new Response(JSON.stringify({
@@ -239,10 +284,26 @@ export async function POST(request: Request) {
 
     const stats = DeviceCacheManager.getStats();
 
-    // Emit Socket.IO update even in error case
+    // Emit individual device update even in error case
     try {
-      const deviceData = await getCurrentDeviceData();
-      emitDeviceUpdate('devicesUpdated', deviceData);
+      const deviceData: singleDeviceResponse = {
+        deviceId,
+        name,
+        type,
+        status,
+        location,
+        ipAddress,
+        macAddress,
+        serialNumber,
+        firmwareVersion,
+        lastActive: currentTime,
+        ownerId,
+        lastSeen: new Date(),
+        connectionStatus: 'online',
+        dbId: undefined // No DB ID in error case
+      };
+
+      emitDeviceUpdate('deviceUpdated', deviceData);
     } catch (socketError) {
       console.warn('Failed to emit device update via Socket.IO:', socketError);
     }

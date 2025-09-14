@@ -1,18 +1,26 @@
 
 import { Server as SocketIOServer } from 'socket.io';
-import { DeviceResponse } from '@/app/api/device/route';
+import { DeviceResponse, singleDeviceResponse } from '@/app/api/device/route';
 
 declare global {
   var io: SocketIOServer;
 }
 
-export function emitDeviceUpdate(eventName: string, data: DeviceResponse) {
+export function emitDevicesUpdate(eventName: string, data: DeviceResponse) {
   if (global.io) {
     global.io.emit(eventName, data);
     // console.log(`Emitted ${eventName} event with data:`, { 
     //   totalDevices: data.totalDevices || 'N/A',
     //   deviceCount: Array.isArray(data.devices) ? data.devices.length : 'N/A'
     // });
+  } else {
+    console.warn('Socket.IO not available - cannot emit device update');
+  }
+}
+
+export function emitDeviceUpdate(eventName: string, data: singleDeviceResponse) {
+  if (global.io) {
+    global.io.emit(eventName, data);
   } else {
     console.warn('Socket.IO not available - cannot emit device update');
   }

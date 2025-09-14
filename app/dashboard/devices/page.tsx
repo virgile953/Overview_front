@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { getSocketUrl } from "@/lib/socketConfig";
 import DeviceCard from "./DeviceCard";
-import { ApiDevice, DeviceResponse } from "@/app/api/device/route";
+import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/app/api/device/route";
 
 export default function Devices() {
   const [deviceData, setDeviceData] = useState<DeviceResponse | null>(null);
@@ -11,6 +11,7 @@ export default function Devices() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
+  const [recentlyUpdatedDevices, setRecentlyUpdatedDevices] = useState<Set<string>>(new Set());
 
   const fetchDevices = async (isRefresh = false) => {
     try {
@@ -42,6 +43,85 @@ export default function Devices() {
 
     newSocket.on('devicesUpdated', (data: DeviceResponse) => {
       setDeviceData(data);
+      setError(null);
+    });
+
+    newSocket.on('deviceUpdated', (data: singleDeviceResponse) => {
+      console.log('Received single device update:', data);
+      
+      // Add device to recently updated set for visual feedback
+      setRecentlyUpdatedDevices(prev => new Set([...prev, data.deviceId]));
+      
+      // Remove from recently updated after 3 seconds
+      setTimeout(() => {
+        setRecentlyUpdatedDevices(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(data.deviceId);
+          return newSet;
+        });
+      }, 150);
+      
+      // Update the specific device in the existing device list
+      setDeviceData(prevData => {
+        if (!prevData) return prevData;
+        
+        const updatedDevices = [...prevData.devices];
+        const deviceIndex = updatedDevices.findIndex(
+          device => device.deviceId === data.deviceId || device.macAddress === data.macAddress
+        );
+        
+        if (deviceIndex !== -1) {
+          // Update existing device
+          updatedDevices[deviceIndex] = {
+            ...updatedDevices[deviceIndex],
+            ...data,
+            lastSeen: new Date(data.lastSeen),
+            connectionStatus: data.connectionStatus,
+            source: data.dbId ? 'database+cache' : 'cache-only'
+          };
+        } else {
+          // Add new device if it doesn't exist
+          const newDevice: ApiDevice = {
+            $id: data.dbId || "",
+            deviceId: data.deviceId,
+            name: data.name,
+            type: data.type,
+            status: data.status,
+            location: data.location || "",
+            ipAddress: data.ipAddress || "",
+            macAddress: data.macAddress,
+            serialNumber: data.serialNumber || "",
+            firmwareVersion: data.firmwareVersion || "",
+            lastActive: data.lastActive,
+            ownerId: data.ownerId,
+            lastSeen: new Date(data.lastSeen),
+            connectionStatus: data.connectionStatus,
+            source: data.dbId ? 'database+cache' : 'cache-only',
+            dbId: data.dbId
+          };
+          updatedDevices.push(newDevice);
+        }
+        
+        // Update stats - recalculate online/offline counts
+        const onlineCount = updatedDevices.filter(d => d.connectionStatus === 'online').length;
+        const cacheOnlyCount = updatedDevices.filter(d => d.source === 'cache-only').length;
+        const linkedToDbCount = updatedDevices.filter(d => d.dbId).length;
+        
+        return {
+          ...prevData,
+          devices: updatedDevices,
+          totalDevices: updatedDevices.length,
+          stats: {
+            ...prevData.stats,
+            total: updatedDevices.length,
+            online: onlineCount,
+            offline: updatedDevices.length - onlineCount,
+            linkedToDb: linkedToDbCount,
+            cacheOnly: cacheOnlyCount
+          }
+        };
+      });
+      
       setError(null);
     });
 
@@ -96,6 +176,11 @@ export default function Devices() {
             <span className="text-xs text-muted-foreground">
               {isSocketConnected ? 'Real-time updates' : 'Disconnected'}
             </span>
+            {recentlyUpdatedDevices.size > 0 && (
+              <span className="text-xs bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">
+                {recentlyUpdatedDevices.size} updating
+              </span>
+            )}
           </div>
           <div className="text-sm text-muted-foreground">
             Total: {devices.length} devices
@@ -142,11 +227,19 @@ export default function Devices() {
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {devices.map((device) => (
-              <DeviceCard
+              <div
                 key={device.deviceId || device.$id}
-                device={device}
-                onDeviceAdded={() => fetchDevices(true)}
-              />
+                className={`transition-all duration-100 ${
+                  recentlyUpdatedDevices.has(device.deviceId) 
+                    ? 'ring-2 ring-emerald-400 rounded-lg ring-opacity-75 shadow-lg' 
+                    : ''
+                }`}
+              >
+                <DeviceCard
+                  device={device}
+                  onDeviceAdded={() => fetchDevices(true)}
+                />
+              </div>
             ))}
           </div>
         </>
