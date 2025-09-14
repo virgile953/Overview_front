@@ -222,8 +222,8 @@ export default function Devices() {
             {devices.map((device) => (
               <div
                 key={device.deviceId || device.$id}
-                className={`transition-all duration-100 ${recentlyUpdatedDevices.has(device.deviceId)
-                  ? 'ring-2 ring-emerald-400 rounded-lg ring-opacity-75 shadow-lg'
+                className={`transition-all rounded-lg duration-200 ${recentlyUpdatedDevices.has(device.deviceId)
+                  ? 'ring-2 ring-emerald-400 ring-opacity-75 shadow-lg'
                   : ''
                   }`}
               >

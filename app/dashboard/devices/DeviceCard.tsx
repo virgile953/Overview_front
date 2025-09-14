@@ -117,7 +117,7 @@ export default function DeviceCard({
   };
 
   return (
-    <div className={`bg-sidebar-accent border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
+    <div className={`h-full w-full bg-sidebar-accent border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-foreground flex flex-row">{device.name}
