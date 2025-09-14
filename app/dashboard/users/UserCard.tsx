@@ -1,5 +1,6 @@
 import { User } from "@/models/server/users";
 import EditUserButton from "./EditUserButton";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UserCardProps {
   user: User;
@@ -41,7 +42,20 @@ export default function UserCard({ user }: UserCardProps) {
               </li>
             ))}
             {user.groups.length > 3 && (
-              <li>and {user.groups.length - 3} more...</li>
+              <Tooltip>
+                <TooltipTrigger>
+                  <li className="text-muted-foreground cursor-pointer">...and {user.groups.length - 3} more</li>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-xs">
+                  <ul className="list-disc list-inside">
+                    {user.groups.slice(3).map((group, index) => (
+                      <li key={typeof group === 'string' ? group : group.$id || index}>
+                        {typeof group === 'string' ? group : group.name}
+                      </li>
+                    ))}
+                  </ul>
+                </TooltipContent>
+              </Tooltip>
             )}
           </ul>
         </div>
