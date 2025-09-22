@@ -4,6 +4,7 @@ import { io } from "socket.io-client";
 import { getSocketUrl } from "@/lib/socketConfig";
 import DeviceCard from "./DeviceCard";
 import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/app/api/device/route";
+import Legend from "./legend";
 
 export default function Devices() {
   const [deviceData, setDeviceData] = useState<DeviceResponse | null>(null);
@@ -96,7 +97,6 @@ export default function Devices() {
           updatedDevices.push(newDevice);
         }
 
-        // Update stats - recalculate online/offline counts
         const onlineCount = updatedDevices.filter(d => d.connectionStatus === 'online').length;
         const cacheOnlyCount = updatedDevices.filter(d => d.source === 'cache-only').length;
         const linkedToDbCount = updatedDevices.filter(d => d.dbId).length;
@@ -126,7 +126,6 @@ export default function Devices() {
       setIsSocketConnected(false);
     });
 
-    // Cleanup on unmount
     return () => {
       newSocket.disconnect();
     };
@@ -134,12 +133,30 @@ export default function Devices() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
-          <p className="text-foreground">Loading devices...</p>
+      <>
+        <div className="flex flex-col">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <div className="w-full">
+                <h1 className="text-2xl font-bold text-foreground">Devices</h1>
+                <div className="text-sm text-muted-foreground">
+                  Total: 0 devices
+                  <span className="ml-2">
+                    (Online: 0, Cache-only: 0)
+                  </span>
+                </div>
+              </div>
+            </div>
+            <Legend />
+
+          </div>
         </div>
-      </div>
+        <div className="flex items-center justify-center min-h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600 mx-auto mb-4"></div>
+            <p className="text-foreground">Loading devices...</p>
+          </div>
+        </div></>
     );
   }
 
@@ -171,7 +188,6 @@ export default function Devices() {
         </div>
         <div className="flex items-center gap-4">
 
-
           <div className="flex flex-col  sm:items-center ">
             <button
               onClick={() => fetchDevices(true)}
@@ -196,24 +212,7 @@ export default function Devices() {
         </div>
       ) : (
         <>
-          {/* Legend */}
-          <div className="bg-sidebar-accent border border-border rounded-lg p-4 mb-4">
-            <h3 className="text-sm font-medium text-foreground mb-2">Device Status Legend:</h3>
-            <div className="flex flex-wrap gap-4 text-xs">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border bg-emerald-600/50 border-emerald-600 rounded"></div>
-                <span className="text-muted-foreground">Database + Live (Recently active)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border bg-blue-600/50 border-blue-600 rounded"></div>
-                <span className="text-muted-foreground">Database only (Offline)</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 border bg-yellow-600/50 border-yellow-600 rounded"></div>
-                <span className="text-muted-foreground">Cache only (Not in database)</span>
-              </div>
-            </div>
-          </div>
+          <Legend />
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {devices.map((device) => (
