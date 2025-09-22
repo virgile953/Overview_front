@@ -40,6 +40,8 @@ export default function Home() {
 
   return (
     <div>
+      <h1 className="text-2xl font-bold text-foreground mb-4">Logs</h1>
+
       <p>Status: {isConnected ? "connected" : "disconnected"}</p>
       <p>Transport: {transport}</p>
     </div>
