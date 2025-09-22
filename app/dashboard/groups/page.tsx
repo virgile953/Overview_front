@@ -4,16 +4,13 @@ import CreateGroupButton from "./CreateGroupButton";
 import GroupsClientWrapper from "./GroupsClientWrapper";
 
 export default async function Groups() {
-  // Fetch groups data on the server
   const groups = await getGroups();
 
   return (
     <GroupsClientWrapper>
       <div>
-        <div className="border-b border-gray-300 pb-4 mb-6">
-          <p>List of user groups:</p>
-        </div>
-        
+        <h1 className="text-2xl font-bold text-foreground mb-4">Groups</h1>
+
         <CreateGroupButton />
 
         {groups.length > 0 ? (

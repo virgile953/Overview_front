@@ -9,10 +9,8 @@ export default async function Users() {
   return (
     <UsersClientWrapper>
       <div className="relative">
-        <div className="border-b border-border pb-4 mb-6">
-          <p>List of users:</p>
-        </div>
-        
+        <h1 className="text-2xl font-bold text-foreground mb-4">Users</h1>
+
         <CreateUserButton />
 
         {users.length > 0 ? (
