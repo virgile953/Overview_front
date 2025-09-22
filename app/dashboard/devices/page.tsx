@@ -158,9 +158,8 @@ export default function Devices() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-foreground">Devices</h1>
-        <div className="flex items-center gap-4">
-
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Devices</h1>
           <div className="text-sm text-muted-foreground">
             Total: {devices.length} devices
             {stats && (
@@ -169,6 +168,10 @@ export default function Devices() {
               </span>
             )}
           </div>
+        </div>
+        <div className="flex items-center gap-4">
+
+
           <div className="flex flex-col  sm:items-center ">
             <button
               onClick={() => fetchDevices(true)}

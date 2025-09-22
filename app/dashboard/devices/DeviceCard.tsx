@@ -1,7 +1,7 @@
 import { ApiDevice } from "@/app/api/device/route";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Device } from "@/models/server/devices";
-import { Trash2 } from "lucide-react";
+import { CirclePlus, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 // Device Card Component
@@ -13,12 +13,7 @@ export default function DeviceCard({
   onDeviceAdded: () => void;
 }) {
   const [isAdding, setIsAdding] = useState(false);
-  const [addMessage, setAddMessage] = useState('');
-  const [addStatus, setAddStatus] = useState<'success' | 'error' | ''>('');
-
   const [isRemoving, setIsRemoving] = useState(false);
-  const [removeMessage, setRemoveMessage] = useState('');
-  const [removeStatus, setRemoveStatus] = useState<'success' | 'error' | ''>('');
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -71,7 +66,6 @@ export default function DeviceCard({
     if (!confirm("Are you sure ?")) return;
     if (isRemoving) return;
     setIsRemoving(true);
-    setRemoveMessage('');
     try {
       const response = await fetch(`/api/device/admin?dbId=${device.$id}&macAddress=${device.macAddress}`, {
         method: 'DELETE',
@@ -82,13 +76,7 @@ export default function DeviceCard({
       })
       const result = await response.json();
       if (response.ok && result.success) {
-        setRemoveStatus('success');
-        setRemoveMessage('✅ Device removed from database!');
-        // Call the callback to refresh the devices list
         onDeviceAdded();
-      } else {
-        setRemoveStatus('error');
-        setRemoveMessage(`Failed: ${result.error || 'Unknown error'}`);
       }
     } catch {
 
@@ -98,7 +86,6 @@ export default function DeviceCard({
   async function addDeviceToDb() {
     if (isAdding) return;
     setIsAdding(true);
-    setAddMessage('');
 
     try {
       const response = await fetch('/api/device/admin', {
@@ -110,63 +97,17 @@ export default function DeviceCard({
       });
       const result = await response.json();
       if (response.ok && result.success) {
-        setAddStatus('success');
-        setAddMessage('✅ Device added to database!');
         // Call the callback to refresh the devices list
         onDeviceAdded();
-      } else {
-        setAddStatus('error');
-        setAddMessage(`Failed: ${result.error || 'Unknown error'}`);
       }
-    } catch (error) {
-      setAddMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setAddStatus('error');
+    } catch {
     } finally {
       setIsAdding(false);
       // Clear message after 3 seconds
       setTimeout(() => {
-        setAddMessage('');
-        setAddStatus('');
       }, 3000);
     }
   }
-
-  async function RemoveDeviceFromDb() {
-    if (isRemoving) return;
-    setIsRemoving(true);
-    setAddMessage('');
-
-    try {
-      const response = await fetch('/api/device/admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(device),
-      });
-      const result = await response.json();
-      if (response.ok && result.success) {
-        setRemoveStatus('success');
-        setRemoveMessage('✅ Device added to database!');
-        // Call the callback to refresh the devices list
-        onDeviceAdded();
-      } else {
-        setRemoveStatus('error');
-        setRemoveMessage(`Failed: ${result.error || 'Unknown error'}`);
-      }
-    } catch (error) {
-      setRemoveMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
-      setRemoveStatus('error');
-    } finally {
-      setIsAdding(false);
-      // Clear message after 3 seconds
-      setTimeout(() => {
-        setRemoveMessage('');
-        setRemoveStatus('');
-      }, 3000);
-    }
-  }
-
 
   const getSourceColor = (device: ApiDevice | Device): string => {
     if ('source' in device) {
@@ -188,26 +129,7 @@ export default function DeviceCard({
     <div className={`h-full w-full bg-sidebar-accent border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
-          <h3 className="font-semibold text-foreground flex flex-row">{device.name}
-            {
-              !isDeviceInDatabase(device) && (
-                <div className="ml-4">
-                  <button
-                    className="w-full px-2 py-1 text-xs bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    onClick={addDeviceToDb}
-                    disabled={isAdding}
-                  >
-                    {isAdding ? 'Adding...' : 'Add to Database'}
-                  </button>
-                  {addMessage && (
-                    <p className={`text-xs mt-2 ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                      {addMessage}
-                    </p>
-                  )}
-                </div>
-              )
-            }
-          </h3>
+
           <p className="text-sm text-muted-foreground">{device.type}</p>
           {'source' in device && (
             <p className="text-xs text-muted-foreground mt-1">
@@ -267,10 +189,25 @@ export default function DeviceCard({
               </TooltipContent>
             </Tooltip>
           }
+          {
+            !isDeviceInDatabase(device) && (
+              <div className="ml-4">
+                <Tooltip>
+                  <TooltipTrigger>
+                    <CirclePlus
+                      onClick={() => !isAdding ? addDeviceToDb() : null}
+                      size={20}
+                      className={`cursor-pointer hover:text-emerald-400 ${isAdding ? 'animate-spin' : ''}`}
+                    />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <div className="text-center">Add to Database</div>
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            )
+          }
         </div>
-
-        {/* Show "Add to Database" button only for cache-only devices */}
-
       </div >
     </div >
   );

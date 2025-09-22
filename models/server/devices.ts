@@ -88,5 +88,5 @@ export async function updateDevice(deviceId: string, updates: Partial<Omit<Devic
 }
 
 export async function deleteDevice(deviceId: string): Promise<void> {
-  const ret = await databases.deleteDocument(db, deviceCollection, deviceId);
+  await databases.deleteDocument(db, deviceCollection, deviceId);
 }
