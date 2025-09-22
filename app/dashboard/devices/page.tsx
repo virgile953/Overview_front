@@ -38,8 +38,6 @@ export default function Devices() {
 
   useEffect(() => {
     fetchDevices(false);
-
-    // Use the utility function for consistent Socket.IO URL
     const newSocket = io(getSocketUrl());
 
     newSocket.on('devicesUpdated', (data: DeviceResponse) => {

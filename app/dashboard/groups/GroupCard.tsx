@@ -9,7 +9,7 @@ interface GroupCardProps {
 
 export default function GroupCard({ group }: GroupCardProps) {
   return (
-    <div className="border relative border-border bg-sidebar-accent rounded p-4 h-full w-full">
+    <div className="border relative border-border bg-sidebar-accent rounded-lg p-4 h-full w-full">
       <h3 className="text-lg font-semibold">{group.name}</h3>
       <p className="text-sm text-gray-500">{group.localisation}</p>
       <p className="text-sm">{group.description}</p>

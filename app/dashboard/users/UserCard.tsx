@@ -8,7 +8,7 @@ interface UserCardProps {
 
 export default function UserCard({ user }: UserCardProps) {
   return (
-    <div className="border relative border-border bg-sidebar-accent rounded p-4 h-full w-full">
+    <div className="border relative border-border bg-sidebar-accent rounded-lg p-4 h-full w-full">
       <h3 className="text-lg font-semibold">{user.name}</h3>
       {user.last_name && (
         <p className="text-sm text-muted-foreground">{user.last_name}</p>
