@@ -1,6 +1,7 @@
 import { ApiDevice } from "@/app/api/device/route";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Device } from "@/models/server/devices";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 // Device Card Component
@@ -14,6 +15,11 @@ export default function DeviceCard({
   const [isAdding, setIsAdding] = useState(false);
   const [addMessage, setAddMessage] = useState('');
   const [addStatus, setAddStatus] = useState<'success' | 'error' | ''>('');
+
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [removeMessage, setRemoveMessage] = useState('');
+  const [removeStatus, setRemoveStatus] = useState<'success' | 'error' | ''>('');
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'online':
@@ -48,7 +54,6 @@ export default function DeviceCard({
 
   function getLastSeenTime(device: ApiDevice | Device): string {
     if ('lastSeen' in device) {
-      // Handle both Date and string types
       const lastSeen = typeof device.lastSeen === 'string' ? device.lastSeen : device.lastSeen.toISOString();
       return formatLastSeen(lastSeen);
     }
@@ -59,8 +64,35 @@ export default function DeviceCard({
     if ('source' in device) {
       return device.source !== 'cache-only';
     }
-    // If no source info, assume it's in database (fallback)
     return true;
+  }
+
+  async function deleteDeviceFromDb() {
+    if (!confirm("Are you sure ?")) return;
+    if (isRemoving) return;
+    setIsRemoving(true);
+    setRemoveMessage('');
+    try {
+      const response = await fetch(`/api/device/admin?dbId=${device.$id}&macAddress=${device.macAddress}`, {
+        method: 'DELETE',
+        headers:
+        {
+          'Content-Type': 'application/json',
+        },
+      })
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setRemoveStatus('success');
+        setRemoveMessage('✅ Device removed from database!');
+        // Call the callback to refresh the devices list
+        onDeviceAdded();
+      } else {
+        setRemoveStatus('error');
+        setRemoveMessage(`Failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch {
+
+    }
   }
 
   async function addDeviceToDb() {
@@ -84,10 +116,10 @@ export default function DeviceCard({
         onDeviceAdded();
       } else {
         setAddStatus('error');
-        setAddMessage(`❌ Failed: ${result.error || 'Unknown error'}`);
+        setAddMessage(`Failed: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
-      setAddMessage(`❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setAddMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
       setAddStatus('error');
     } finally {
       setIsAdding(false);
@@ -95,6 +127,42 @@ export default function DeviceCard({
       setTimeout(() => {
         setAddMessage('');
         setAddStatus('');
+      }, 3000);
+    }
+  }
+
+  async function RemoveDeviceFromDb() {
+    if (isRemoving) return;
+    setIsRemoving(true);
+    setAddMessage('');
+
+    try {
+      const response = await fetch('/api/device/admin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(device),
+      });
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setRemoveStatus('success');
+        setRemoveMessage('✅ Device added to database!');
+        // Call the callback to refresh the devices list
+        onDeviceAdded();
+      } else {
+        setRemoveStatus('error');
+        setRemoveMessage(`Failed: ${result.error || 'Unknown error'}`);
+      }
+    } catch (error) {
+      setRemoveMessage(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setRemoveStatus('error');
+    } finally {
+      setIsAdding(false);
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        setRemoveMessage('');
+        setRemoveStatus('');
       }, 3000);
     }
   }
@@ -121,24 +189,24 @@ export default function DeviceCard({
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="font-semibold text-foreground flex flex-row">{device.name}
-             {
-          !isDeviceInDatabase(device) && (
-            <div className="ml-4">
-              <button
-                className="w-full px-2 py-1 text-xs bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                onClick={addDeviceToDb}
-                disabled={isAdding}
-              >
-                {isAdding ? 'Adding...' : 'Add to Database'}
-              </button>
-              {addMessage && (
-                <p className={`text-xs mt-2 ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
-                  {addMessage}
-                </p>
-              )}
-            </div>
-          )
-        }
+            {
+              !isDeviceInDatabase(device) && (
+                <div className="ml-4">
+                  <button
+                    className="w-full px-2 py-1 text-xs bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    onClick={addDeviceToDb}
+                    disabled={isAdding}
+                  >
+                    {isAdding ? 'Adding...' : 'Add to Database'}
+                  </button>
+                  {addMessage && (
+                    <p className={`text-xs mt-2 ${addStatus === 'success' ? 'text-green-400' : 'text-red-400'}`}>
+                      {addMessage}
+                    </p>
+                  )}
+                </div>
+              )
+            }
           </h3>
           <p className="text-sm text-muted-foreground">{device.type}</p>
           {'source' in device && (
@@ -175,20 +243,34 @@ export default function DeviceCard({
           </div>
         )}
 
-        <div>
-          <span className="text-foreground">Last seen:</span>
-          <Tooltip >
-            <TooltipTrigger>
-              <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
-            </TooltipTrigger>
-            <TooltipContent className="text-sm">
-              <span>{new Date(device.lastActive).toLocaleTimeString('fr-FR')}</span>
-            </TooltipContent>
-          </Tooltip>
+        <div className="flex flex-row w-full justify-between">
+          <div>
+            <span className="text-foreground">Last seen:</span>
+            <Tooltip >
+              <TooltipTrigger>
+                <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
+              </TooltipTrigger>
+              <TooltipContent className="text-sm">
+                <span>{new Date(device.lastActive).toLocaleTimeString('fr-FR')}</span>
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          {isDeviceInDatabase(device) &&
+            <Tooltip>
+              <TooltipTrigger>
+                <Trash2 size={20} onClick={deleteDeviceFromDb} />
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-center">Remove from DB<br />
+                  (Will still receive device data in cache)
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          }
         </div>
 
         {/* Show "Add to Database" button only for cache-only devices */}
-       
+
       </div >
     </div >
   );

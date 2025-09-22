@@ -39,7 +39,7 @@ export interface singleDeviceResponse {
   lastSeen: Date | string;
   connectionStatus: string;
   dbId?: string;
-} 
+}
 
 // Cleanup interval to mark devices as offline after inactivity
 const OFFLINE_THRESHOLD = 1 * 60 * 1000; // 1 minute
@@ -172,7 +172,7 @@ export async function POST(request: Request) {
     // Check if device already exists in database by MAC address
     const dbDevices = await getDevices();
     const existingDbDevice = dbDevices.find(device => device.macAddress === macAddress);
-    
+
     // Check if device exists in cache before update
     const existingCacheDevice = DeviceCacheManager.getDevice(deviceId);
 
@@ -410,3 +410,4 @@ export async function GET(request: Request) {
     }), { status: 200 });
   }
 }
+

@@ -47,12 +47,7 @@ export default function Devices() {
     });
 
     newSocket.on('deviceUpdated', (data: singleDeviceResponse) => {
-      console.log('Received single device update:', data);
-
-      // Add device to recently updated set for visual feedback
       setRecentlyUpdatedDevices(prev => new Set([...prev, data.deviceId]));
-
-      // Remove from recently updated after 3 seconds
       setTimeout(() => {
         setRecentlyUpdatedDevices(prev => {
           const newSet = new Set(prev);
@@ -61,7 +56,6 @@ export default function Devices() {
         });
       }, 150);
 
-      // Update the specific device in the existing device list
       setDeviceData(prevData => {
         if (!prevData) return prevData;
 

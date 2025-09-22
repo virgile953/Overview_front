@@ -1,4 +1,4 @@
-import { addDevice } from "@/models/server/devices";
+import { addDevice, deleteDevice, getDevices } from "@/models/server/devices";
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 
 // Admin route to manually add devices to the database
@@ -7,8 +7,8 @@ export async function POST(request: Request) {
   const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, ownerId } = requestData;
 
   if (!name || !type || !status || !ownerId || !macAddress) {
-    return new Response(JSON.stringify({ 
-      error: "Missing required fields (name, type, status, ownerId, macAddress are required)" 
+    return new Response(JSON.stringify({
+      error: "Missing required fields (name, type, status, ownerId, macAddress are required)"
     }), { status: 400 });
   }
 
@@ -92,10 +92,12 @@ export async function POST(request: Request) {
 // Admin route to remove device from both DB and cache
 export async function DELETE(request: Request) {
   const url = new URL(request.url);
-  const macAddress = url.searchParams.get('macAddress');
 
-  if (!macAddress) {
-    return new Response(JSON.stringify({ error: "macAddress parameter required" }), { status: 400 });
+  const macAddress = url.searchParams.get('macAddress');
+  const dbId = url.searchParams.get('dbId')
+
+  if (!dbId || !macAddress) {
+    return new Response(JSON.stringify({ error: "dbId and MacAddress parameters required" }), { status: 400 });
   }
 
   try {
@@ -104,6 +106,10 @@ export async function DELETE(request: Request) {
     const removed = DeviceCacheManager.removeDevice(macAddress);
     const stats = DeviceCacheManager.getStats();
 
+    // Remove from database if dbId is provided
+    if (dbId) {
+      await deleteDevice(dbId);
+    }
     return new Response(JSON.stringify({
       success: true,
       message: "Device removed from cache",
