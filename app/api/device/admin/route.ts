@@ -27,7 +27,6 @@ export async function POST(request: Request) {
       ownerId,
     });
 
-    // Update the cache if this device is already cached
     const existingCacheEntry = DeviceCacheManager.getDevice(macAddress);
     if (existingCacheEntry) {
       // Update existing cache entry with database ID
