@@ -28,7 +28,7 @@ export default async function Logs() {
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mb-1">{log.message}</p>
-              <p className="text-xs text-muted-foreground">Latency: {log.latency}ms | Logged at: {new Date(log.$createdAt).toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">Latency: {log.latency}ms | Logged at: {new Date(log.$createdAt).toLocaleString("fr-FR")}</p>
             </div>
           ))}
         </div>
