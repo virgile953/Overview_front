@@ -1,19 +1,20 @@
-import { getAllLogs } from "@/models/server/logs";
+import { getAllLogs, getLogCount } from "@/models/server/logs";
 
 
 export default async function Logs() {
 
   const logs = await getAllLogs();
-
+  const count = await getLogCount();
   return (
     <div>
       <h1 className="text-2xl font-bold text-foreground">Logs</h1>
+      <div>{count}</div>
       {logs.length === 0 ? (
         <p className="text-muted-foreground">No logs available.</p>
       ) : (
         <div className="mt-4 space-y-4">
           {logs.map((log) => (
-            <div key={log.$id} className="p-4 border rounded-lg">
+            <div key={log.$id} className="p-4 border border-border rounded-lg">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium">{log.device.name}</span>
                 <span className={`px-2 py-1 text-sm rounded-full ${

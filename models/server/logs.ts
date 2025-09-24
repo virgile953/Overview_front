@@ -37,14 +37,20 @@ export async function isDeviceLog(doc: unknown): Promise<boolean> {
   return await isDevice(typedDoc.device);
 }
 
-export async function getAllLogs(max: number = 0): Promise<DeviceLog[]> {
+export async function getLogCount(deviceId?: string): Promise<number> {
+  const data = await databases.listDocuments(db, deviceLogCollection, deviceId ? [Query.equal("device", deviceId)] : []);
+
+  return data.total
+}
+
+export async function getAllLogs(max?: number): Promise<DeviceLog[]> {
   try {
     const result = await databases.listDocuments(db, deviceLogCollection
-      , max > 0 ? [
+      , max ? [
         Query.orderDesc("$createdAt"),
         Query.limit(max)
       ] : [
-        Query.orderDesc("$createdAt")
+        Query.orderDesc("$createdAt"),
       ]
     );
     return await Promise.all(result.documents.map(async (doc: unknown) => {
