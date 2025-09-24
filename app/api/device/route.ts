@@ -194,7 +194,7 @@ export async function POST(request: Request) {
         ownerId,
       });
       const timeDiff = currentTime.getTime() - new Date(lastActive).getTime();
-      addDeviceLog({ device: updatedDevice, status: 'info', message: 'Device updated via API', latency: timeDiff });
+      addDeviceLog({ device: updatedDevice.$id, status: 'info', message: 'Device updated via API', latency: timeDiff });
       dbId = updatedDevice.$id;
       dbAction = 'updated';
     }
