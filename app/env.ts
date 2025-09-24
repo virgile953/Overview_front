@@ -11,10 +11,8 @@ const env = {
     apiKey: String(process.env.APPWRITE_API_KEY) || '',
     emailUrl: String(process.env.APPWRITE_VERIFICATION_URL) || 'http://localhost:3000/verify',
   },
-  supabase: {
-    url: String(process.env.NEXT_PUBLIC_SUPABASE_URL) || '',
-    serviceKey: String(process.env.SUPABASE_SERVICE_KEY) || '',
-    anonKey: String(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) || '',
-  }
+  postgresql: {
+    connectionString: String(process.env.DATABASE_URL),
+  },
 }
 export default env;
