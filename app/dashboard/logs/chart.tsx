@@ -16,10 +16,6 @@ const chartConfig = {
     label: "Error",
     color: "#ef4444",
   },
-  ok: {
-    label: "Success",
-    color: "#10b981",
-  },
 } satisfies ChartConfig;
 
 type ChartData = {
@@ -61,10 +57,6 @@ export default function LogChart({ data }: LogChartProps) {
                 <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8} />
                 <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1} />
               </linearGradient>
-              <linearGradient id="colorOk" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />
-                <stop offset="95%" stopColor="#10b981" stopOpacity={0.1} />
-              </linearGradient>
             </defs>
             <XAxis
               dataKey="date"
@@ -73,7 +65,7 @@ export default function LogChart({ data }: LogChartProps) {
               tick={{ fontSize: 12 }}
               angle={-45}
               textAnchor="end"
-              height={60}
+              height={80}
             />
             <YAxis
               axisLine={false}
@@ -96,13 +88,6 @@ export default function LogChart({ data }: LogChartProps) {
             />
             <Area
               type="monotone"
-              dataKey="ok"
-              stackId="1"
-              stroke="#10b981"
-              fill="url(#colorOk)"
-            />
-            <Area
-              type="monotone"
               dataKey="info"
               stackId="1"
               stroke="#3b82f6"
@@ -111,14 +96,14 @@ export default function LogChart({ data }: LogChartProps) {
             <Area
               type="monotone"
               dataKey="warning"
-              stackId="1"
+              stackId="2"
               stroke="#f59e0b"
               fill="url(#colorWarning)"
             />
             <Area
               type="monotone"
               dataKey="error"
-              stackId="1"
+              stackId="3"
               stroke="#ef4444"
               fill="url(#colorError)"
             />
