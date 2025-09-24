@@ -1,6 +1,7 @@
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 import { Device, getDevices, updateDevice } from "@/models/server/devices";
 import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
+import { addDeviceLog } from "@/models/server/logs";
 
 export interface ApiDevice extends Device {
   deviceId: string;
@@ -159,14 +160,15 @@ async function getCurrentDeviceData(): Promise<DeviceResponse> {
 
 export async function POST(request: Request) {
   const requestData = await request.json();
-  const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, ownerId } = requestData;
+
+  const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, ownerId, lastActive } = requestData;
 
   if (!name || !type || !status || !ownerId || !macAddress) {
     return new Response(JSON.stringify({ error: "Missing required fields (name, type, status, ownerId, macAddress are required)" }), { status: 400 });
   }
 
   const deviceId: string = macAddress;
-  const currentTime = new Date().toISOString();
+  const currentTime = new Date();
 
   try {
     // Check if device already exists in database by MAC address
@@ -188,9 +190,11 @@ export async function POST(request: Request) {
         ipAddress,
         serialNumber,
         firmwareVersion,
-        lastActive: currentTime,
+        lastActive: lastActive || currentTime.toISOString(),
         ownerId,
       });
+      const timeDiff = currentTime.getTime() - new Date(lastActive).getTime();
+      addDeviceLog({ device: updatedDevice, status: 'info', message: 'Device updated via API', latency: timeDiff });
       dbId = updatedDevice.$id;
       dbAction = 'updated';
     }
@@ -206,7 +210,7 @@ export async function POST(request: Request) {
         macAddress,
         serialNumber,
         firmwareVersion,
-        lastActive: currentTime,
+        lastActive: lastActive || currentTime.toISOString(),
         ownerId,
       },
       lastSeen: new Date(),
@@ -228,7 +232,7 @@ export async function POST(request: Request) {
         macAddress,
         serialNumber,
         firmwareVersion,
-        lastActive: currentTime,
+        lastActive: lastActive || currentTime.toISOString(),
         ownerId,
         lastSeen: new Date(),
         connectionStatus: 'online',
@@ -275,7 +279,7 @@ export async function POST(request: Request) {
         macAddress,
         serialNumber,
         firmwareVersion,
-        lastActive: currentTime,
+        lastActive: lastActive || currentTime.toISOString(),
         ownerId,
       },
       lastSeen: new Date(),
@@ -296,7 +300,7 @@ export async function POST(request: Request) {
         macAddress,
         serialNumber,
         firmwareVersion,
-        lastActive: currentTime,
+        lastActive: lastActive || currentTime.toISOString(),
         ownerId,
         lastSeen: new Date(),
         connectionStatus: 'online',
@@ -410,4 +414,3 @@ export async function GET(request: Request) {
     }), { status: 200 });
   }
 }
-

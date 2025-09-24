@@ -1,49 +1,37 @@
-"use client";
+import { getAllLogs } from "@/models/server/logs";
 
-import { useEffect, useState } from "react";
-import { io } from "socket.io-client";
-import { getSocketUrl } from "@/lib/socketConfig";
 
-export const socket = io(getSocketUrl());
+export default async function Logs() {
 
-export default function Home() {
-  const [isConnected, setIsConnected] = useState(false);
-  const [transport, setTransport] = useState("N/A");
-
-  useEffect(() => {
-    if (socket.connected) {
-      onConnect();
-    }
-
-    function onConnect() {
-      setIsConnected(true);
-      setTransport(socket.io.engine.transport.name);
-
-      socket.io.engine.on("upgrade", (transport) => {
-        setTransport(transport.name);
-      });
-    }
-
-    function onDisconnect() {
-      setIsConnected(false);
-      setTransport("N/A");
-    }
-
-    socket.on("connect", onConnect);
-    socket.on("disconnect", onDisconnect);
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("disconnect", onDisconnect);
-    };
-  }, []);
+  const logs = await getAllLogs();
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-foreground mb-4">Logs</h1>
-
-      <p>Status: {isConnected ? "connected" : "disconnected"}</p>
-      <p>Transport: {transport}</p>
+      <h1 className="text-2xl font-bold text-foreground">Logs</h1>
+      {logs.length === 0 ? (
+        <p className="text-muted-foreground">No logs available.</p>
+      ) : (
+        <div className="mt-4 space-y-4">
+          {logs.map((log) => (
+            <div key={log.$id} className="p-4 border rounded-lg">
+              <div className="flex justify-between items-center mb-2">
+                <span className="font-medium">{log.device.name}</span>
+                <span className={`px-2 py-1 text-sm rounded-full ${
+                  log.status === 'info' ? 'bg-blue-100 text-blue-800' :
+                  log.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                  log.status === 'error' ? 'bg-red-100 text-red-800' :
+                  log.status === 'ok' ? 'bg-green-100 text-green-800' :
+                  'bg-gray-100 text-gray-800'
+                }`}>
+                  {log.status.toUpperCase()}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground mb-1">{log.message}</p>
+              <p className="text-xs text-muted-foreground">Latency: {log.latency}ms | Logged at: {new Date(log.$createdAt).toLocaleString()}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

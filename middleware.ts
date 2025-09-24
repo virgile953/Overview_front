@@ -35,7 +35,3 @@ export const config = {
     '/((?!_next/static|_next/image|.well-known|api/socket|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$).*)',
   ],
 }
-
-// /((?!_next/static|_next/image|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$|/api/device$).*)
-
-// /api/device
