@@ -13,6 +13,8 @@ export interface DeviceLog {
   latency: number;
 }
 
+type sourceTime = "millennium" | "century" | "decade" | "year" | "quarter" | "month" | "week" | "day" | "hour" | "minute" | "second" | "milliseconds" | "microseconds"
+
 export async function getLogCount(): Promise<number> {
   const result = await Drizzle.select({ count: count() }).from(deviceLogs);
   return Number(result[0].count);
@@ -39,53 +41,101 @@ export async function getAllLogs(max?: number): Promise<DeviceLog[]> {
   return logs;
 }
 
-export async function getLogsForChart(): Promise<{
+export async function getLogsForChart(startDate: Date, endDate: Date, period: number = 24, interval: sourceTime = "hour"): Promise<{
   date: string,
   info: number,
   warning: number,
   error: number,
 }[]> {
-  // Use SQL to properly group by hour and count log levels
   const results = await Drizzle
     .select({
-      hour: sql<string>`DATE_TRUNC('hour', ${deviceLogs.createdAt})::text`,
+      hour: sql<string>`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})::text`,
       level: deviceLogs.level,
       count: sql<number>`COUNT(*)::int`
     })
     .from(deviceLogs)
-    .where(sql`${deviceLogs.createdAt} >= NOW() - INTERVAL '24 hours'`) // Last 24 hours
+    .where(sql`${deviceLogs.createdAt} >= NOW() - INTERVAL ${sql.raw(`'${period} ${interval + 's'}'`)}`)
     .groupBy(
-      sql`DATE_TRUNC('hour', ${deviceLogs.createdAt})`,
+      sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})`,
       deviceLogs.level
     )
-    .orderBy(sql`DATE_TRUNC('hour', ${deviceLogs.createdAt}) DESC`);
+    .orderBy(sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt}) ASC`);
 
-  // Group the results by hour and aggregate counts by level
-  const hourlyData: Record<string, { info: number; warning: number; error: number; }> = {};
+  const timeData: Record<string, { info: number; warning: number; error: number; }> = {};
 
   for (const row of results) {
-    const hour = new Date(row.hour).toLocaleString("fr-FR", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      hour12: false
-    });
+    const date = new Date(row.hour);
+    let timeKey: string;
 
-    if (!hourlyData[hour]) {
-      hourlyData[hour] = { info: 0, warning: 0, error: 0 };
+    // Format the time key based on the interval granularity
+    switch (interval) {
+      case 'second':
+        timeKey = date.toLocaleString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        });
+        break;
+      case 'minute':
+        timeKey = date.toLocaleString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+          hour12: false
+        });
+        break;
+      case 'hour':
+        timeKey = date.toLocaleString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false
+        });
+        break;
+      case 'day':
+        timeKey = date.toLocaleString("fr-FR", {
+          month: "short",
+          day: "numeric"
+        });
+        break;
+      case 'week':
+        timeKey = date.toLocaleString("fr-FR", {
+          month: "short",
+          day: "numeric"
+        }) + ` (Week)`;
+        break;
+      case 'month':
+        timeKey = date.toLocaleString("fr-FR", {
+          month: "long",
+          year: "numeric"
+        });
+        break;
+      case 'year':
+        timeKey = date.toLocaleString("fr-FR", {
+          year: "numeric"
+        });
+        break;
+      default:
+        timeKey = date.toLocaleString("fr-FR", {
+          day: "numeric",
+          hour: "2-digit",
+          hour12: false
+        });
     }
 
-    // Add count for the specific level
-    if (row.level in hourlyData[hour]) {
-      hourlyData[hour][row.level as keyof typeof hourlyData[string]] = row.count;
+    if (!timeData[timeKey]) {
+      timeData[timeKey] = { info: 0, warning: 0, error: 0 };
+    }
+
+    if (row.level in timeData[timeKey]) {
+      timeData[timeKey][row.level as keyof typeof timeData[string]] = row.count;
     }
   }
 
-  // Convert to array format for the chart
-  return Object.entries(hourlyData).map(([date, counts]) => ({
+  return Object.entries(timeData).map(([date, counts]) => ({
     date,
     ...counts
-  })).reverse(); // Show chronologically (oldest to newest)
+  }));
 }
 
 export async function getDeviceLogs(deviceId: string, max = 100): Promise<DeviceLog[]> {

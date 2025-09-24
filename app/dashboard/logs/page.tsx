@@ -6,7 +6,7 @@ export default async function Logs() {
   const [count, devices, chartData] = await Promise.all([
     getLogCount(),
     getDevices(),
-    getLogsForChart() // This returns the format you want
+    getLogsForChart(new Date(), new Date(), 24, "hour"),
   ]);
 
   console.log('Chart data:', chartData);
