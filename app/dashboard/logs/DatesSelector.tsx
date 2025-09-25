@@ -10,17 +10,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { DateRange } from "react-day-picker"
+import { useLogsContext } from "./LogsClientWrapper"
 
 export default function DatesSelector() {
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
-    from: (() => {
-      const d = new Date();
-      d.setDate(d.getDate() - 1);
-      return d;
-    })(),
-    to: new Date(),
-  })
+const {dateRange, setDateRange} = useLogsContext();
   return (
     <Popover>
       <PopoverTrigger asChild>
