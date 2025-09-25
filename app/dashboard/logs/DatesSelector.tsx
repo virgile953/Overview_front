@@ -24,7 +24,7 @@ const {dateRange, setDateRange} = useLogsContext();
         >
           <CalendarIcon />
           {dateRange && dateRange.from && dateRange.to ? 
-          dateRange.from.toLocaleDateString("fr-FR") + " -> " + dateRange.from.toLocaleDateString("fr-FR")
+          dateRange.from.toLocaleDateString("fr-FR") + " -> " + dateRange.to.toLocaleDateString("fr-FR")
           
           : <span>Pick a date</span>}
         </Button>

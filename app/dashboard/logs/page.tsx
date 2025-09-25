@@ -25,9 +25,10 @@ export default async function Logs() {
         <div className="bg-card p-6 rounded-lg border">
           <div className="flex flex-row justify-between items-center mb-4">
             <h3 className="text-lg font-semibold align-middle">Log Activity Over Time</h3>
-            <DeviceSelector />
-            <DatesSelector />
-
+            <div className="flex gap-2">
+              <DeviceSelector />
+              <DatesSelector />
+            </div>
           </div>
           <LogChart data={chartData} />
         </div>
