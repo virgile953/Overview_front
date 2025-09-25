@@ -2,6 +2,7 @@ import { ApiDevice } from "@/app/api/device/route";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Device } from "@/models/server/devices";
 import { CirclePlus, Trash2 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 
 // Device Card Component
@@ -130,7 +131,7 @@ export default function DeviceCard({
       <div className="flex items-start justify-between mb-3">
         <div>
 
-          <p className="text-sm text-muted-foreground">{device.type}</p>
+          <Link className="text-sm text-muted-foreground" href={`/dashboard/devices/${device.name}`}>{device.name}</Link>
           {'source' in device && (
             <p className="text-xs text-muted-foreground mt-1">
               Source: {device.source}

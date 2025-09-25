@@ -174,10 +174,11 @@ function NavbarContent({ user }: { user?: { name: string; email: string; emailVe
     <>
       <h1 className="text-foreground text-lg font-semibold">
         {path && path.slice(1).split("/").map((segment, index) => (
-          <span key={index} className="text-foreground">
+          <Link key={index} className="text-foreground"
+            href={`/${path.split("/").slice(1, index + 2).join("/")}`}>
             {segment}
             {index < path.split("/").length - 2 && " - "}
-          </span>
+          </Link>
         ))}
       </h1>
       <div className="flex items-center space-x-4">

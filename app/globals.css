@@ -1,11 +1,12 @@
 @import "tailwindcss";
-
+@plugin 'tailwind-scrollbar';
 @plugin "tailwindcss-animate";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
 @config "../tailwind.config.ts";
+
 
 :root {
   --color-background: var(--background);

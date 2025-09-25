@@ -1,4 +1,5 @@
 "use server";
+import { Query } from "node-appwrite";
 import { db, deviceCollection } from "../name";
 import { databases } from "./config";
 
@@ -46,6 +47,22 @@ export async function getDevices(): Promise<Device[]> {
     })
   );
   return devices;
+}
+
+export async function getDevice(deviceName: string): Promise<Device | null> {
+  try {
+    const result = await databases.listDocuments(db, deviceCollection, [
+      Query.equal("name", deviceName),
+      Query.limit(1)
+    ]);
+    if (await isDevice(result.documents[0])) {
+      return result.documents[0] as unknown as Device;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching device:', error);
+    return null;
+  }
 }
 
 export async function addDevice(device: Omit<Device, '$id'>): Promise<Device> {
