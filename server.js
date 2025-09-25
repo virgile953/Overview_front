@@ -7,12 +7,12 @@ const hostname = dev ? "localhost" : "0.0.0.0"; // Listen on all interfaces in p
 const port = process.env.PORT || 3000;
 
 // CORS origins for development and production
-const allowedOrigins = dev 
+const allowedOrigins = dev
   ? ["http://localhost:3000"]
   : ["https://overview.management"];
 
 // when using middleware `hostname` and `port` must be provided below
-const app = next({ dev, hostname, port });
+const app = next({ dev, hostname, port, turbopack: true });
 const handler = app.getRequestHandler();
 
 app.prepare().then(() => {
