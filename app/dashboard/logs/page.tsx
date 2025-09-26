@@ -4,6 +4,7 @@ import DatesSelector from "./DatesSelector";
 import LogsClientWrapper from "./LogsClientWrapper";
 import { getDevices } from "@/models/server/devices";
 import DeviceSelector from "./DeviceSelector";
+export const dynamic = 'force-static'
 
 export default async function Logs() {
   const [devices, count, chartData] = await Promise.all([
