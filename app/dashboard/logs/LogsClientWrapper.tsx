@@ -64,6 +64,7 @@ export default function LogsClientWrapper({
   useEffect(() => {
     if (dateRange && dateRange.from && dateRange.to) {
       fetchLogsForChart(dateRange.from, dateRange.to, "hour", devices?.map(d => d.$id)).then(data => {
+        console.log(data.length);
         setChartData(data);
       });
     }

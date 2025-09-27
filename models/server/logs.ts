@@ -57,6 +57,15 @@ export async function getLogsForChart(startDate: Date, endDate: Date, interval: 
   warning: number,
   error: number,
 }[]> {
+  const whereClauses = [
+    sql`${deviceLogs.createdAt} <= ${sql.raw(`'${postgresNow(endDate)}'`)}`,
+    sql`${deviceLogs.createdAt} >= ${sql.raw(`'${postgresNow(startDate)}'`)}`
+  ];
+
+  if (deviceIds && deviceIds.length > 0) {
+    whereClauses.push(inArray(deviceLogs.deviceId, deviceIds));
+  }
+
   const req = Drizzle
     .select({
       hour: sql<string>`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})::text`,
@@ -64,37 +73,30 @@ export async function getLogsForChart(startDate: Date, endDate: Date, interval: 
       count: sql<number>`COUNT(*)::int`
     })
     .from(deviceLogs)
-    .where(
-      and(
-        deviceIds && deviceIds.length > 0 ? inArray(deviceLogs.deviceId, deviceIds) : undefined,
-
-        // sql`${deviceLogs.createdAt} >= NOW() - INTERVAL ${sql.raw(`'${period} ${interval + 's'}'`)}`,
-        sql`${deviceLogs.createdAt} <= ${sql.raw(`'${postgresNow(endDate)}'`)}`,
-        sql`${deviceLogs.createdAt} >= ${sql.raw(`'${postgresNow(startDate)}'`)}`,
-        sql`${deviceLogs.deviceId} in ANY(${deviceIds || []})`
-      )
-    )
+    .where(and(...whereClauses))
     .groupBy(
       sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})`,
       deviceLogs.level
     )
     .orderBy(sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt}) ASC`);
 
-  // console.log('Executing query for logs chart with params:', { startDate, endDate, period, interval });
   console.log('Query:', req.toSQL().sql);
   console.log('Params:', req.toSQL().params);
   const results = await req;
-  console.log('Query results:', results);
   const timeData: Record<string, { info: number; warning: number; error: number; }> = {};
+
+  const daysDifference = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+  const spansMultipleDays = daysDifference > 1;
 
   for (const row of results) {
     const date = new Date(row.hour);
     let timeKey: string;
 
-    // Format the time key based on the interval granularity
     switch (interval) {
       case 'second':
         timeKey = date.toLocaleString("fr-FR", {
+          month: "short",
+          day: "numeric",
           hour: "2-digit",
           minute: "2-digit",
           second: "2-digit",
@@ -102,19 +104,38 @@ export async function getLogsForChart(startDate: Date, endDate: Date, interval: 
         });
         break;
       case 'minute':
-        timeKey = date.toLocaleString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-          hour12: false
-        });
+        if (spansMultipleDays) {
+          timeKey = date.toLocaleString("fr-FR", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          });
+        } else {
+          timeKey = date.toLocaleString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false
+          });
+        }
         break;
       case 'hour':
-        timeKey = date.toLocaleString("fr-FR", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false
-        });
+        if (spansMultipleDays) {
+          // Include the date when spanning multiple days
+          timeKey = date.toLocaleString("fr-FR", {
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            hour12: false
+          });
+        } else {
+          // Only show the hour for single day
+          timeKey = date.toLocaleString("fr-FR", {
+            hour: "2-digit",
+            hour12: false
+          });
+        }
         break;
       case 'day':
         timeKey = date.toLocaleString("fr-FR", {
@@ -141,6 +162,7 @@ export async function getLogsForChart(startDate: Date, endDate: Date, interval: 
         break;
       default:
         timeKey = date.toLocaleString("fr-FR", {
+          month: "short",
           day: "numeric",
           hour: "2-digit",
           hour12: false

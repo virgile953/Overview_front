@@ -17,7 +17,7 @@ export default async function Logs() {
         return d;
       })(),
       new Date(),
-      "hour"
+      "day"
     ),
   ]);
 
