@@ -15,7 +15,7 @@ import { useLogsContext } from "./LogsClientWrapper"
 export default function DatesSelector() {
 const {dateRange, setDateRange} = useLogsContext();
   return (
-    <Popover>
+    <Popover modal>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
@@ -29,8 +29,8 @@ const {dateRange, setDateRange} = useLogsContext();
           : <span>Pick a date</span>}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0">
-        <Calendar classNames={{weekday: "p-2"}} mode="range" selected={dateRange} onSelect={setDateRange} />
+      <PopoverContent className="w-auto p-0 rounded-lg">
+        <Calendar className="rounded-lg bg-popover" classNames={{weekday: "p-2"}} mode="range" selected={dateRange} onSelect={setDateRange} />
       </PopoverContent>
     </Popover>
   )
