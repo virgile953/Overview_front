@@ -10,11 +10,17 @@ export default async function Logs() {
   const [devices, count, chartData] = await Promise.all([
     getDevices(),
     getLogCount(),
-    getLogsForChart(new Date(), new Date(), 24, "hour"),
+    getLogsForChart(
+      (() => {
+        const d = new Date();
+        d.setDate(d.getDate() - 1);
+        return d;
+      })(),
+      new Date(),
+      "hour"
+    ),
   ]);
 
-  console.log('Chart data:', chartData);
-  console.log('Devices:', devices);
   return (
     <LogsClientWrapper initialChartData={chartData} initialCount={count} initialDevices={devices}>
       <div className="space-y-6">
@@ -31,7 +37,7 @@ export default async function Logs() {
               <DatesSelector />
             </div>
           </div>
-          <LogChart data={chartData} />
+          <LogChart />
         </div>
       </div>
     </LogsClientWrapper>

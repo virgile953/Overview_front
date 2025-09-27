@@ -1,7 +1,7 @@
 "use server";
 import { deviceLogs } from '../../drizzle/schema';
 import Drizzle from '../../lib/db/db';
-import { eq, desc, count } from "drizzle-orm";
+import { eq, desc, count, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 export interface DeviceLog {
@@ -15,8 +15,18 @@ export interface DeviceLog {
 
 type sourceTime = "millennium" | "century" | "decade" | "year" | "quarter" | "month" | "week" | "day" | "hour" | "minute" | "second" | "milliseconds" | "microseconds"
 
-export async function getLogCount(): Promise<number> {
-  const result = await Drizzle.select({ count: count() }).from(deviceLogs);
+function postgresNow(date: Date): string {
+  const iso = date.toISOString();
+  const [dateSplit, timeSplit] = iso.split("T");
+  const [hms, msZ] = timeSplit.split(".");
+  const ms = (msZ || "0Z").replace("Z", "");
+  const micros = (ms + "000000").slice(0, 6);
+  return `${dateSplit} ${hms}.${micros}+00`;
+}
+
+
+export async function getLogCount(deviceId?: string): Promise<number> {
+  const result = await Drizzle.select({ count: count() }).from(deviceLogs).where(deviceId ? eq(deviceLogs.deviceId, deviceId) : undefined);
   return Number(result[0].count);
 }
 
@@ -41,26 +51,40 @@ export async function getAllLogs(max?: number): Promise<DeviceLog[]> {
   return logs;
 }
 
-export async function getLogsForChart(startDate: Date, endDate: Date, period: number = 24, interval: sourceTime = "hour"): Promise<{
+export async function getLogsForChart(startDate: Date, endDate: Date, interval: sourceTime = "hour", deviceIds?: string[]): Promise<{
   date: string,
   info: number,
   warning: number,
   error: number,
 }[]> {
-  const results = await Drizzle
+  const req = Drizzle
     .select({
       hour: sql<string>`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})::text`,
       level: deviceLogs.level,
       count: sql<number>`COUNT(*)::int`
     })
     .from(deviceLogs)
-    .where(sql`${deviceLogs.createdAt} >= NOW() - INTERVAL ${sql.raw(`'${period} ${interval + 's'}'`)}`)
+    .where(
+      and(
+        deviceIds && deviceIds.length > 0 ? inArray(deviceLogs.deviceId, deviceIds) : undefined,
+
+        // sql`${deviceLogs.createdAt} >= NOW() - INTERVAL ${sql.raw(`'${period} ${interval + 's'}'`)}`,
+        sql`${deviceLogs.createdAt} <= ${sql.raw(`'${postgresNow(endDate)}'`)}`,
+        sql`${deviceLogs.createdAt} >= ${sql.raw(`'${postgresNow(startDate)}'`)}`,
+        sql`${deviceLogs.deviceId} in ANY(${deviceIds || []})`
+      )
+    )
     .groupBy(
       sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})`,
       deviceLogs.level
     )
     .orderBy(sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt}) ASC`);
 
+  // console.log('Executing query for logs chart with params:', { startDate, endDate, period, interval });
+  console.log('Query:', req.toSQL().sql);
+  console.log('Params:', req.toSQL().params);
+  const results = await req;
+  console.log('Query results:', results);
   const timeData: Record<string, { info: number; warning: number; error: number; }> = {};
 
   for (const row of results) {

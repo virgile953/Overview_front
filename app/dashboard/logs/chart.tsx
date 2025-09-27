@@ -2,6 +2,7 @@
 
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import { useLogsContext } from "./LogsClientWrapper";
 
 const chartConfig = {
   info: {
@@ -18,19 +19,19 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-type ChartData = {
+export type ChartData = {
   date: string;
   info: number;
   warning: number;
   error: number;
 };
 
-type LogChartProps = {
-  data: ChartData[];
-}
 
-export default function LogChart({ data }: LogChartProps) {
-  if (data.length === 0) {
+export default function LogChart() {
+
+  const { chartData } = useLogsContext();
+
+  if (chartData.length === 0) {
     return (
       <div className="flex items-center justify-center h-[200px] text-muted-foreground">
         No data available for chart
@@ -38,13 +39,14 @@ export default function LogChart({ data }: LogChartProps) {
     );
   }
 
+
   return (
     <div className="w-full">
       <div className="w-full aspect-[3/1] max-h-[400px]"> {/* 3:1 aspect ratio with max height */}
 
         <ChartContainer config={chartConfig} className="max-h-full w-full">
           <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={data} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+            <AreaChart data={chartData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorInfo" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8} />
