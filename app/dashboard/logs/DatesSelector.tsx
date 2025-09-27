@@ -20,7 +20,7 @@ const {dateRange, setDateRange} = useLogsContext();
         <Button
           variant="outline"
           data-empty={!dateRange}
-          className="data-[empty=true]:text-muted-foreground justify-start text-left font-normal"
+          className="data-[empty=true]:text-muted-foreground justify-start text-left font-normal w-fit"
         >
           <CalendarIcon />
           {dateRange && dateRange.from && dateRange.to ? 

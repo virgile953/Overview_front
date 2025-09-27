@@ -16,6 +16,7 @@ interface LogsContextType {
   setLoading: (loading: boolean) => void;
   dateRange?: DateRange;
   setDateRange: (range?: DateRange) => void;
+  isLoadingChartData: boolean;
 }
 
 type ChartData = {
@@ -38,18 +39,16 @@ export const useLogsContext = () => {
 interface LogsClientWrapperProps {
   children: React.ReactNode;
   initialCount: number;
-  initialChartData: ChartData[];
   initialDevices?: Device[];
 }
 
 export default function LogsClientWrapper({
   children,
   initialCount,
-  initialChartData,
   initialDevices,
 }: LogsClientWrapperProps) {
   const [count, setCount] = useState<number>(initialCount);
-  const [chartData, setChartData] = useState<ChartData[]>(initialChartData);
+  const [chartData, setChartData] = useState<ChartData[]>([]);
   const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: (() => {
@@ -60,14 +59,18 @@ export default function LogsClientWrapper({
     to: new Date(),
   })
   const [devices, setDevices] = useState<Device[] | undefined>(undefined);
-
+  const [isLoadingChartData, setIsLoadingChartData] = useState(true);
   useEffect(() => {
     if (dateRange && dateRange.from && dateRange.to) {
+      setIsLoadingChartData(true);
+
       fetchLogsForChart(dateRange.from, dateRange.to, "hour", devices?.map(d => d.$id)).then(data => {
         console.log(data.length);
         setChartData(data);
       });
     }
+    setIsLoadingChartData(false);
+
   }, [dateRange, devices]);
 
   const contextValue = {
@@ -82,6 +85,7 @@ export default function LogsClientWrapper({
     setDateRange,
     devices,
     setDevices,
+    isLoadingChartData,
   };
 
   return (

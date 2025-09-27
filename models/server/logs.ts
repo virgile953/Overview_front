@@ -65,7 +65,6 @@ export async function getLogsForChart(startDate: Date, endDate: Date, interval: 
   if (deviceIds && deviceIds.length > 0) {
     whereClauses.push(inArray(deviceLogs.deviceId, deviceIds));
   }
-
   const req = Drizzle
     .select({
       hour: sql<string>`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt})::text`,
