@@ -30,7 +30,7 @@ const {dateRange, setDateRange} = useLogsContext();
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0 rounded-lg">
-        <Calendar className="rounded-lg bg-popover" classNames={{weekday: "p-2"}} mode="range" selected={dateRange} onSelect={setDateRange} />
+        <Calendar className="rounded-lg bg-popover" classNames={{weekday: "p-1"}} mode="range" selected={dateRange} onSelect={setDateRange} />
       </PopoverContent>
     </Popover>
   )
