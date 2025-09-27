@@ -80,8 +80,6 @@ export async function getLogsForChart(startDate: Date, endDate: Date, interval: 
     )
     .orderBy(sql`DATE_TRUNC(${sql.raw(`'${interval}'`)}, ${deviceLogs.createdAt}) ASC`);
 
-  console.log('Query:', req.toSQL().sql);
-  console.log('Params:', req.toSQL().params);
   const results = await req;
   const timeData: Record<string, { info: number; warning: number; error: number; }> = {};
 
