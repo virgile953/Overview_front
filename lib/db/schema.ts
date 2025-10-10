@@ -145,7 +145,7 @@ export const apikey = pgTable("apikey", {
 	metadata: text("metadata"),
 });
 
-export const devicesTable = pgTable('devices', {
+export const devices = pgTable('devices', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	organizationId: text("organization_id")
 		.notNull()
@@ -169,5 +169,26 @@ export const devicesTable = pgTable('devices', {
 		index('devices_ip_idx').using('btree', table.ipAddress),
 	]);
 
-export type Device = typeof devicesTable.$inferSelect;
-export type NewDevice = typeof devicesTable.$inferInsert;
+
+export type DeviceLogs = typeof deviceLogs.$inferSelect;
+export type NewDeviceLogs = typeof deviceLogs.$inferInsert;
+export type User = typeof user.$inferSelect;
+export type NewUser = typeof user.$inferInsert;
+export type Session = typeof session.$inferSelect;
+export type NewSession = typeof session.$inferInsert;
+export type Account = typeof account.$inferSelect;
+export type NewAccount = typeof account.$inferInsert;
+export type Verification = typeof verification.$inferSelect;
+export type NewVerification = typeof verification.$inferInsert;
+export type Organization = typeof organization.$inferSelect;
+export type NewOrganization = typeof organization.$inferInsert;
+export type Member = typeof member.$inferSelect;
+export type NewMember = typeof member.$inferInsert;
+export type Invitation = typeof invitation.$inferSelect;
+export type NewInvitation = typeof invitation.$inferInsert;
+export type TwoFactor = typeof twoFactor.$inferSelect;
+export type NewTwoFactor = typeof twoFactor.$inferInsert;
+export type Apikey = typeof apikey.$inferSelect;
+export type NewApikey = typeof apikey.$inferInsert;
+export type Device = typeof devices.$inferSelect;
+export type NewDevice = typeof devices.$inferInsert;
