@@ -21,7 +21,7 @@ export default function Register() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const data = await authClient.signUp.email({
+    await authClient.signUp.email({
       email: email,
       password: password,
       name: `${firstName} ${lastName.toUpperCase()}`,

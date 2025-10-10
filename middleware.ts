@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
-import { getLoggedInUser } from './models/server/auth';
 import { setClientDeviceCookie } from './lib/clientDeviceHandler';
 import { cookies } from 'next/headers';
 import { auth } from "@/lib/auth";
@@ -37,7 +36,6 @@ export async function middleware(request: NextRequest) {
 // See "Matching Paths" below to learn more
 export const config = {
   runtime: "nodejs",
-
   matcher: [
     '/((?!_next/static|_next/image|.well-known|api/socket|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$).*)',
   ],

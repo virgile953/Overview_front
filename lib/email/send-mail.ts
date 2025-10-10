@@ -34,10 +34,7 @@ export function sendTemplate(mailTo: string, templateId: number, variables: obje
   const request = coucou.post('send', { version: 'v3.1' }).request({
     Messages: [
       {
-        From: {
-          Email: 'admin@overview.management',
-          Name: 'Admin',
-        },
+        subject: 'Please verify your email',
         To: [
           {
             Email: mailTo,
