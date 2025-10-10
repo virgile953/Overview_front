@@ -6,6 +6,7 @@ import AvatarClient from "@/app/ui/AvatarClient";
 import { Separator } from "@/components/ui/separator";
 import { changeTheme } from "../actions/themeSwitcher";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
 
 interface UserProfileProps {
   name: string;
@@ -21,11 +22,17 @@ export default function UserProfile(props: UserProfileProps) {
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
 
   async function handleLogout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/login");
+    await authClient.signOut({
+      fetchOptions: {
+        onSuccess: () => {
+          router.push("/login"); // redirect to login page
+        },
+      },
+    });
   }
 
-  function toggleTheme() {
+  function toggleTheme(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
     const newIsDarkMode = !isDarkMode;
     setIsDarkMode(newIsDarkMode);
     document.documentElement.classList.toggle('dark', newIsDarkMode);
@@ -51,8 +58,10 @@ export default function UserProfile(props: UserProfileProps) {
   //mail verification
   async function verifyEmail() {
     if (verifyEmailSent) return; // prevent multiple clicks
-    const res = await fetch("/api/auth/user/verify-mail", { method: "POST" });
-    if (res.ok) {
+    const res = await authClient.sendVerificationEmail({
+      email: accountInfo?.email || props.email
+    });
+    if (!res.error) {
       setVerifyEmailSent(true);
     }
   }

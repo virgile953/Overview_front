@@ -34,6 +34,9 @@ import {
 export { SidebarProvider } from "@/components/ui/sidebar";
 import UserProfile from "../Navbar/UserProfile";
 import { Separator } from "@radix-ui/react-separator";
+import Image from "next/image";
+
+import logo from '@/public/logo/logo.svg';
 
 const navigation = [
   {
@@ -117,8 +120,8 @@ export function AppSidebar() {
       <SidebarHeader>
         <div className="flex flex-col gap-2 py-2 text-sidebar-foreground">
           <div className="flex items-center gap-2">
-            <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <Monitor className="size-4" />
+            <div className="relative flex aspect-square size-10 items-center justify-center rounded-lg bg-sidebar-accent text-sidebar-primary-foreground">
+              <Image src={logo} alt="Logo" fill className="p-1 stroke-1" />
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-semibold">Pi Overview</span>
@@ -168,7 +171,7 @@ export function AppSidebar() {
   );
 }
 
-function NavbarContent({ user }: { user?: { name: string; email: string; emailVerification: boolean; } | null; }) {
+function NavbarContent({ user }: { user?: { name: string; email: string; emailVerified: boolean; } | null; }) {
   const path = usePathname();
   return (
     <>
@@ -185,7 +188,7 @@ function NavbarContent({ user }: { user?: { name: string; email: string; emailVe
         <UserProfile
           name={user?.name || ""}
           email={user?.email || ""}
-          emailVerification={user?.emailVerification || false}
+          emailVerification={user?.emailVerified || false}
         />
       </div>
     </>
@@ -197,7 +200,7 @@ export function SidebarLayout({
   user,
 }: {
   children: React.ReactNode;
-  user?: { name: string; email: string; emailVerification: boolean; } | null;
+  user?: { name: string; email: string; emailVerified: boolean; } | null;
 }) {
   return (
     <div className="flex h-screen w-full">

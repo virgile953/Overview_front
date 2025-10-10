@@ -5,6 +5,7 @@ import { nextCookies } from "better-auth/next-js";
 import { organization, apiKey, twoFactor } from "better-auth/plugins";
 
 import * as schema from "@/drizzle/schema";
+import { verifyEmail } from "./email/verification";
 
 export const auth = betterAuth({
   database: drizzleAdapter(Drizzle, {
@@ -12,7 +13,15 @@ export const auth = betterAuth({
     schema: schema,
   }),
   emailAndPassword: {
-    enabled: true
+    enabled: true,
+    requireEmailVerification: false,
+  },
+  emailVerification: {
+    sendVerificationEmail: async ({ user, url, token }) => {
+      await verifyEmail({ email: user.email, token, url });
+    },
+    autoSignInAfterVerification: true,
+
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7, // 7 days
