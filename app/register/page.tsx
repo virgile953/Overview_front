@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { authClient } from "@/lib/auth-client";
+import { useRouter } from "next/navigation";
 
 export default function Register() {
   const [firstName, setFirstName] = useState("");
@@ -12,24 +14,37 @@ export default function Register() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const router = useRouter();
+
   const handleRegister = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const response = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ email, password, name: `${firstName} ${lastName.toUpperCase()}` }),
-    });
-    const data = await response.json();
-    if (response.ok) {
-      setSuccess("Registration successful!");
-    } else {
-      console.error("Registration failed:", data);
-      setError("Registration failed. Please try again.");
-    }
-    setIsSubmitting(false);
+
+    const data = await authClient.signUp.email({
+      email: email,
+      password: password,
+      name: `${firstName} ${lastName.toUpperCase()}`,
+      callbackURL: `${window.location.origin}/dashboard`
+    },
+      {
+        onRequest: () => {
+          setError(null);
+          setSuccess(null);
+          setIsSubmitting(true);
+        },
+        onSuccess: () => {
+          setIsSubmitting(false);
+          router.push("/dashboard")
+
+        },
+        onError: (err) => {
+          console.error("Registration error:", err);
+          setError(err.error.message || "Registration failed. Please try again.");
+          setIsSubmitting(false);
+        }
+      }
+    );
   };
 
   return (

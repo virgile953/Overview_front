@@ -2,7 +2,6 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { loginAction } from "./actions";
 import { useRouter } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
 
@@ -30,9 +29,6 @@ export default function Login() {
           setError(error.message ?? "An unknown error occurred")
           return
         }
-
-        // Server-side authentication via server action
-        await loginAction(email, password)
 
         // Redirect on success
         router.push("/dashboard")
