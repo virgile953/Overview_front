@@ -1,22 +1,27 @@
-"use server";
-import { account } from "@/models/server/config";
-import { cookies } from "next/headers";
+"use server"
 
-export async function handleLogin(formData: FormData) {
-  const email = formData.get("email") as string;
-  const password = formData.get("password") as string;
-  const cookieStore = await cookies();
+import { auth } from "@/lib/auth"
+import { headers } from "next/headers"
+
+export async function loginAction(email: string, password: string) {
   try {
-    const session = await account.createEmailPasswordSession(email, password);
-    cookieStore.set("a_session", session.secret, {
-      path: "/",
-      httpOnly: true,
-      sameSite: "lax",
-      secure: true,
-      
-    });
-    return { success: true };
-  } catch (err) {
-    return { error: err instanceof Error ? err.message : "Login failed" };
+    // Get the session from Better Auth on the server
+    const session = await auth.api.signInEmail({
+      body: {
+        email,
+        password,
+      },
+      headers: await headers(),
+    })
+
+    if (session) {
+      return { success: true }
+    } else {
+      throw new Error("Login failed")
+    }
+  } catch (error) {
+    console.error("Server login error:", error)
+    throw new Error("Authentication failed")
   }
 }
+

@@ -3,6 +3,7 @@ import type { NextRequest } from 'next/server'
 import { getLoggedInUser } from './models/server/auth';
 import { setClientDeviceCookie } from './lib/clientDeviceHandler';
 import { cookies } from 'next/headers';
+import { auth } from "@/lib/auth";
 
 export async function middleware(request: NextRequest) {
   const cookieStore = await cookies();
@@ -11,18 +12,22 @@ export async function middleware(request: NextRequest) {
   if (url.pathname.startsWith('/api/device')) {
     return NextResponse.next();
   }
-  const user = await getLoggedInUser();
+
+
+  const session = await auth.api.getSession({
+    headers: request.headers
+  })
 
   const clientDevice = cookieStore.get('client-device');
   if (!clientDevice) {
     await setClientDeviceCookie(request);
   }
 
-  if (user && (url.pathname === '/login' || url.pathname === '/' || url.pathname === '/register')) {
+  if (session && (url.pathname === '/login' || url.pathname === '/' || url.pathname === '/register')) {
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
-  if (!user && (url.pathname !== '/login' && url.pathname !== '/register' && !url.pathname.startsWith('/api/auth'))) {
+  if (!session && (url.pathname !== '/login' && url.pathname !== '/register' && !url.pathname.startsWith('/api/auth'))) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
@@ -31,6 +36,8 @@ export async function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
+  runtime: "nodejs",
+
   matcher: [
     '/((?!_next/static|_next/image|.well-known|api/socket|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$).*)',
   ],

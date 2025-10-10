@@ -1,8 +1,10 @@
-import env from "@/app/env";
 import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 
+const pool = new Pool({
+  connectionString: process.env.PG_STRING!,
+});
 
-
-const Drizzle = drizzle(env.postgresql.connectionString);
+const Drizzle = drizzle(pool);
 
 export default Drizzle;

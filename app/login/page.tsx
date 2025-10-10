@@ -2,8 +2,9 @@
 import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { handleLogin } from "./actions";
+import { loginAction } from "./actions";
 import { useRouter } from "next/navigation";
+import { signIn } from "@/lib/auth-client";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -12,24 +13,34 @@ export default function Login() {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
+
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    setError("")
     e.preventDefault();
-    setError(null);
-
+    console.log("Submitting login form with:", { email, password });
     startTransition(async () => {
-      const formData = new FormData();
-      formData.append("email", email);
-      formData.append("password", password);
+      try {
+        // Client-side authentication
+        const { error } = await signIn.email({
+          email: email,
+          password: password,
+        })
 
-      const result = await handleLogin(formData);
+        if (error) {
+          setError(error.message ?? "An unknown error occurred")
+          return
+        }
 
-      if (result?.success) {
-        router.push("/dashboard");
-      } else {
-        setError(result?.error || "Login failed");
+        // Server-side authentication via server action
+        await loginAction(email, password)
+
+        // Redirect on success
+        router.push("/dashboard")
+      } catch {
+        setError("Login failed. Please try again.")
       }
-    });
-  };
+    })
+  }
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row font-sans bg-background">
