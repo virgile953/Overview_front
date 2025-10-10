@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { user, account, twoFactor, apikey, invitation, organization, member, session } from "./schema";
+import { user, account, twoFactor, organization, devices, apikey, invitation, member, session } from "./schema";
 
 export const accountRelations = relations(account, ({one}) => ({
 	user: one(user, {
@@ -24,6 +24,19 @@ export const twoFactorRelations = relations(twoFactor, ({one}) => ({
 	}),
 }));
 
+export const devicesRelations = relations(devices, ({one}) => ({
+	organization: one(organization, {
+		fields: [devices.organizationId],
+		references: [organization.id]
+	}),
+}));
+
+export const organizationRelations = relations(organization, ({many}) => ({
+	devices: many(devices),
+	invitations: many(invitation),
+	members: many(member),
+}));
+
 export const apikeyRelations = relations(apikey, ({one}) => ({
 	user: one(user, {
 		fields: [apikey.userId],
@@ -40,11 +53,6 @@ export const invitationRelations = relations(invitation, ({one}) => ({
 		fields: [invitation.organizationId],
 		references: [organization.id]
 	}),
-}));
-
-export const organizationRelations = relations(organization, ({many}) => ({
-	invitations: many(invitation),
-	members: many(member),
 }));
 
 export const memberRelations = relations(member, ({one}) => ({

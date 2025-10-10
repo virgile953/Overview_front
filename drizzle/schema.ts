@@ -1,4 +1,7 @@
-import { pgTable, foreignKey, text, timestamp, unique, boolean, integer, index, primaryKey, uuid } from "drizzle-orm/pg-core"
+import { pgTable, foreignKey, text, timestamp, index, uuid, unique, boolean, integer, primaryKey } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+
+
 
 export const account = pgTable("account", {
 	id: text().primaryKey().notNull(),
@@ -32,6 +35,32 @@ export const twoFactor = pgTable("two_factor", {
 			columns: [table.userId],
 			foreignColumns: [user.id],
 			name: "two_factor_user_id_user_id_fk"
+		}).onDelete("cascade"),
+]);
+
+export const devices = pgTable("devices", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	name: text().notNull(),
+	type: text().notNull(),
+	status: text().notNull(),
+	location: text().notNull(),
+	ipAddress: text("ip_address").notNull(),
+	macAddress: text("mac_address").notNull(),
+	serialNumber: text("serial_number").notNull(),
+	firmwareVersion: text("firmware_version").notNull(),
+	lastActive: timestamp("last_active", { mode: 'string' }).notNull(),
+	organizationId: text("organization_id").notNull(),
+}, (table) => [
+	index("devices_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),
+	index("devices_ip_idx").using("btree", table.ipAddress.asc().nullsLast().op("text_ops")),
+	index("devices_mac_idx").using("btree", table.macAddress.asc().nullsLast().op("text_ops")),
+	index("devices_name_idx").using("btree", table.name.asc().nullsLast().op("text_ops")),
+	index("devices_org_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
+	index("devices_serial_idx").using("btree", table.serialNumber.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "devices_organization_id_organization_id_fk"
 		}).onDelete("cascade"),
 ]);
 

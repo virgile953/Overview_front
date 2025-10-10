@@ -72,19 +72,6 @@ export async function addDevice(device: Omit<Device, '$id'>): Promise<Device> {
     throw new Error("Invalid device document created");
   }
   return result as unknown as Device;
-  // return {
-  //   $id: result.$id,
-  //   name: result.name,
-  //   type: result.type,
-  //   status: result.status,
-  //   location: result.location,
-  //   ipAddress: result.ipAddress,
-  //   macAddress: result.macAddress,
-  //   serialNumber: result.serialNumber,
-  //   firmwareVersion: result.firmwareVersion,
-  //   lastActive: result.lastActive,
-  //   ownerId: result.ownerId,
-  // };
 }
 
 export async function updateDevice(deviceId: string, updates: Partial<Omit<Device, '$id'>>): Promise<Device> {

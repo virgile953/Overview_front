@@ -9,7 +9,7 @@ export const deviceLogs = pgTable("device_logs", {
 	createdAt: timestamp("created_at", { withTimezone: true, mode: 'string' }).defaultNow().notNull(),
 }, (table) => [
 	index("device_logs_created_at_idx").using("btree", table.createdAt.desc().nullsFirst().op("timestamptz_ops")),
-	primaryKey({ columns: [table.id, table.createdAt], name: "device_logs_pkey"}),
+	primaryKey({ columns: [table.id, table.createdAt], name: "device_logs_pkey" }),
 ]);
 
 
@@ -144,3 +144,30 @@ export const apikey = pgTable("apikey", {
 	permissions: text("permissions"),
 	metadata: text("metadata"),
 });
+
+export const devicesTable = pgTable('devices', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	name: text('name').notNull(),
+	type: text('type').notNull(),
+	status: text('status').notNull(),
+	location: text('location').notNull(),
+	ipAddress: text('ip_address').notNull(),
+	macAddress: text('mac_address').notNull(),
+	serialNumber: text('serial_number').notNull(),
+	firmwareVersion: text('firmware_version').notNull(),
+	lastActive: timestamp('last_active').notNull(),
+}
+	, (table) => [
+		index('devices_org_idx').using('btree', table.organizationId),
+		index('devices_id_idx').using('btree', table.id),
+		index('devices_mac_idx').using('btree', table.macAddress),
+		index('devices_name_idx').using('btree', table.name),
+		index('devices_serial_idx').using('btree', table.serialNumber),
+		index('devices_ip_idx').using('btree', table.ipAddress),
+	]);
+
+export type Device = typeof devicesTable.$inferSelect;
+export type NewDevice = typeof devicesTable.$inferInsert;
