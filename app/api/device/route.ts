@@ -1,9 +1,10 @@
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
-import { Device, getDevices, updateDevice } from "@/models/server/devices";
+import { getDevices, updateDevice } from "@/models/server/devices";
 import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
 import { addDeviceLog } from "@/models/server/logs";
+import { Device } from "@/lib/db/schema";
 
-export interface ApiDevice extends Device {
+export interface ApiDevice extends Partial<Device> {
   deviceId: string;
   lastSeen: Date | string;
   connectionStatus: string;
@@ -36,7 +37,7 @@ export interface singleDeviceResponse {
   serialNumber?: string;
   firmwareVersion?: string;
   lastActive: string;
-  ownerId: string;
+  organizationId: string;
   lastSeen: Date | string;
   connectionStatus: string;
   dbId?: string;
@@ -115,7 +116,7 @@ async function getCurrentDeviceData(): Promise<DeviceResponse> {
       const existingDevice = allDevices.get(macAddress);
       allDevices.set(macAddress, {
         deviceId: macAddress,
-        $id: data.dbId || existingDevice?.$id || "",
+        id: data.dbId || existingDevice?.id || "",
         ...data.device,
         lastSeen: data.lastSeen,
         connectionStatus: data.status,
@@ -139,7 +140,7 @@ async function getCurrentDeviceData(): Promise<DeviceResponse> {
     const cachedDevices = DeviceCacheManager.getAllDevices();
     const devices = Array.from(cachedDevices.entries()).map(([id, data]) => ({
       deviceId: id,
-      $id: data.dbId || "",
+      id: data.dbId || "",
       ...data.device,
       lastSeen: data.lastSeen,
       connectionStatus: data.status,
@@ -161,10 +162,11 @@ async function getCurrentDeviceData(): Promise<DeviceResponse> {
 export async function POST(request: Request) {
   const requestData = await request.json();
 
-  const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, ownerId, lastActive } = requestData;
+  const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, organizationId, lastActive } = requestData;
 
-  if (!name || !type || !status || !ownerId || !macAddress) {
-    return new Response(JSON.stringify({ error: "Missing required fields (name, type, status, ownerId, macAddress are required)" }), { status: 400 });
+  if (!name || !type || !status || !organizationId || !macAddress) {
+    console.log('Invalid device data received:', requestData);  
+    return new Response(JSON.stringify({ error: "Missing required fields (name, type, status, organizationId, macAddress are required)" }), { status: 400 });
   }
 
   const deviceId: string = macAddress;
@@ -182,7 +184,7 @@ export async function POST(request: Request) {
     let dbAction: string = 'cache-only';
 
     if (existingDbDevice) {
-      const updatedDevice = await updateDevice(existingDbDevice.$id, {
+      const updatedDevice = await updateDevice(existingDbDevice.id, {
         name,
         type,
         status,
@@ -191,11 +193,11 @@ export async function POST(request: Request) {
         serialNumber,
         firmwareVersion,
         lastActive: lastActive || currentTime.toISOString(),
-        ownerId,
+        organizationId: organizationId,
       });
       const timeDiff = currentTime.getTime() - new Date(lastActive).getTime();
-      addDeviceLog({ device: updatedDevice.$id, status: 'info', message: 'Device updated via API', latency: timeDiff });
-      dbId = updatedDevice.$id;
+      addDeviceLog({ device: updatedDevice.id, status: 'info', message: 'Device updated via API', latency: timeDiff });
+      dbId = updatedDevice.id;
       dbAction = 'updated';
     }
     // If device doesn't exist in DB, we only cache it (don't create new DB entry)
@@ -211,7 +213,7 @@ export async function POST(request: Request) {
         serialNumber,
         firmwareVersion,
         lastActive: lastActive || currentTime.toISOString(),
-        ownerId,
+        organizationId: organizationId,
       },
       lastSeen: new Date(),
       status: 'online',
@@ -233,7 +235,7 @@ export async function POST(request: Request) {
         serialNumber,
         firmwareVersion,
         lastActive: lastActive || currentTime.toISOString(),
-        ownerId,
+        organizationId,
         lastSeen: new Date(),
         connectionStatus: 'online',
         dbId
@@ -280,7 +282,7 @@ export async function POST(request: Request) {
         serialNumber,
         firmwareVersion,
         lastActive: lastActive || currentTime.toISOString(),
-        ownerId,
+        organizationId,
       },
       lastSeen: new Date(),
       status: 'online'
@@ -301,7 +303,7 @@ export async function POST(request: Request) {
         serialNumber,
         firmwareVersion,
         lastActive: lastActive || currentTime.toISOString(),
-        ownerId,
+        organizationId,
         lastSeen: new Date(),
         connectionStatus: 'online',
         dbId: undefined // No DB ID in error case
@@ -356,7 +358,7 @@ export async function GET(request: Request) {
       dbDevices.forEach(device => {
         allDevices.set(device.macAddress, {
           deviceId: device.macAddress,
-          ...device, // This includes $id
+          ...device, // This includes id
           lastSeen: new Date(device.lastActive),
           connectionStatus: 'offline', // Default to offline, will be updated if in cache
           source: 'database'
@@ -370,11 +372,21 @@ export async function GET(request: Request) {
 
         allDevices.set(macAddress, {
           deviceId: macAddress,
-          $id: data.dbId || existingDevice?.$id || "",
+          id: data.dbId || existingDevice?.id || "",
           ...data.device,
           lastSeen: data.lastSeen,
           connectionStatus: data.status,
-          source: data.dbId ? 'database+cache' : 'cache-only'
+          source: data.dbId ? 'database+cache' : 'cache-only',
+          name: "",
+          organizationId: "",
+          type: "",
+          status: "",
+          location: "",
+          ipAddress: "",
+          macAddress: "",
+          serialNumber: "",
+          firmwareVersion: "",
+          lastActive: new Date(),
         });
       });
 

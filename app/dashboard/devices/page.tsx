@@ -69,13 +69,14 @@ export default function Devices() {
             ...updatedDevices[deviceIndex],
             ...data,
             lastSeen: new Date(data.lastSeen),
+            lastActive: new Date(data.lastActive),
             connectionStatus: data.connectionStatus,
             source: data.dbId ? 'database+cache' : 'cache-only'
           };
         } else {
           // Add new device if it doesn't exist
           const newDevice: ApiDevice = {
-            $id: data.dbId || "",
+            id: data.dbId || "",
             deviceId: data.deviceId,
             name: data.name,
             type: data.type,
@@ -85,8 +86,8 @@ export default function Devices() {
             macAddress: data.macAddress,
             serialNumber: data.serialNumber || "",
             firmwareVersion: data.firmwareVersion || "",
-            lastActive: data.lastActive,
-            ownerId: data.ownerId,
+            lastActive: new Date(data.lastActive),
+            organizationId: data.organizationId,
             lastSeen: new Date(data.lastSeen),
             connectionStatus: data.connectionStatus,
             source: data.dbId ? 'database+cache' : 'cache-only',
@@ -215,7 +216,7 @@ export default function Devices() {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {devices.map((device) => (
               <div
-                key={device.deviceId || device.$id}
+                key={device.deviceId || device.id}
                 className={`transition-all rounded-lg duration-200 ${recentlyUpdatedDevices.has(device.deviceId)
                   ? 'ring-2 ring-emerald-400 ring-opacity-75 shadow-lg'
                   : ''

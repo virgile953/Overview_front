@@ -1,27 +1,14 @@
 "use server";
-import { Query } from "node-appwrite";
-import { db, deviceCollection } from "../name";
-import { databases } from "./config";
+import Drizzle from "@/lib/db/db";
+import { Device, devices, NewDevice } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 
-export interface Device {
-  $id: string;
-  name: string;
-  type: string;
-  status: string;
-  location: string;
-  ipAddress: string;
-  macAddress: string;
-  serialNumber: string;
-  firmwareVersion: string;
-  lastActive: string;
-  ownerId: string;
-}
 
 export async function isDevice(doc: unknown): Promise<boolean> {
   return (
     typeof doc === "object" &&
     doc !== null &&
-    "$id" in doc &&
+    "id" in doc &&
     "name" in doc &&
     "type" in doc &&
     "status" in doc &&
@@ -31,32 +18,21 @@ export async function isDevice(doc: unknown): Promise<boolean> {
     "serialNumber" in doc &&
     "firmwareVersion" in doc &&
     "lastActive" in doc &&
-    "ownerId" in doc
+    "organizationId" in doc
   );
 }
 
 export async function getDevices(): Promise<Device[]> {
-  const result = await databases.listDocuments(db, deviceCollection);
-  // Map raw documents to Device type
-  const devices = await Promise.all(
-    result.documents.map(async (doc: unknown) => {
-      if (await isDevice(doc)) {
-        return doc as Device;
-      }
-      throw new Error("Invalid device document");
-    })
-  );
-  return devices;
+  const result = await Drizzle.select().from(devices).where(eq(devices.organizationId, ""));
+  return result;
 }
 
-export async function getDevice(deviceName: string): Promise<Device | null> {
+export async function getDevice(deviceId: string): Promise<Device | null> {
   try {
-    const result = await databases.listDocuments(db, deviceCollection, [
-      Query.equal("name", deviceName),
-      Query.limit(1)
-    ]);
-    if (await isDevice(result.documents[0])) {
-      return result.documents[0] as unknown as Device;
+
+    const result = await Drizzle.select().from(devices).where(eq(devices.id, deviceId)).limit(1);
+    if (result.length > 0 && await isDevice(result[0])) {
+      return result[0];
     }
     return null;
   } catch (error) {
@@ -65,32 +41,33 @@ export async function getDevice(deviceName: string): Promise<Device | null> {
   }
 }
 
-export async function addDevice(device: Omit<Device, '$id'>): Promise<Device> {
-  const result = await databases.createDocument(db, deviceCollection, 'unique()', device);
+export async function addDevice(device: NewDevice): Promise<Device> {
+  const result = await Drizzle.insert(devices).values(device).returning();
 
-  if (!await isDevice(result)) {
-    throw new Error("Invalid device document created");
+  if (!result || result.length === 0) {
+    throw new Error("Failed to create device");
   }
-  return result as unknown as Device;
+  if (!await isDevice(result[0])) {
+    throw new Error("Invalid device created");
+  }
+  return result[0];
 }
 
-export async function updateDevice(deviceId: string, updates: Partial<Omit<Device, '$id'>>): Promise<Device> {
-  const result = await databases.updateDocument(db, deviceCollection, deviceId, updates);
-  return {
-    $id: result.$id,
-    name: result.name,
-    type: result.type,
-    status: result.status,
-    location: result.location,
-    ipAddress: result.ipAddress,
-    macAddress: result.macAddress,
-    serialNumber: result.serialNumber,
-    firmwareVersion: result.firmwareVersion,
-    lastActive: result.lastActive,
-    ownerId: result.ownerId,
-  };
+export async function updateDevice(deviceId: string, updates: Partial<NewDevice>): Promise<Device> {
+
+  const result = await Drizzle.update(devices).set(updates).where(eq(devices.id, deviceId)).returning();
+  if (!result || result.length === 0) {
+    throw new Error("Failed to update device");
+  }
+  if (!await isDevice(result[0])) {
+    throw new Error("Invalid device updated");
+  }
+  return result[0];
 }
 
 export async function deleteDevice(deviceId: string): Promise<void> {
-  await databases.deleteDocument(db, deviceCollection, deviceId);
+  const res = await Drizzle.delete(devices).where(eq(devices.id, deviceId));
+  if (res.rowCount === 0) {
+    throw new Error("Failed to delete device");
+  }
 }
