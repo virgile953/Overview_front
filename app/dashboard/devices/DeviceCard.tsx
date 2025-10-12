@@ -1,9 +1,10 @@
 import { ApiDevice } from "@/app/api/device/route";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Device } from "@/models/server/devices";
+import { Device, NewDevice } from "@/lib/db/schema";
 import { CirclePlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { addDeviceToDb } from "./actions";
 
 // Device Card Component
 export default function DeviceCard({
@@ -53,7 +54,7 @@ export default function DeviceCard({
       const lastSeen = typeof device.lastSeen === 'string' ? device.lastSeen : device.lastSeen.toISOString();
       return formatLastSeen(lastSeen);
     }
-    return formatLastSeen(device.lastActive);
+    return formatLastSeen(device.lastActive.toISOString());
   }
 
   function isDeviceInDatabase(device: ApiDevice | Device): boolean {
@@ -68,7 +69,7 @@ export default function DeviceCard({
     if (isRemoving) return;
     setIsRemoving(true);
     try {
-      const response = await fetch(`/api/device/admin?dbId=${device.$id}&macAddress=${device.macAddress}`, {
+      const response = await fetch(`/api/device/admin?dbId=${device.id}&macAddress=${device.macAddress}`, {
         method: 'DELETE',
         headers:
         {
@@ -84,27 +85,26 @@ export default function DeviceCard({
     }
   }
 
-  async function addDeviceToDb() {
+  async function addDevice() {
     if (isAdding) return;
     setIsAdding(true);
 
     try {
-      const response = await fetch('/api/device/admin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(device),
-      });
-      const result = await response.json();
-      if (response.ok && result.success) {
-        // Call the callback to refresh the devices list
+      // Validate required fields before adding to database
+      if (!device.name || !device.type || !device.status || !device.location ||
+        !device.ipAddress || !device.macAddress || !device.serialNumber ||
+        !device.firmwareVersion || !device.lastActive) {
+        throw new Error('Missing required device fields');
+      }
+
+      const response = await addDeviceToDb(device as NewDevice);
+
+      if (response) {
         onDeviceAdded();
       }
     } catch {
     } finally {
       setIsAdding(false);
-      // Clear message after 3 seconds
       setTimeout(() => {
       }, 3000);
     }
@@ -174,7 +174,7 @@ export default function DeviceCard({
                 <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
               </TooltipTrigger>
               <TooltipContent className="text-sm">
-                <span>{new Date(device.lastActive).toLocaleTimeString('fr-FR')}</span>
+                <span>{device.lastActive?.toLocaleTimeString('fr-FR')}</span>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -196,7 +196,7 @@ export default function DeviceCard({
                 <Tooltip>
                   <TooltipTrigger>
                     <CirclePlus
-                      onClick={() => !isAdding ? addDeviceToDb() : null}
+                      onClick={() => !isAdding ? addDevice() : null}
                       size={20}
                       className={`cursor-pointer hover:text-emerald-400 ${isAdding ? 'animate-spin' : ''}`}
                     />

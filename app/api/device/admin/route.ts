@@ -4,9 +4,9 @@ import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 // Admin route to manually add devices to the database
 export async function POST(request: Request) {
   const requestData = await request.json();
-  const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, ownerId } = requestData;
+  const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, organizationId } = requestData;
 
-  if (!name || !type || !status || !ownerId || !macAddress) {
+  if (!name || !type || !status || !organizationId || !macAddress) {
     return new Response(JSON.stringify({
       error: "Missing required fields (name, type, status, ownerId, macAddress are required)"
     }), { status: 400 });
@@ -23,8 +23,8 @@ export async function POST(request: Request) {
       macAddress,
       serialNumber,
       firmwareVersion,
-      lastActive: new Date().toISOString(),
-      ownerId,
+      lastActive: new Date(),
+      organizationId: organizationId
     });
 
     const existingCacheEntry = DeviceCacheManager.getDevice(macAddress);
@@ -42,9 +42,9 @@ export async function POST(request: Request) {
           serialNumber,
           firmwareVersion,
           lastActive: newDevice.lastActive,
-          ownerId,
+          organizationId,
         },
-        dbId: newDevice.$id // Now it has a database ID
+        dbId: newDevice.id // Now it has a database ID
       });
     } else {
       // Add new cache entry
@@ -59,11 +59,11 @@ export async function POST(request: Request) {
           serialNumber,
           firmwareVersion,
           lastActive: newDevice.lastActive,
-          ownerId,
+          organizationId,
         },
         lastSeen: new Date(),
         status: 'offline', // Default to offline since it's manually added
-        dbId: newDevice.$id
+        dbId: newDevice.id
       });
     }
 
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
       success: true,
       message: "Device added to database and cache updated",
       deviceId: macAddress,
-      dbId: newDevice.$id,
+      dbId: newDevice.id,
       cacheUpdated: true,
       totalCachedDevices: stats.total,
       stats

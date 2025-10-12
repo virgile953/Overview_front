@@ -5,6 +5,7 @@ import { getSocketUrl } from "@/lib/socketConfig";
 import DeviceCard from "./DeviceCard";
 import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/app/api/device/route";
 import Legend from "./legend";
+import { fetchDevices } from "./actions";
 
 export default function Devices() {
   const [deviceData, setDeviceData] = useState<DeviceResponse | null>(null);
@@ -14,30 +15,30 @@ export default function Devices() {
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [recentlyUpdatedDevices, setRecentlyUpdatedDevices] = useState<Set<string>>(new Set());
 
-  const fetchDevices = async (isRefresh = false) => {
-    try {
-      if (isRefresh) {
-        setRefreshing(true);
-      } else {
-        setLoading(true);
-      }
-      const res = await fetch("/api/device");
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      const data = await res.json();
-      setDeviceData(data);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch devices');
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
+  // const fetchDevices = async (isRefresh = false) => {
+  //   try {
+  //     if (isRefresh) {
+  //       setRefreshing(true);
+  //     } else {
+  //       setLoading(true);
+  //     }
+  //     const res = await fetch("/api/device");
+  //     if (!res.ok) {
+  //       throw new Error(`HTTP error! status: ${res.status}`);
+  //     }
+  //     const data = await res.json();
+  //     setDeviceData(data);
+  //     setError(null);
+  //   } catch (err) {
+  //     setError(err instanceof Error ? err.message : 'Failed to fetch devices');
+  //   } finally {
+  //     setLoading(false);
+  //     setRefreshing(false);
+  //   }
+  // };
 
   useEffect(() => {
-    fetchDevices(false);
+    fetchDevices();
     const newSocket = io(getSocketUrl());
 
     newSocket.on('devicesUpdated', (data: DeviceResponse) => {
@@ -189,7 +190,11 @@ export default function Devices() {
 
           <div className="flex flex-col  sm:items-center ">
             <button
-              onClick={() => fetchDevices(true)}
+              onClick={async () => {
+                setRefreshing(true);
+                await fetchDevices()
+                setRefreshing(false);
+              }}
               disabled={refreshing}
               className="px-3 py-1 text-sm bg-emerald-600 text-white rounded-md hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
@@ -224,7 +229,11 @@ export default function Devices() {
               >
                 <DeviceCard
                   device={device}
-                  onDeviceAdded={() => fetchDevices(true)}
+                  onDeviceAdded={async () => {
+                    setRefreshing(true);
+                    await fetchDevices()
+                    setRefreshing(false);
+                  }}
                 />
               </div>
             ))}
