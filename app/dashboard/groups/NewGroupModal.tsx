@@ -34,7 +34,7 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
         localisation: formData.localisation,
         description: formData.description,
         users: (formData.users ?? []).map(user => user && user.$id ? user.$id.trim() : "").filter(Boolean),
-        devices: (formData.devices ?? []).map(device => device && device.$id ? device.$id.trim() : "").filter(Boolean),
+        devices: (formData.devices ?? []).map(device => device && device.id ? device.id.trim() : "").filter(Boolean),
       };
 
       const res = await fetch("/api/groups", {

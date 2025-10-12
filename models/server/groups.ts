@@ -2,8 +2,8 @@
 import { Query } from "node-appwrite";
 import { db, groupCollection } from "../name";
 import { databases } from "./config";
-import { Device, isDevice } from "./devices";
 import { User, isUser } from "./users";
+import { Device } from "@/lib/db/schema";
 
 
 export interface Group {
@@ -23,8 +23,7 @@ export async function isGroup(doc: unknown): Promise<boolean> {
     typeof (doc as Group).name === "string" &&
     typeof (doc as Group).localisation === "string" &&
     typeof (doc as Group).description === "string" &&
-    Array.isArray((doc as Group).users) && (doc as Group).users.every(u => isUser(u)) &&
-    Array.isArray((doc as Group).devices) && (doc as Group).devices.every(d => isDevice(d))
+    Array.isArray((doc as Group).users) && (doc as Group).users.every(u => isUser(u))
   ) {
     return true;
   }
@@ -91,7 +90,7 @@ export async function updateGroup(group: Group): Promise<Group | null> {
       localisation: updatedGroup.localisation,
       name: updatedGroup.name,
       users: updatedGroup.users.map(u => u.$id),
-      devices: updatedGroup.devices.map(d => d.$id)
+      devices: updatedGroup.devices.map(d => d.id)
     });
     return updatedGroup;
   } catch (error) {
