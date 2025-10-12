@@ -1,8 +1,8 @@
 "use client";
-import { Device } from "@/models/server/devices";
 import { createContext, useContext, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { fetchLogsForChart } from "./actions";
+import { Device } from "@/lib/db/schema";
 
 interface LogsContextType {
   initialDevices?: Device[];
@@ -64,7 +64,7 @@ export default function LogsClientWrapper({
     if (dateRange && dateRange.from && dateRange.to) {
       setIsLoadingChartData(true);
 
-      fetchLogsForChart(dateRange.from, dateRange.to, "hour", devices?.map(d => d.$id)).then(data => {
+      fetchLogsForChart(dateRange.from, dateRange.to, "hour", devices?.map(d => d.id)).then(data => {
         console.log(data.length);
         setChartData(data);
       });

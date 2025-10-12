@@ -1,5 +1,5 @@
 "use client";
-import { Device } from "@/models/server/devices";
+import { Device } from "@/lib/db/schema";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
@@ -47,13 +47,13 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
       <Select
         options={
           devices ? devices.map((device) => ({
-            value: device.$id,
+            value: device.id,
             label: device.name,
           })) : []
         }
         value={
           initialValue ? initialValue.map(device => ({
-            value: device.$id,
+            value: device.id,
             label: device.name,
           })) : []
         }
@@ -169,7 +169,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
           if (onChange && devices) {
             // Map selected options back to full Device objects
             const selectedDevices = (selected as Array<{ value: string, label: string }>)
-              .map(option => devices.find(user => user.$id === option.value))
+              .map(option => devices.find(device => device.id === option.value))
               .filter((user): user is Device => user !== undefined);
 
             onChange(selectedDevices);

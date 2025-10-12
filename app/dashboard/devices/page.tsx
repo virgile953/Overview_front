@@ -38,6 +38,7 @@ export default function Devices() {
   // };
 
   useEffect(() => {
+    setLoading(true);
     fetchDevices();
     const newSocket = io(getSocketUrl());
 
@@ -115,7 +116,7 @@ export default function Devices() {
           }
         };
       });
-
+      setLoading(false);
       setError(null);
     });
 

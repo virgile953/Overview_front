@@ -35,11 +35,11 @@ export default function DeviceSelector() {
             <CommandGroup>
               {initialDevices && initialDevices.map((device) => (
                 <CommandItem
-                  key={device.$id}
-                  value={device.$id}
+                  key={device.id}
+                  value={device.id}
                   onSelect={() => {
-                    if (devices && devices.some(d => d.$id === device.$id)) {
-                      setDevices(devices.filter(d => d.$id !== device.$id));
+                    if (devices && devices.some(d => d.id === device.id)) {
+                      setDevices(devices.filter(d => d.id !== device.id));
                     } else {
                       setDevices([...(devices || []), device]);
                     }
@@ -49,7 +49,7 @@ export default function DeviceSelector() {
                   <CheckIcon
                     className={cn(
                       "mr-2 h-4 w-4",
-                      devices && devices.some(d => d.$id === device.$id) ? "opacity-100" : "opacity-0"
+                      devices && devices.some(d => d.id === device.id) ? "opacity-100" : "opacity-0"
                     )}
                   />
                   {device.name}

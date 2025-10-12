@@ -37,6 +37,8 @@ import { Separator } from "@radix-ui/react-separator";
 import Image from "next/image";
 
 import logo from '@/public/logo/logo.svg';
+import { Organization, Session } from "@/lib/db/schema";
+import { OrganizationMenu } from "@/components/newOrganization";
 
 const navigation = [
   {
@@ -111,10 +113,15 @@ const navigation = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({
+  orgs,
+  session,
+}: {
+  orgs?: Organization[] | null;
+  session?: Session | null;
+}) {
   const pathname = usePathname();
   const sidebar = useSidebar();
-
   return (
     <Sidebar variant="floating" collapsible="icon" className="relative w-56">
       <SidebarHeader>
@@ -126,8 +133,12 @@ export function AppSidebar() {
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-semibold">Pi Overview</span>
               <span className="truncate text-xs">Raspberry Pi Monitor</span>
+
             </div>
           </div>
+          <OrganizationMenu orgs={orgs || undefined} session={session || undefined} />
+
+         
         </div>
       </SidebarHeader>
       <SidebarContent className="overflow-x-hidden">
@@ -198,13 +209,17 @@ function NavbarContent({ user }: { user?: { name: string; email: string; emailVe
 export function SidebarLayout({
   children,
   user,
+  orgs,
+  session,
 }: {
   children: React.ReactNode;
   user?: { name: string; email: string; emailVerified: boolean; } | null;
+  orgs?: Organization[] | null;
+  session?: Session | null;
 }) {
   return (
     <div className="flex h-screen w-full">
-      <AppSidebar />
+      <AppSidebar orgs={orgs} session={session} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-16 shrink-0 items-center justify-between gap-2 border-b px-4 bg-background">
           <div className="flex items-center gap-2">

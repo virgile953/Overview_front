@@ -1,7 +1,7 @@
-import { Device } from "@/models/server/devices";
+import { Device } from "./db/schema";
 
 export interface CacheDevice {
-  device: Omit<Device, '$id'>;
+  device: Omit<Device, 'id'>;
   lastSeen: Date;
   status: 'online' | 'offline';
   dbId?: string;

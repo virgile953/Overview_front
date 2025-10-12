@@ -19,7 +19,7 @@ const DevicePage = async ({ params }: DevicePageProps) => {
     notFound();
   }
 
-  const logs = await getDeviceLogs(device.$id, 50);
+  const logs = await getDeviceLogs(device.id, 50);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -167,7 +167,7 @@ const DevicePage = async ({ params }: DevicePageProps) => {
 
             <div>
               <label className="text-sm font-medium text-muted-foreground">Owner ID</label>
-              <p className="text-sm mt-1 p-2 bg-muted rounded font-mono">{device.ownerId}</p>
+              <p className="text-sm mt-1 p-2 bg-muted rounded font-mono">{device.organizationId}</p>
             </div>
           </div>
         </div>

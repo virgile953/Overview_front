@@ -13,12 +13,29 @@ export default async function Layout({
     headers: await headers(),
   });
 
+  const orgs = await auth.api.listOrganizations({
+    headers: await headers(),
+  });
+
   if (!session) {
     return <>{children}</>;
   }
   return (
     <SidebarProvider>
-      <SidebarLayout user={session.user}>
+      <SidebarLayout 
+        user={session.user} 
+        session={{
+          ...session.session,
+          ipAddress: session.session.ipAddress ?? null,
+          userAgent: session.session.userAgent ?? null,
+          activeOrganizationId: session.session.activeOrganizationId ?? null
+        }}
+        orgs={orgs.map(org => ({
+          ...org,
+          metadata: org.metadata ?? null,
+          logo: org.logo ?? null
+        }))}
+      >
         {children}
       </SidebarLayout>
     </SidebarProvider>
