@@ -6,11 +6,13 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from "./ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form";
 import { Input } from "./ui/input";
-import { PenBoxIcon, SquarePlus } from "lucide-react";
+import { ChevronsUpDown, PenBoxIcon, SquarePlus, Trash2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { Popover, PopoverTrigger, PopoverContent } from "./ui/popover";
 import { Separator } from "./ui/separator";
-import { Organization, Session } from "@/lib/db/schema";
+import { Session } from "@/lib/db/schema";
+import Image from "next/image";
+import { Organization } from "better-auth/plugins";
 
 const organizationSchema = z.object({
   name: z.string().min(1, {
@@ -28,80 +30,147 @@ interface MenuProps {
 
 export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }: MenuProps) {
   const { data: activeOrgData } = authClient.useActiveOrganization();
+  const { data: organizationsData } = authClient.useListOrganizations();
   const { data: sessionData } = authClient.useSession();
   const [open, setOpen] = useState(false);
-
+  const [newOrgOpen, setNewOrgOpen] = useState(false);
+  const [editedOrg, setEditedOrg] = useState<Organization | undefined>(undefined);
+  const [deleteOrgOpen, setDeleteOrgOpen] = useState(false);
+  const [orgToDelete, setOrgToDelete] = useState<Organization | undefined>(undefined);
   // Use reactive data if available, otherwise fall back to props
   const currentSession = sessionData?.session || initialSession;
-  const currentOrgs = initialOrgs; // Organizations list stays the same
+  const currentOrgs = organizationsData || initialOrgs; // Organizations list stays the same
 
   // Get the active organization - prefer reactive data
   const activeOrgId = activeOrgData?.id || currentSession?.activeOrganizationId || null;
   const activeOrg = currentOrgs?.find(org => org.id === activeOrgId);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="text-start w-full p-2 bg-sidebar-accent rounded-lg">
-        {currentSession && (
-          <div className="">
-            {currentOrgs && currentOrgs.length > 0 && activeOrg && (
-              <div className="flex items-center gap-2">
-                <PenBoxIcon className="size-4" />
-                {activeOrg.name}
-                {/* {activeOrg.logo && (
-                  <img
-                    src={activeOrg.logo}
-                    alt="Organization Logo"
-                    className="size-6 rounded-full object-cover"
-                  />
-                )} */}
-              </div>
-            )}
-          </div>
-        )}
-      </PopoverTrigger>
-      <PopoverContent side="right" className="p-1">
-        {currentOrgs && currentOrgs.length > 0 ? (
-          currentOrgs.map(org => (
-            <div key={org.id} className="hover:bg-accent rounded">
-              <Button
-                className={`w-full text-left ${org.id === activeOrgId ? 'bg-accent' : ''}`}
-                variant="ghost"
-                onClick={async () => {
-                  console.log(`Switch to organization: ${org.name}`);
-                  await authClient.organization.setActive({
-                    organizationId: org.id
-                  });
-                  setOpen(false);
-                }}
-              >
-                <div className="flex items-center gap-2 w-full">
-                  {/* {org.logo && org.logo !== "" && (
-                    <img
-                      src={org.logo}
-                      alt={`${org.name} logo`}
-                      className="size-5 rounded-full object-cover"
-                    />
-                  )} */}
-                  <span className="flex-1">{org.name}</span>
-                  {org.id === activeOrgId && (
-                    <span className="text-xs text-muted-foreground">Active</span>
-                  )}
+    <>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger className="text-start w-full p-2 bg-sidebar-accent rounded-lg">
+          {currentSession && (
+            <div className="">
+              {currentOrgs && currentOrgs.length > 0 && activeOrg && (
+                <div className="flex justify-between text-center gap-2">
+                  <div className="flex flex-row">
+                    {activeOrg.logo && (
+                      <Image
+                        src={"/logo/logo.svg"}
+                        alt="Organization Logo"
+                        className="size-6 rounded-full object-cover"
+                        width={24}
+                        height={24}
+                      />
+                    )}
+                    {activeOrg.name}
+                  </div>
+
+                  <ChevronsUpDown className="size-4 self-center" />
+
                 </div>
-              </Button>
+              )}
             </div>
-          ))
-        ) : (
-          <div className="text-muted-foreground p-2">No organizations available</div>
-        )}
-        <Separator orientation="horizontal" className="my-2 h-px bg-border" />
-        <Button className="flex gap-2 h-full w-full m-0" variant="ghost" asChild>
-          <div>
-            <OrgManager open={false} setOpen={setOpen} organization={undefined} />
-          </div>
-        </Button>
-      </PopoverContent>
-    </Popover>
+          )}
+        </PopoverTrigger>
+        <PopoverContent side="right" className="p-1">
+          {currentOrgs && currentOrgs.length > 0 ? (
+            currentOrgs.map(org => (
+              <div key={org.id} className="hover:bg-accent rounded">
+                <div
+                  className={`w-full text-left ${org.id === activeOrgId ? 'bg-accent' : ''}`}
+                  onClick={async () => {
+                    console.log(`Switch to organization: ${org.name}`);
+                    await authClient.organization.setActive({
+                      organizationId: org.id
+                    });
+                    setOpen(false);
+                  }}
+                >
+                  <div className="flex items-center gap-2 w-full">
+                    {org.logo && org.logo !== "" && (
+                      <img
+                        src={org.logo}
+                        alt={`${org.name} logo`}
+                        className="size-5 rounded-full object-cover"
+                      />
+                    )}
+                    <div className="flex-1">{org.name}</div>
+                    <div>
+                      <Button
+                        className="hover:bg-accent-foreground/10"
+                        variant={"ghost"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setNewOrgOpen(true);
+                          setEditedOrg(org);
+                        }}
+                      >
+                        <PenBoxIcon />
+                      </Button>
+                      <Button
+                        className="hover:bg-red-600/20 hover:text-red-600"
+                        variant={"ghost"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOrgToDelete(org);
+                          setDeleteOrgOpen(true);
+                        }}
+                      >
+                        <Trash2 />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="text-muted-foreground p-2">No organizations available</div>
+          )}
+          <Separator orientation="horizontal" className="my-2 h-px bg-border" />
+          <Button className="flex gap-2 h-full w-full m-0" variant="ghost" asChild>
+            <div>
+              <OrgManager open={newOrgOpen} setOpen={setNewOrgOpen} organization={editedOrg} />
+            </div>
+          </Button>
+        </PopoverContent>
+      </Popover>
+
+      <Dialog open={deleteOrgOpen} onOpenChange={setDeleteOrgOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Delete organization</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the organization "{orgToDelete?.name}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteOrgOpen(false)}>Cancel</Button>
+            <Button
+              variant="destructive"
+              onClick={async () => {
+                if (!orgToDelete) return;
+                try {
+                  const response = await authClient.organization.delete({
+                    organizationId: orgToDelete.id
+                  });
+                  if (response.error) {
+                    throw new Error(`Error: ${response.error.message}`);
+                  }
+                  setDeleteOrgOpen(false);
+                  setOpen(false);
+                } catch (error) {
+                  console.error("Failed to delete organization:", error);
+                  // Optionally, you could add a toast notification here
+                }
+              }}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 
@@ -142,6 +211,7 @@ export function OrgManager({ organization, open, setOpen }: ManagerProps) {
           data: {
             name: data.name,
             logo: data.logo,
+            slug: data.name.toLowerCase().replace(/\s+/g, '-'),
           }
         });
 
