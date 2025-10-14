@@ -3,7 +3,7 @@ import { auth } from '@/lib/auth';
 import Drizzle from '@/lib/db/db';
 import { devices, NewDevice } from '@/lib/db/schema';
 import { headers } from 'next/headers';
-import { eq } from 'drizzle-orm';
+import { getDeviceWithCache } from '@/lib/devices/devices';
 
 
 export async function fetchDevices() {
@@ -17,7 +17,7 @@ export async function fetchDevices() {
   if (!organizationId) {
     throw new Error('No active organization');
   }
-  const res = await Drizzle.select().from(devices).where(eq(devices.organizationId, organizationId));
+  const res = await getDeviceWithCache(organizationId);
   return res;
 }
 

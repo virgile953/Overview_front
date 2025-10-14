@@ -3,9 +3,9 @@ import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { getSocketUrl } from "@/lib/socketConfig";
 import DeviceCard from "./DeviceCard";
-import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/app/api/device/route";
 import Legend from "./legend";
 import { fetchDevices } from "./actions";
+import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/lib/devices/devices";
 
 export default function Devices() {
   const [deviceData, setDeviceData] = useState<DeviceResponse | null>(null);
@@ -93,7 +93,8 @@ export default function Devices() {
             lastSeen: new Date(data.lastSeen),
             connectionStatus: data.connectionStatus,
             source: data.dbId ? 'database+cache' : 'cache-only',
-            dbId: data.dbId
+            dbId: data.dbId,
+            orgId: data.organizationId
           };
           updatedDevices.push(newDevice);
         }

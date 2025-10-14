@@ -38,7 +38,7 @@ import Image from "next/image";
 
 import logo from '@/public/logo/logo.svg';
 import { Organization, Session } from "@/lib/db/schema";
-import { OrganizationMenu } from "@/components/newOrganization";
+import { OrganizationMenu } from "@/components/Organization";
 
 const navigation = [
   {

@@ -1,10 +1,12 @@
 import { Device } from "./db/schema";
+import { emitDevicesUpdate } from "./socketUtils";
 
 export interface CacheDevice {
   device: Omit<Device, 'id'>;
   lastSeen: Date;
   status: 'online' | 'offline';
   dbId?: string;
+  organizationId: string;
 }
 
 export interface CacheStats {
@@ -17,6 +19,59 @@ export interface CacheStats {
 
 // In-memory cache for device status (use Redis in production)
 export const deviceCache = new Map<string, CacheDevice>();
+
+
+// Cleanup interval to mark devices as offline after inactivity
+const OFFLINE_THRESHOLD = 1 * 60 * 1000; // 1 minute
+setInterval(async () => {
+  const now = new Date();
+  const devices = DeviceCacheManager.getAllDevices();
+  let hasChanges = false;
+
+  for (const [macAddress, data] of devices.entries()) {
+    if (now.getTime() - data.lastSeen.getTime() > OFFLINE_THRESHOLD && data.status === 'online') {
+      DeviceCacheManager.markOffline(macAddress);
+      hasChanges = true;
+    }
+  }
+
+  // Emit update if any devices were marked offline
+  if (hasChanges) {
+    try {
+      const deviceData = await getCurrentDeviceData();
+      emitDevicesUpdate('devicesUpdated', deviceData);
+    } catch (error) {
+      console.warn('Failed to emit device offline update:', error);
+    }
+  }
+}, 60 * 1000); // Check every minute
+
+// Cleanup interval to remove devices after prolonged inactivity
+const REMOVE_THRESHOLD = 5 * 60 * 1000; // 5 minutes
+setInterval(async () => {
+  const now = new Date();
+  const devices = DeviceCacheManager.getAllDevices();
+  let hasChanges = false;
+
+  for (const [macAddress, data] of devices.entries()) {
+    if (now.getTime() - data.lastSeen.getTime() > REMOVE_THRESHOLD) {
+      DeviceCacheManager.removeDevice(macAddress);
+      hasChanges = true;
+    }
+  }
+
+  // Emit update if any devices were removed
+  if (hasChanges) {
+    try {
+      const deviceData = await getCurrentDeviceData(organizationId);
+      emitDevicesUpdate('devicesUpdated', deviceData);
+    } catch (error) {
+      console.warn('Failed to emit device removal update:', error);
+    }
+  }
+}, 60 * 1000); // Check every minute
+
+
 
 // Utility functions to manage device cache from anywhere in the app
 export class DeviceCacheManager {
@@ -33,8 +88,12 @@ export class DeviceCacheManager {
     return deviceCache.get(macAddress);
   }
 
-  static getAllDevices(): Map<string, CacheDevice> {
-    return new Map(deviceCache);
+  static getAllDevices(organizationId?: string): Map<string, CacheDevice> {
+
+    if (!organizationId) {
+      return new Map(deviceCache);
+    }
+    return new Map(deviceCache.entries().filter(([_, device]) => device.organizationId === organizationId));
   }
 
   static markOffline(macAddress: string): boolean {
