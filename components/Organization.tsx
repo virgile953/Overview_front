@@ -97,6 +97,12 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
                         className="size-5 rounded-full object-cover"
                       />
                     )}
+
+                    {/* npm install lucide-react react
+npx shadcn@latest add https://www.kibo-ui.com/r/code-block.json
+npx shadcn@latest add button
+npx shadcn@latest add scroll-area
+npx shadcn@latest add tabs */}
                     <div className="flex-1">{org.name}</div>
                     <div>
                       <Button

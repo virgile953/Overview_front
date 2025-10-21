@@ -76,11 +76,11 @@ const defaultNavigationLinks: Navbar01NavLink[] = [
   { href: '#about', label: 'About' },
 ];
 
-export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
+export const Navbar = React.forwardRef<HTMLElement, Navbar01Props>(
   (
     {
       className,
-      logo = <Image src="/logo/logo.svg" alt="Logo" width={24} height={24} />,
+      logo = <Image src="/logo/logo.svg" alt="Logo" width={32} height={32} className='p-1 bg-accent-foreground rounded-lg'/>,
       navigationLinks = defaultNavigationLinks,
       signInText = 'Sign In',
       signInHref = '#signin',
@@ -175,9 +175,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
                 onClick={(e) => e.preventDefault()}
                 className="flex items-center space-x-2 text-primary hover:text-primary/90 transition-colors cursor-pointer"
               >
-                <div className="text-2xl">
                   {logo}
-                </div>
                 <span className="hidden font-bold text-xl sm:inline-block">Overview</span>
               </button>
               {/* Navigation menu */}
@@ -228,6 +226,6 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
   }
 );
 
-Navbar01.displayName = 'Navbar01';
+Navbar.displayName = 'Navbar01';
 
 export { HamburgerIcon };

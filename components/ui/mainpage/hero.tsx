@@ -53,24 +53,16 @@ const Hero = ({
     alt: "logo"
   }
 }: HeroProps) => {
-  const { theme } = useTheme();
+  const { resolvedTheme } = useTheme();
   const [imageSrc, setImageSrc] = useState(image.src);
   useEffect(() => {
-    if (theme == "dark") {
+    if (resolvedTheme == "dark") {
       setImageSrc("/logo/noBgWhite.png");
     }
-    else if (theme == "light") {
+    else if (resolvedTheme == "light") {
       setImageSrc("/logo/noBgBlack.png");
     }
-    if (theme == "system") {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      if (isDark) {
-        setImageSrc("/logo/noBgWhite.png");
-      } else {
-        setImageSrc("/logo/noBgBlack.png");
-      }
-    }
-  }, [theme, imageSrc]);
+  }, [resolvedTheme, imageSrc]);
 
   return (
     <section className="py-32">
