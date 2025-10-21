@@ -89,7 +89,7 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
                 >
                   <div className="flex items-center gap-2 w-full">
                     {org.logo && org.logo !== "" && (
-                      <img
+                      <Image
                         src={org.logo}
                         alt={`${org.name} logo`}
                         className="size-5 rounded-full object-cover"
@@ -141,7 +141,7 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
           <DialogHeader>
             <DialogTitle>Delete organization</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete the organization "{orgToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete the organization &quot;{orgToDelete?.name}&quot;? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }
-  if (!session && (url.pathname !== '/login' && url.pathname !== '/register' && !url.pathname.startsWith('/api/auth'))) {
+  if (!session && (url.pathname !== '/login' && url.pathname !== '/register' && url.pathname !== '/' && !url.pathname.startsWith('/api/auth'))) {
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }

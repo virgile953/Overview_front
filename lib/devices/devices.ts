@@ -1,6 +1,6 @@
 import { devices } from "@/drizzle/schema";
 import Drizzle from "../db/db";
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { DeviceCacheManager } from "../deviceCacheManager";
 import { Device } from "../db/schema";
 
@@ -49,25 +49,31 @@ export async function getDevices(organizationId: string) {
   return res;
 }
 
-export async function getDeviceWithCache(organizationId: string, deviceId?: string) {
+export async function getDevice(organizationId: string, deviceId: string) {
+  const res = await Drizzle.select().from(devices).where(
+    and(
+      eq(devices.organizationId, organizationId),
+      eq(devices.macAddress, deviceId)
+    ));
+  return res;
+}
+
+export async function getDevicesWithCache(organizationId: string): Promise<DeviceResponse | null> {
   // Get all devices - combine database devices with cached devices
   const dbDevices = await getDevices(organizationId);
-  const allDevices = new Map<string, Device & {
-    deviceId: string;
-    lastSeen: Date;
-    connectionStatus: string;
-    source: string;
-  }>();
+  const allDevices = new Map<string, ApiDevice>();
 
   // First, add all database devices
   dbDevices.forEach(device => {
-    allDevices.set(device.macAddress, {
+    return allDevices.set(device.macAddress, {
       deviceId: device.macAddress,
-      ...device, // This includes id
-      lastSeen: new Date(device.lastActive),
+      ...device,
       lastActive: new Date(device.lastActive),
+      lastSeen: new Date(device.lastActive),
       connectionStatus: 'offline',
-      source: 'database'
+      source: 'database' as const,
+      dbId: device.id,
+      orgId: device.organizationId,
     });
   });
 
@@ -78,25 +84,24 @@ export async function getDeviceWithCache(organizationId: string, deviceId?: stri
 
     allDevices.set(macAddress, {
       deviceId: macAddress,
-      id: data.dbId || existingDevice?.id || "",
       ...data.device,
+      ...(existingDevice || {}), // Preserve DB data if exists
       lastSeen: data.lastSeen,
       connectionStatus: data.status,
-      source: data.dbId ? 'database+cache' : 'cache-only',
-      name: "",
-      organizationId: "",
-      type: "",
-      status: "",
-      location: "",
-      ipAddress: "",
-      macAddress: "",
-      serialNumber: "",
-      firmwareVersion: "",
-      lastActive: new Date(),
+      source: data.dbId ? 'database+cache' as const : 'cache-only' as const,
+      dbId: data.dbId,
+      orgId: data.organizationId,
     });
   });
 
-  const devices = Array.from(allDevices.values());
-  const stats = DeviceCacheManager.getStats();
+  const devicesArray = Array.from(allDevices.values());
+  const stats = DeviceCacheManager.getStats(organizationId);
 
+  return {
+    devices: devicesArray,
+    totalDevices: devicesArray.length,
+    cacheCount: stats.cacheOnly,
+    dbCount: stats.linkedToDb,
+    stats,
+  };
 }

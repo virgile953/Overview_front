@@ -1,14 +1,14 @@
 
 import { Server as SocketIOServer } from 'socket.io';
-import { DeviceResponse, singleDeviceResponse } from '@/app/api/device/route';
+import { DeviceResponse, singleDeviceResponse } from './devices/devices';
 
 declare global {
   var io: SocketIOServer;
 }
 
-export function emitDevicesUpdate(eventName: string, data: DeviceResponse) {
+export function emitDevicesUpdate(eventName: string, data: DeviceResponse, organizationId?: string) {
   if (global.io) {
-    global.io.emit(eventName, data);
+    global.io.emit(eventName, data, organizationId);
     // console.log(`Emitted ${eventName} event with data:`, { 
     //   totalDevices: data.totalDevices || 'N/A',
     //   deviceCount: Array.isArray(data.devices) ? data.devices.length : 'N/A'
