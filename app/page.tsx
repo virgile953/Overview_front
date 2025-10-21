@@ -1,4 +1,5 @@
 import { Hero } from "@/components/ui/mainpage/hero";
+import { Pricing } from "@/components/ui/mainpage/pricing";
 import { Navbar01 } from "@/components/ui/shadcn-io/navbar-01";
 // import { useTheme } from "next-themes";
 
@@ -25,7 +26,16 @@ export default function Home() {
           image={{
             src: "/logo/noBgColor.png",
             alt: "logo"
+          }}
+          imageDark={{
+            src: "/logo/noBgWhite.png",
+            alt: "logo"
+          }}
+          imageLight={{
+            src: "/logo/noBgBlack.png",
+            alt: "logo"
           }} />
+        <Pricing  />
         <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
           <p>Welcome to the Device Cache Management System</p>
         </div>

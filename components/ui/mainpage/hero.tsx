@@ -3,7 +3,8 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 
 interface HeroProps {
   badge?: string;
@@ -19,7 +20,15 @@ interface HeroProps {
       url: string;
     };
   };
-  image: {
+  image?: {
+    src: string;
+    alt: string;
+  };
+  imageDark?: {
+    src: string;
+    alt: string;
+  };
+  imageLight?: {
     src: string;
     alt: string;
   };
@@ -40,14 +49,28 @@ const Hero = ({
     },
   },
   image = {
-    src: "https://deifkwefumgah.cloudfront.net/shadcnblocks/block/placeholder-1.svg",
-    alt: "Hero section demo image showing interface components",
-  },
+    src: "/logo/noBgColor.png",
+    alt: "logo"
+  }
 }: HeroProps) => {
   const { theme } = useTheme();
+  const [imageSrc, setImageSrc] = useState(image.src);
   useEffect(() => {
-    console.log("Current theme:", theme);
-  }, [theme]);
+    if (theme == "dark") {
+      setImageSrc("/logo/noBgWhite.png");
+    }
+    else if (theme == "light") {
+      setImageSrc("/logo/noBgBlack.png");
+    }
+    if (theme == "system") {
+      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (isDark) {
+        setImageSrc("/logo/noBgWhite.png");
+      } else {
+        setImageSrc("/logo/noBgBlack.png");
+      }
+    }
+  }, [theme, imageSrc]);
 
   return (
     <section className="py-32">
@@ -82,11 +105,17 @@ const Hero = ({
               )}
             </div>
           </div>
-          <img
-            src={image.src}
+          <div className="dark:hidden block mx-auto ">
+            <Image src={"/logo/noBgBlack.png"} alt='White' width={400} height={284} />
+          </div>
+          <div className="hidden dark:block mx-auto">
+            <Image src={"/logo/noBgWhite.png"} alt='Dark' width={400} height={284} />
+          </div>
+          {/* <img
+            src={imageSrc}
             alt={image.alt}
             className="max-h-96 w-full rounded-md object-cover"
-          />
+          /> */}
         </div>
       </div>
     </section>
