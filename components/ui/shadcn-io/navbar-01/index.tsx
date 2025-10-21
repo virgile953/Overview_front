@@ -80,7 +80,7 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
   (
     {
       className,
-      logo = <Image src="/logo/logo.svg" alt="Logo" width={24} height={24}/>,
+      logo = <Image src="/logo/logo.svg" alt="Logo" width={24} height={24} />,
       navigationLinks = defaultNavigationLinks,
       signInText = 'Sign In',
       signInHref = '#signin',
@@ -92,7 +92,6 @@ export const Navbar01 = React.forwardRef<HTMLElement, Navbar01Props>(
   ) => {
     const [isMobile, setIsMobile] = useState(false);
     const containerRef = useRef<HTMLElement>(null);
-
     useEffect(() => {
       const checkWidth = () => {
         if (containerRef.current) {

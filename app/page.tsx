@@ -1,21 +1,31 @@
+import { Hero } from "@/components/ui/mainpage/hero";
 import { Navbar01 } from "@/components/ui/shadcn-io/navbar-01";
-// export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
-//   logo?: React.ReactNode;
-//   logoHref?: string;
-//   navigationLinks?: Navbar01NavLink[];
-//   signInText?: string;
-//   signInHref?: string;
-//   ctaText?: string;
-//   ctaHref?: string;
-//   onSignInClick?: () => void;
-//   onCtaClick?: () => void;
-// }
+// import { useTheme } from "next-themes";
 
 export default function Home() {
   return (
     <>
       <Navbar01 signInHref="login" ctaHref="register" />
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
+
+      <main className="max-w-7xl mx-auto p-4">
+        <Hero
+          badge=""
+          buttons={{
+            primary: {
+              text: "Get Started",
+              url: "/register",
+            },
+            secondary: {
+              text: "Learn More",
+              url: "/about",
+            }
+          }}
+          heading={"Overview"}
+          description={"The simple and easy to deploy status manager for temporary installs"}
+          image={{
+            src: "/logo/noBgColor.png",
+            alt: "logo"
+          }} />
         <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
           <p>Welcome to the Device Cache Management System</p>
         </div>
