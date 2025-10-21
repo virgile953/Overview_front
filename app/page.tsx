@@ -1,3 +1,4 @@
+import { Features } from "@/components/ui/mainpage/features";
 import { Hero } from "@/components/ui/mainpage/hero";
 import { Pricing } from "@/components/ui/mainpage/pricing";
 import { Navbar01 } from "@/components/ui/shadcn-io/navbar-01";
@@ -35,7 +36,8 @@ export default function Home() {
             src: "/logo/noBgBlack.png",
             alt: "logo"
           }} />
-        <Pricing  />
+        <Features />
+        <Pricing />
         <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
           <p>Welcome to the Device Cache Management System</p>
         </div>

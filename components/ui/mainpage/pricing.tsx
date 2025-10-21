@@ -42,37 +42,54 @@ const Pricing = ({
   description = "Check out our affordable pricing plans",
   plans = [
     {
+      id: "free",
+      name: "Free",
+      description: "For testing",
+      weeklyPrice: "€0",
+      monthlyPrice: "€0",
+      features: [
+        { text: "Limited to 1 alerted user" },
+        { text: "No support" },
+        { text: "Logs keps for a week" },
+      ],
+      button: {
+        text: "Register",
+        url: "/register",
+      },
+    },
+    {
       id: "plus",
       name: "Plus",
-      description: "For single user",
-      weeklyPrice: "$19",
-      monthlyPrice: "$179",
+      description: "For a single user",
+      weeklyPrice: "€25",
+      monthlyPrice: "€100",
       features: [
         { text: "Up to 5 team members" },
-        { text: "Basic components library" },
-        { text: "Community support" },
-        { text: "1GB storage space" },
+        { text: "Up to 2 groups" },
+        { text: "Basic support" },
+        { text: "Logs keps for two weeks" },
       ],
       button: {
         text: "Purchase",
-        url: "https://shadcnblocks.com",
+        url: "/register",
       },
     },
     {
       id: "pro",
       name: "Pro",
       description: "For organizations",
-      weeklyPrice: "$49",
-      monthlyPrice: "$359",
+      weeklyPrice: "€50",
+      monthlyPrice: "€200",
       features: [
         { text: "Unlimited team members" },
-        { text: "Advanced components" },
+        { text: "Unlimited groups" },
         { text: "Priority support" },
-        { text: "Unlimited storage" },
+        { text: "Unlimited logs" },
+        { text: "Data exports" },
       ],
       button: {
         text: "Purchase",
-        url: "https://shadcnblocks.com",
+        url: "/register",
       },
     },
   ],
@@ -112,7 +129,7 @@ const Pricing = ({
                       {isMonthly ? plan.monthlyPrice : plan.weeklyPrice}
                     </span>
                     <span className="text-muted-foreground text-2xl font-semibold">
-                      {isMonthly ? "/mo" : "/wk"}
+                      {plan.weeklyPrice !== "€0" ? (isMonthly ? "/mo" : "/wk") : ""}
                     </span>
                   </div>
                 </CardHeader>
