@@ -6,7 +6,7 @@
 // import { getDevices } from "@/lib/devices/devices";
 
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
-import { getDevices, singleDeviceResponse } from "@/lib/devices/devices";
+import { ApiDevice, DeviceResponse, getDevices, singleDeviceResponse } from "@/lib/devices/devices";
 import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
 import { updateDevice } from "@/models/server/devices";
 import { addDeviceLog } from "@/models/server/logs";
@@ -334,23 +334,37 @@ export async function POST(request: Request) {
   }
 }
 
-async function getCurrentDeviceData(organizationId?: string): Promise<any> {
+async function getCurrentDeviceData(organizationId?: string): Promise<DeviceResponse> {
   try {
+
+    // export interface DeviceResponse {
+    //   devices: ApiDevice[];
+    //   totalDevices: number;
+    //   cacheCount: number;
+    //   dbCount: number;
+    //   stats: {
+    //     total: number;
+    //     online: number;
+    //     offline: number;
+    //     linkedToDb: number;
+    //     cacheOnly: number;
+    //   };
+    // }
     const dbDevices = organizationId ? await getDevices(organizationId) : [];
-    const allDevices = new Map<string, any>();
+    const allDevices = new Map<string, ApiDevice>();
 
     // Add database devices
     dbDevices.forEach(device => {
-      allDevices.set(device.macAddress, {
+      return allDevices.set(device.macAddress, {
         deviceId: device.macAddress,
         ...device,
         lastActive: new Date(device.lastActive),
         lastSeen: new Date(device.lastActive),
         connectionStatus: 'offline',
-        source: 'database'
+        source: 'database',
+        orgId: device.organizationId
       });
     });
-
     // Add/update with cached devices
     const cachedDevices = DeviceCacheManager.getAllDevices();
     cachedDevices.forEach((data, macAddress) => {
@@ -362,7 +376,8 @@ async function getCurrentDeviceData(organizationId?: string): Promise<any> {
         lastSeen: data.lastSeen,
         connectionStatus: data.status,
         source: data.dbId ? 'database+cache' : 'cache-only',
-        dbId: data.dbId
+        dbId: data.dbId,
+        orgId: data.device.organizationId
       });
     });
 
@@ -386,7 +401,8 @@ async function getCurrentDeviceData(organizationId?: string): Promise<any> {
       lastSeen: data.lastSeen,
       connectionStatus: data.status,
       source: 'cache-only' as const,
-      dbId: data.dbId
+      dbId: data.dbId,
+      orgId: data.device.organizationId
     }));
 
     const stats = DeviceCacheManager.getStats();
