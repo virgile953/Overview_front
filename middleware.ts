@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
     await setClientDeviceCookie(request);
   }
 
-  if (session && (url.pathname === '/login' || url.pathname === '/' || url.pathname === '/register')) {
+  if (session && (url.pathname === '/login' || url.pathname === '/register')) {
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);
   }

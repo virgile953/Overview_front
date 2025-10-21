@@ -90,6 +90,8 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
                   <div className="flex items-center gap-2 w-full">
                     {org.logo && org.logo !== "" && (
                       <Image
+                        height={24}
+                        width={24}
                         src={org.logo}
                         alt={`${org.name} logo`}
                         className="size-5 rounded-full object-cover"

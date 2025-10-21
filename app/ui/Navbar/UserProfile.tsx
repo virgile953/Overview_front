@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { changeTheme } from "../actions/themeSwitcher";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { useTheme } from "next-themes";
 
 interface UserProfileProps {
   name: string;
@@ -20,6 +21,7 @@ export default function UserProfile(props: UserProfileProps) {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [verifyEmailSent, setVerifyEmailSent] = useState(false);
+  const { theme, setTheme } = useTheme();
 
   async function handleLogout() {
     await authClient.signOut({
@@ -35,8 +37,7 @@ export default function UserProfile(props: UserProfileProps) {
     e.preventDefault();
     const newIsDarkMode = !isDarkMode;
     setIsDarkMode(newIsDarkMode);
-    document.documentElement.classList.toggle('dark', newIsDarkMode);
-    localStorage.setItem('theme', newIsDarkMode ? 'dark' : 'light');
+    setTheme(newIsDarkMode ? 'dark' : 'light');
     changeTheme(newIsDarkMode ? 'dark' : 'light');
   }
 
@@ -50,10 +51,9 @@ export default function UserProfile(props: UserProfileProps) {
   }, [props.name, props.email, props.emailVerification]);
 
   useEffect(() => {
-    const localTheme = localStorage.getItem('theme');
-    const isDark = localTheme === 'dark';
+    const isDark = theme === 'dark';
     setIsDarkMode(isDark);
-  }, []);
+  }, [theme]);
 
   //mail verification
   async function verifyEmail() {
