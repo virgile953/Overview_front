@@ -50,16 +50,16 @@ const HamburgerIcon = ({ className, ...props }: React.SVGAttributes<SVGElement>)
 );
 
 // Types
-export interface Navbar01NavLink {
+export interface NavbarNavLink {
   href: string;
   label: string;
   active?: boolean;
 }
 
-export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
+export interface NavbarProps extends React.HTMLAttributes<HTMLElement> {
   logo?: React.ReactNode;
   logoHref?: string;
-  navigationLinks?: Navbar01NavLink[];
+  navigationLinks?: NavbarNavLink[];
   signInText?: string;
   signInHref?: string;
   ctaText?: string;
@@ -69,14 +69,14 @@ export interface Navbar01Props extends React.HTMLAttributes<HTMLElement> {
 }
 
 // Default navigation links
-const defaultNavigationLinks: Navbar01NavLink[] = [
+const defaultNavigationLinks: NavbarNavLink[] = [
   { href: '#', label: 'Home', active: true },
   { href: '#features', label: 'Features' },
   { href: '#pricing', label: 'Pricing' },
   { href: '#about', label: 'About' },
 ];
 
-export const Navbar = React.forwardRef<HTMLElement, Navbar01Props>(
+export const Navbar = React.forwardRef<HTMLElement, NavbarProps>(
   (
     {
       className,
@@ -151,8 +151,8 @@ export const Navbar = React.forwardRef<HTMLElement, Navbar01Props>(
                     <NavigationMenuList className="flex-col items-start gap-1">
                       {navigationLinks.map((link, index) => (
                         <NavigationMenuItem key={index} className="w-full">
-                          <button
-                            onClick={(e) => e.preventDefault()}
+                          <Link
+                            href={link.href}
                             className={cn(
                               "flex w-full items-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer no-underline",
                               link.active
@@ -161,7 +161,7 @@ export const Navbar = React.forwardRef<HTMLElement, Navbar01Props>(
                             )}
                           >
                             {link.label}
-                          </button>
+                          </Link>
                         </NavigationMenuItem>
                       ))}
                     </NavigationMenuList>
