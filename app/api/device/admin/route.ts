@@ -63,7 +63,8 @@ export async function POST(request: Request) {
         },
         lastSeen: new Date(),
         status: 'offline', // Default to offline since it's manually added
-        dbId: newDevice.id
+        dbId: newDevice.id,
+        organizationId: organizationId
       });
     }
 
