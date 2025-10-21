@@ -1,10 +1,10 @@
-import { ApiDevice } from "@/app/api/device/route";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Device, NewDevice } from "@/lib/db/schema";
 import { CirclePlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { addDeviceToDb } from "./actions";
+import { ApiDevice } from "@/lib/devices/devices";
 
 // Device Card Component
 export default function DeviceCard({
