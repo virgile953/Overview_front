@@ -45,7 +45,7 @@ export const devices = pgTable("devices", {
 	macAddress: text("mac_address").notNull(),
 	serialNumber: text("serial_number").notNull(),
 	firmwareVersion: text("firmware_version").notNull(),
-	lastActive: timestamp("last_active", { mode: 'string' }).notNull(),
+	lastActive: timestamp("last_active").notNull(),
 	organizationId: text("organization_id").notNull(),
 }, (table) => [
 	index("devices_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),

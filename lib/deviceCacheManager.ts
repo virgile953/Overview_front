@@ -1,17 +1,17 @@
 import { Device } from "./db/schema";
 import { emitDevicesUpdate } from "./socketUtils";
 import { DeviceCacheSettingsManager } from "./deviceCacheSettings";
-import { getDevicesWithCache } from "./devices/devices";
+import Drizzle from "./db/db";
+import { devices as devicesTable } from "@/drizzle/schema";
 
-export interface CacheDevice {
-  device: Omit<Device, 'id'>;
+// Type definitions
+interface CacheDevice {
+  device: Partial<Device>;
   lastSeen: Date;
   status: 'online' | 'offline';
-  dbId?: string;
-  organizationId: string;
 }
 
-export interface CacheStats {
+interface CacheStats {
   total: number;
   online: number;
   offline: number;
@@ -23,83 +23,151 @@ export interface CacheStats {
 export const deviceCache = new Map<string, CacheDevice>();
 
 // Cleanup interval to mark devices as offline after inactivity
-let offlineCheckInterval: NodeJS.Timeout;
-let removeCheckInterval: NodeJS.Timeout;
+let offlineCheckInterval: NodeJS.Timeout | null = null;
+let removeCheckInterval: NodeJS.Timeout | null = null;
+let isInitialized = false;
+let initializationPromise: Promise<void> | null = null;
 
 function startOfflineCheck() {
   if (offlineCheckInterval) clearInterval(offlineCheckInterval);
-  
+
   const settings = DeviceCacheSettingsManager.getSettings();
   offlineCheckInterval = setInterval(async () => {
-    const now = new Date();
-    const devices = DeviceCacheManager.getAllDevices();
-    const changedOrgs = new Set<string>();
+    try {
+      if (!isInitialized) return; // Skip if not initialized yet
 
-    for (const [macAddress, data] of devices.entries()) {
-      const threshold = DeviceCacheSettingsManager.getSettings().offlineThresholdMs;
-      if (now.getTime() - data.lastSeen.getTime() > threshold && data.status === 'online') {
-        DeviceCacheManager.markOffline(macAddress);
-        changedOrgs.add(data.organizationId);
-      }
-    }
+      const now = new Date();
+      const allDevicesMap = await DeviceCacheManager.getAllDevices();
+      const changedOrgs = new Set<string>();
 
-    // Emit updates per organization
-    for (const orgId of changedOrgs) {
-      try {
-        const deviceData = await getDevicesWithCache(orgId);
-        if (deviceData) {
-          emitDevicesUpdate('devicesUpdated', deviceData);
+      for (const [macAddress, deviceData] of allDevicesMap.entries()) {
+        const threshold = DeviceCacheSettingsManager.getSettings().offlineThresholdMs;
+        if (now.getTime() - deviceData.lastSeen.getTime() > threshold && deviceData.status === 'online') {
+          DeviceCacheManager.markOffline(macAddress);
+          changedOrgs.add(deviceData.device.organizationId!);
         }
-      } catch (error) {
-        console.warn(`Failed to emit device offline update for org ${orgId}:`, error);
       }
+
+      // Emit updates per organization
+      for (const orgId of changedOrgs) {
+        try {
+          const deviceData = await DeviceCacheManager.getDevicesWithCache(orgId);
+          if (deviceData) {
+            emitDevicesUpdate('devicesUpdated', deviceData);
+          }
+        } catch (error) {
+          console.warn(`Failed to emit device offline update for org ${orgId}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in offline check interval:', error);
     }
   }, settings.checkIntervalMs);
 }
 
 function startRemoveCheck() {
   if (removeCheckInterval) clearInterval(removeCheckInterval);
-  
+
   const settings = DeviceCacheSettingsManager.getSettings();
   removeCheckInterval = setInterval(async () => {
-    const now = new Date();
-    const devices = DeviceCacheManager.getAllDevices();
-    const changedOrgs = new Set<string>();
+    try {
+      if (!isInitialized) return; // Skip if not initialized yet
 
-    for (const [macAddress, data] of devices.entries()) {
-      const threshold = DeviceCacheSettingsManager.getSettings().removeThresholdMs;
-      const isInactive = now.getTime() - data.lastSeen.getTime() > threshold;
-      const isCacheOnly = !data.dbId;
-      
-      // Only remove devices that are cache-only AND inactive
-      if (isInactive && isCacheOnly) {
-        DeviceCacheManager.removeDevice(macAddress);
-        changedOrgs.add(data.organizationId);
-      }
-    }
+      const now = new Date();
+      const allDevicesMap = await DeviceCacheManager.getAllDevices();
+      const changedOrgs = new Set<string>();
 
-    // Emit updates per organization
-    for (const orgId of changedOrgs) {
-      try {
-        const deviceData = await getDevicesWithCache(orgId);
-        if (deviceData) {
-          emitDevicesUpdate('devicesUpdated', deviceData);
+      for (const [macAddress, deviceData] of allDevicesMap.entries()) {
+        const threshold = DeviceCacheSettingsManager.getSettings().removeThresholdMs;
+        const isInactive = now.getTime() - deviceData.lastSeen.getTime() > threshold;
+        const isCacheOnly = !deviceData.device.id;
+
+        // Only remove devices that are cache-only AND inactive
+        if (isInactive && isCacheOnly) {
+          DeviceCacheManager.removeDevice(macAddress);
+          changedOrgs.add(deviceData.device.organizationId!);
         }
-      } catch (error) {
-        console.warn(`Failed to emit device removal update for org ${orgId}:`, error);
       }
+
+      // Emit updates per organization
+      for (const orgId of changedOrgs) {
+        try {
+          const deviceData = await DeviceCacheManager.getDevicesWithCache(orgId);
+          if (deviceData) {
+            emitDevicesUpdate('devicesUpdated', deviceData);
+          }
+        } catch (error) {
+          console.warn(`Failed to emit device removal update for org ${orgId}:`, error);
+        }
+      }
+    } catch (error) {
+      console.error('Error in remove check interval:', error);
     }
   }, settings.checkIntervalMs);
 }
 
-// Start the cleanup intervals
-startOfflineCheck();
-startRemoveCheck();
+// Initialize cache from database
+async function initializeCacheFromDatabase() {
+  if (isInitialized) return;
+  if (initializationPromise) return initializationPromise;
+
+  initializationPromise = (async () => {
+    try {
+      console.log("Initializing device cache from database...");
+      const allDevices: Device[] = await Drizzle.select().from(devicesTable);
+
+      for (const device of allDevices) {
+        const cacheDevice: CacheDevice = {
+          device: {
+            id: device.id,
+            name: device.name,
+            organizationId: device.organizationId,
+            type: device.type,
+            status: device.status,
+            location: device.location || undefined,
+            ipAddress: device.ipAddress || undefined,
+            macAddress: device.macAddress,
+            serialNumber: device.serialNumber || undefined,
+            firmwareVersion: device.firmwareVersion || undefined,
+            lastActive: new Date(device.lastActive),
+          },
+          lastSeen: new Date(device.lastActive),
+          status: 'offline', // Assume offline until heartbeat received
+        };
+        deviceCache.set(device.macAddress, cacheDevice);
+      }
+
+      isInitialized = true;
+      console.log(`Device cache initialized with ${allDevices.length} devices`);
+
+      // Start intervals after initialization
+      startOfflineCheck();
+      startRemoveCheck();
+    } catch (error) {
+      console.error("Failed to initialize device cache:", error);
+      throw error;
+    }
+  })();
+
+  return initializationPromise;
+}
+
+// Ensure cache is initialized before operations
+async function ensureInitialized() {
+  if (!isInitialized) {
+    await initializeCacheFromDatabase();
+  }
+}
 
 // Utility functions to manage device cache from anywhere in the app
 export class DeviceCacheManager {
 
-  static updateDevice(macAddress: string, deviceData: CacheDevice): void {
+  static async initialize(): Promise<void> {
+    await initializeCacheFromDatabase();
+  }
+
+  static async updateDevice(macAddress: string, deviceData: CacheDevice): Promise<void> {
+    await ensureInitialized();
     deviceCache.set(macAddress, deviceData);
   }
 
@@ -107,24 +175,22 @@ export class DeviceCacheManager {
     return deviceCache.delete(macAddress);
   }
 
-  static getDevice(macAddress: string): CacheDevice | undefined {
-    return deviceCache.get(macAddress);
-  }
+  static async getAllDevices(organizationId?: string): Promise<Map<string, CacheDevice>> {
+    await ensureInitialized();
 
-  static getAllDevices(organizationId?: string): Map<string, CacheDevice> {
     if (!organizationId) {
       return new Map(deviceCache);
     }
-    
+    console.log("Filtering devices for organization:", organizationId); 
     const filtered = new Map<string, CacheDevice>();
     for (const [key, device] of deviceCache.entries()) {
-      if (device.organizationId === organizationId) {
+      if (device.device.organizationId === organizationId) {
         filtered.set(key, device);
       }
     }
     return filtered;
   }
-
+  
   static markOffline(macAddress: string): boolean {
     const device = deviceCache.get(macAddress);
     if (device) {
@@ -149,49 +215,141 @@ export class DeviceCacheManager {
   static linkToDatabase(macAddress: string, dbId: string): boolean {
     const device = deviceCache.get(macAddress);
     if (device) {
-      device.dbId = dbId;
+      device.device.id = dbId;
       deviceCache.set(macAddress, device);
       return true;
     }
     return false;
   }
 
-  static getStats(organizationId?: string): CacheStats {
-    const allDevices = organizationId 
-      ? Array.from(DeviceCacheManager.getAllDevices(organizationId).values())
+  static async getStats(organizationId?: string): Promise<CacheStats> {
+    await ensureInitialized();
+
+    const allDevices = organizationId
+      ? Array.from((await DeviceCacheManager.getAllDevices(organizationId)).values())
       : Array.from(deviceCache.values());
 
     return {
       total: allDevices.length,
       online: allDevices.filter(d => d.status === 'online').length,
       offline: allDevices.filter(d => d.status === 'offline').length,
-      linkedToDb: allDevices.filter(d => d.dbId).length,
-      cacheOnly: allDevices.filter(d => !d.dbId).length
+      linkedToDb: allDevices.filter(d => d.device.id).length,
+      cacheOnly: allDevices.filter(d => !d.device.id).length
     };
   }
 
-  // Get devices by status
-  static getDevicesByStatus(status: 'online' | 'offline', organizationId?: string): CacheDevice[] {
-    const devices = organizationId
-      ? Array.from(DeviceCacheManager.getAllDevices(organizationId).values())
-      : Array.from(deviceCache.values());
-    return devices.filter(d => d.status === status);
+  // Sync database operations with cache
+  static async syncDatabaseCreate(device: Device): Promise<void> {
+    await ensureInitialized();
+
+    const cacheDevice: CacheDevice = {
+      device: {
+        id: device.id,
+        name: device.name,
+        organizationId: device.organizationId,
+        type: device.type,
+        status: device.status,
+        location: device.location || undefined,
+        ipAddress: device.ipAddress || undefined,
+        macAddress: device.macAddress,
+        serialNumber: device.serialNumber || undefined,
+        firmwareVersion: device.firmwareVersion || undefined,
+        lastActive: device.lastActive,
+      },
+      lastSeen: new Date(device.lastActive),
+      status: 'offline',
+    };
+
+    deviceCache.set(device.macAddress, cacheDevice);
+
+    // Emit update
+    const deviceData = await DeviceCacheManager.getDevicesWithCache(device.organizationId);
+    if (deviceData) {
+      emitDevicesUpdate('devicesUpdated', deviceData);
+    }
   }
 
-  // Get devices that are cache-only (not in database)
-  static getCacheOnlyDevices(organizationId?: string): CacheDevice[] {
-    const devices = organizationId
-      ? Array.from(DeviceCacheManager.getAllDevices(organizationId).values())
-      : Array.from(deviceCache.values());
-    return devices.filter(d => !d.dbId);
+  static async syncDatabaseUpdate(device: Device): Promise<void> {
+    await ensureInitialized();
+
+    const existing = deviceCache.get(device.macAddress);
+
+    const cacheDevice: CacheDevice = {
+      device: {
+        id: device.id,
+        name: device.name,
+        organizationId: device.organizationId,
+        type: device.type,
+        status: device.status,
+        location: device.location || undefined,
+        ipAddress: device.ipAddress || undefined,
+        macAddress: device.macAddress,
+        serialNumber: device.serialNumber || undefined,
+        firmwareVersion: device.firmwareVersion || undefined,
+        lastActive: device.lastActive,
+      },
+      lastSeen: existing?.lastSeen || new Date(device.lastActive),
+      status: existing?.status || 'offline',
+    };
+
+    deviceCache.set(device.macAddress, cacheDevice);
+
+    // Emit update
+    const deviceData = await DeviceCacheManager.getDevicesWithCache(device.organizationId);
+    if (deviceData) {
+      emitDevicesUpdate('devicesUpdated', deviceData);
+    }
   }
 
-  // Get devices that are linked to database
-  static getLinkedDevices(organizationId?: string): CacheDevice[] {
-    const devices = organizationId
-      ? Array.from(DeviceCacheManager.getAllDevices(organizationId).values())
-      : Array.from(deviceCache.values());
-    return devices.filter(d => d.dbId);
+  static async syncDatabaseDelete(macAddress: string, organizationId: string): Promise<void> {
+    await ensureInitialized();
+
+    const device = deviceCache.get(macAddress);
+    if (device && device.device.id) {
+      // Remove dbId but keep in cache if it's still active
+      device.device.id = undefined;
+      deviceCache.set(macAddress, device);
+    } else {
+      deviceCache.delete(macAddress);
+    }
+
+    // Emit update
+    const deviceData = await DeviceCacheManager.getDevicesWithCache(organizationId);
+    if (deviceData) {
+      emitDevicesUpdate('devicesUpdated', deviceData);
+    }
+  }
+
+  // Get devices with cache data (replaces getDevicesWithCache from devices.ts)
+  static async getDevicesWithCache(organizationId: string) {
+    await ensureInitialized();
+
+    const cachedDevices = await DeviceCacheManager.getAllDevices(organizationId);
+    const devicesArray = Array.from(cachedDevices.values()).map(data => ({
+      deviceId: data.device.macAddress,
+      ...data.device,
+      lastSeen: data.lastSeen,
+      connectionStatus: data.status,
+      source: data.device.id ? ('database+cache' as const) : ('cache-only' as const),
+      dbId: data.device.id,
+      orgId: data.device.organizationId,
+    }));
+
+    const stats = await DeviceCacheManager.getStats(organizationId);
+
+    return {
+      devices: devicesArray,
+      totalDevices: devicesArray.length,
+      cacheCount: stats.cacheOnly,
+      dbCount: stats.linkedToDb,
+      stats,
+    };
+  }
+
+  // Get single device
+  static async getDevice(macAddress: string): Promise<CacheDevice | undefined> {
+    await ensureInitialized();
+    return deviceCache.get(macAddress);
   }
 
   static clearAll(): void {
@@ -199,19 +357,19 @@ export class DeviceCacheManager {
   }
 
   // Manually trigger purge of cache-only inactive devices
-  static purgeCacheOnlyDevices(organizationId?: string): number {
+  static async purgeCacheOnlyDevices(organizationId?: string): Promise<number> {
     const now = new Date();
     const threshold = DeviceCacheSettingsManager.getSettings().removeThresholdMs;
     let purgedCount = 0;
 
-    const devices = organizationId 
-      ? DeviceCacheManager.getAllDevices(organizationId)
+    const devices = organizationId
+      ? await DeviceCacheManager.getAllDevices(organizationId)
       : new Map(deviceCache);
 
     for (const [macAddress, data] of devices.entries()) {
       const isInactive = now.getTime() - data.lastSeen.getTime() > threshold;
-      const isCacheOnly = !data.dbId;
-      
+      const isCacheOnly = !data.device.id;
+
       if (isInactive && isCacheOnly) {
         if (DeviceCacheManager.removeDevice(macAddress)) {
           purgedCount++;
@@ -228,3 +386,6 @@ export class DeviceCacheManager {
     startRemoveCheck();
   }
 }
+
+// Auto-initialize on module load
+initializeCacheFromDatabase().catch(console.error);

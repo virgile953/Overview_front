@@ -5,12 +5,10 @@ import { DeviceCacheManager } from "../deviceCacheManager";
 import { Device } from "../db/schema";
 
 export interface ApiDevice extends Partial<Device> {
-  deviceId: string;
+  deviceId?: string;
   lastSeen: Date | string;
   connectionStatus: string;
   source: 'database' | 'database+cache' | 'cache-only';
-  dbId?: string;
-  orgId: string;
 }
 
 export interface DeviceResponse {
@@ -45,63 +43,76 @@ export interface singleDeviceResponse {
 }
 
 export async function getDevices(organizationId: string) {
-  const res = await Drizzle.select().from(devices).where(eq(devices.organizationId, organizationId));
-  return res;
+  return DeviceCacheManager.getDevicesWithCache(organizationId);
 }
 
 export async function getDevice(organizationId: string, deviceId: string) {
-  const res = await Drizzle.select().from(devices).where(
-    and(
-      eq(devices.organizationId, organizationId),
-      eq(devices.macAddress, deviceId)
-    ));
-  return res;
+  const device = await DeviceCacheManager.getDevice(deviceId);
+  if (device && device.device.organizationId === organizationId) {
+    return {
+      deviceId: device.device.macAddress,
+      ...device.device,
+      lastSeen: device.lastSeen,
+      connectionStatus: device.status,
+      dbId: device.device.id,
+      orgId: device.device.organizationId,
+    };
+  }
+  return null;
 }
 
-export async function getDevicesWithCache(organizationId: string): Promise<DeviceResponse | null> {
-  // Get all devices - combine database devices with cached devices
-  const dbDevices = await getDevices(organizationId);
-  const allDevices = new Map<string, ApiDevice>();
-
-  // First, add all database devices
-  dbDevices.forEach(device => {
-    return allDevices.set(device.macAddress, {
-      deviceId: device.macAddress,
-      ...device,
-      lastActive: new Date(device.lastActive),
-      lastSeen: new Date(device.lastActive),
-      connectionStatus: 'offline',
-      source: 'database' as const,
-      dbId: device.id,
-      orgId: device.organizationId,
-    });
-  });
-
-  // Then, add/update with cached devices (these are more recent)
-  const cachedDevices = DeviceCacheManager.getAllDevices(organizationId);
-  cachedDevices.forEach((data, macAddress) => {
-    const existingDevice = allDevices.get(macAddress);
-
-    allDevices.set(macAddress, {
-      deviceId: macAddress,
-      ...data.device,
-      ...(existingDevice || {}), // Preserve DB data if exists
-      lastSeen: data.lastSeen,
-      connectionStatus: data.status,
-      source: data.dbId ? 'database+cache' as const : 'cache-only' as const,
-      dbId: data.dbId,
-      orgId: data.organizationId,
-    });
-  });
-
-  const devicesArray = Array.from(allDevices.values());
-  const stats = DeviceCacheManager.getStats(organizationId);
-
-  return {
-    devices: devicesArray,
-    totalDevices: devicesArray.length,
-    cacheCount: stats.cacheOnly,
-    dbCount: stats.linkedToDb,
-    stats,
+// Database mutation helpers that sync with cache
+export async function createDevice(device: Omit<Device, 'id'>) {
+  const [newDevice] = await Drizzle.insert(devices).values(device).returning();
+  const deviceForCache = {
+    ...newDevice,
+    lastActive: new Date(newDevice.lastActive)
   };
+  await DeviceCacheManager.syncDatabaseCreate(deviceForCache);
+  return newDevice;
+}
+
+export async function updateDevice(deviceId: string, organizationId: string, updates: Record<string, unknown>) {
+  // Filter out undefined values
+  const filteredUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
+    if (value !== undefined) {
+      if (key === 'lastActive' && value instanceof Date) {
+        acc[key] = value.toISOString();
+      } else {
+        acc[key] = value;
+      }
+    }
+    return acc;
+  }, {} as Record<string, unknown>);
+
+  if (Object.keys(filteredUpdates).length === 0) {
+    throw new Error('No valid updates provided');
+  }
+
+  const [updatedDevice] = await Drizzle.update(devices)
+    .set(filteredUpdates)
+    .where(and(
+      eq(devices.macAddress, deviceId),
+      eq(devices.organizationId, organizationId)
+    ))
+    .returning();
+
+  if (updatedDevice) {
+    const deviceForCache = {
+      ...updatedDevice,
+      lastActive: new Date(updatedDevice.lastActive)
+    };
+    await DeviceCacheManager.syncDatabaseUpdate(deviceForCache);
+  }
+  return updatedDevice;
+}
+
+export async function deleteDevice(deviceId: string, organizationId: string) {
+  await Drizzle.delete(devices)
+    .where(and(
+      eq(devices.macAddress, deviceId),
+      eq(devices.organizationId, organizationId)
+    ));
+
+  await DeviceCacheManager.syncDatabaseDelete(deviceId, organizationId);
 }

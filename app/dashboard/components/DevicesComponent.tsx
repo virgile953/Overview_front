@@ -6,16 +6,16 @@ import { getDevices } from '@/models/server/devices';
 
 export default async function DevicesDashboard({ className }: { className?: string }) {
 
-    const allCacheDevices = DeviceCacheManager.getAllDevices();
-    const dbDevices = await getDevices();
-    const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
-    const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
-    const stats = {
-      ...DeviceCacheManager.getStats(),
-      dbOnly: dbOnlyDevices.length
-    };
-    stats.total += dbOnlyDevices.length;
-    stats.offline += dbOnlyDevices.length;
+  const allCacheDevices = await DeviceCacheManager.getAllDevices();
+  const dbDevices = await getDevices();
+  const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
+  const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
+  const stats = await {
+    ...DeviceCacheManager.getStats(),
+    dbOnly: dbOnlyDevices.length
+  };
+  stats.total += dbOnlyDevices.length;
+  stats.offline += dbOnlyDevices.length;
 
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>
@@ -25,9 +25,13 @@ export default async function DevicesDashboard({ className }: { className?: stri
         <EllipsisVertical className="ml-auto text-foreground" />
 
       </div>
-      <div className="text-3xl font-bold text-foreground">{stats?.total}</div>
-      <div className="mt-2 text-sm text-muted-foreground mb-4">Total Devices</div>
-
+      {stats && (
+        <>
+          <div className="text-3xl font-bold text-foreground">{stats?.total}</div>
+          <div className="mt-2 text-sm text-muted-foreground mb-4">Total Devices</div>
+        </>
+      )
+      }
       {/* Status breakdown */}
       <div className="grid grid-cols-3 gap-2 mb-4">
         <Link
