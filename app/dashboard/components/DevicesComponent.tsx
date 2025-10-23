@@ -4,9 +4,8 @@ import Link from 'next/link';
 import { DeviceCacheManager } from '@/lib/deviceCacheManager';
 import { getDevices } from '@/models/server/devices';
 
-export default async function DevicesDashboard({ className }: { className?: string }) {
-
-  const allCacheDevices = await DeviceCacheManager.getAllDevices();
+export default async function DevicesDashboard({ orgId, className }: { orgId: string; className?: string }) {
+  const allCacheDevices = await DeviceCacheManager.getAll(orgId);
   const dbDevices = await getDevices();
   const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
   const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
