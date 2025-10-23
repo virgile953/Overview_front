@@ -1,60 +1,44 @@
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
-import { ApiDevice, DeviceResponse, getDevices, singleDeviceResponse, updateDevice } from "@/lib/devices/devices";
-import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
-import { addDeviceLog } from "@/models/server/logs";
+import { getDevices, updateDevice } from "@/lib/devices/devices";
+// import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
+// import { addDeviceLog } from "@/models/server/logs";
 
 export async function POST(request: Request) {
   const requestData = await request.json();
-
   const { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, organizationId, lastActive } = requestData;
 
-  console.log('Received device POST:', { name, type, status, organizationId, macAddress });
+  console.log('Received device POST:', { name, macAddress, organizationId });
 
   if (!name || !type || !status || !organizationId || !macAddress) {
-    console.log('Invalid device data received:', requestData);
-    return new Response(JSON.stringify({ error: "Missing required fields (name, type, status, organizationId, macAddress are required)" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "Missing required fields" }), { status: 400 });
   }
 
-  const deviceId: string = macAddress;
-  const currentTime = new Date();
-  const lastActiveDate = lastActive ? new Date(lastActive) : currentTime;
+  const lastActiveDate = lastActive ? new Date(lastActive) : new Date();
 
   try {
-    // Check if device already exists in database by MAC address
     const dbDevicesResponse = await getDevices(organizationId);
-    const existingDbDevice = dbDevicesResponse.devices.find(device => device.macAddress === macAddress);
-
-    // Check if device exists in cache before update
-    const existingCacheDevice = await DeviceCacheManager.getDevice(deviceId);
+    const existingDbDevice = dbDevicesResponse.devices.find(d => d.macAddress === macAddress);
 
     let dbId: string | undefined;
-    let dbAction: string = 'cache-only';
+    let action = 'cache-only';
 
-    if (existingDbDevice && existingDbDevice.dbId) {
-      // Build updates object with only defined values
-      const updates: Record<string, unknown> = {
-        name,
-        type,
-        status,
-        lastActive: lastActiveDate,
-      };
-      
+    // Update database if device exists
+    if (existingDbDevice && existingDbDevice.id) {
+      const updates: Record<string, unknown> = { name, type, status, lastActive: lastActiveDate };
       if (location) updates.location = location;
       if (ipAddress) updates.ipAddress = ipAddress;
       if (serialNumber) updates.serialNumber = serialNumber;
       if (firmwareVersion) updates.firmwareVersion = firmwareVersion;
 
-      const updatedDevice = await updateDevice(existingDbDevice.macAddress!, organizationId, updates);
-      const timeDiff = currentTime.getTime() - lastActiveDate.getTime();
-      await addDeviceLog({ device: updatedDevice.id, status: 'info', message: 'Device updated via API', latency: timeDiff });
-      dbId = existingDbDevice.dbId;
-      dbAction = 'updated';
+      const updatedDevice = await updateDevice(macAddress, organizationId, updates);
+      dbId = updatedDevice.id;
+      action = 'updated';
     }
 
-    // Update device cache with correct organizationId
-    await DeviceCacheManager.updateDevice(deviceId, {
+    // Always update cache
+    DeviceCacheManager.set(macAddress, {
       device: {
-        id: existingDbDevice ? existingDbDevice.dbId : undefined,
+        id: dbId,
         name,
         type,
         status,
@@ -64,195 +48,107 @@ export async function POST(request: Request) {
         serialNumber,
         firmwareVersion,
         lastActive: lastActiveDate,
-        organizationId: organizationId,
+        organizationId,
       },
       lastSeen: new Date(),
       status: 'online',
     });
 
-    console.log(`Device ${macAddress} cached for org ${organizationId}, dbId: ${dbId}`);
-
-    // Verify it's in cache
-    const cachedDevice = await DeviceCacheManager.getDevice(macAddress);
-    console.log('Verified device in cache:', cachedDevice ? 'YES' : 'NO');
-    
-    // Check org devices
-    const orgDevices = await DeviceCacheManager.getAllDevices(organizationId);
-    console.log(`Total devices in cache for org ${organizationId}:`, orgDevices.size);
+    console.log(`Device ${macAddress} cached for org ${organizationId}`);
 
     const stats = await DeviceCacheManager.getStats(organizationId);
-    console.log('Cache stats:', stats);
-
-    // Emit individual device update for real-time UI updates
-    try {
-      const deviceData: singleDeviceResponse = {
-        deviceId,
-        name,
-        type,
-        status,
-        location,
-        ipAddress,
-        macAddress,
-        serialNumber,
-        firmwareVersion,
-        lastActive: lastActiveDate.toISOString(),
-        organizationId,
-        lastSeen: new Date(),
-        connectionStatus: 'online',
-        dbId
-      };
-
-      emitDeviceUpdate('deviceUpdated', deviceData);
-    } catch (socketError) {
-      console.warn('Failed to emit single device update via Socket.IO:', socketError);
-    }
-
-    // Also emit full devices update if this is a new device (for stats update)
-    if (!existingDbDevice && !existingCacheDevice) {
-      try {
-        const fullDeviceData = await getCurrentDeviceData(organizationId);
-        emitDevicesUpdate('devicesUpdated', fullDeviceData);
-      } catch (socketError) {
-        console.warn('Failed to emit full devices update via Socket.IO:', socketError);
-      }
-    }
 
     return new Response(JSON.stringify({
       success: true,
-      deviceId,
+      deviceId: macAddress,
       dbId,
-      action: dbAction,
-      message: existingDbDevice
-        ? 'Device updated in database and cache'
-        : 'Device cached only (not in database)',
+      action,
       totalDevices: stats.total,
       organizationId,
-      cached: true
     }), { status: 200 });
 
   } catch (error) {
-    console.error('Error handling device POST request:', error);
+    console.error('Error handling device POST:', error);
 
-    // Still update cache even if DB operation fails
-    await DeviceCacheManager.updateDevice(deviceId, {
-      device: {
-        name,
-        type,
-        status,
-        location,
-        ipAddress,
-        macAddress,
-        serialNumber,
-        firmwareVersion,
-        lastActive: lastActiveDate,
-        organizationId,
-      },
+    // Cache even on error
+    DeviceCacheManager.set(macAddress, {
+      device: { name, type, status, location, ipAddress, macAddress, serialNumber, firmwareVersion, lastActive: lastActiveDate, organizationId },
       lastSeen: new Date(),
       status: 'online',
     });
 
-    const stats = await DeviceCacheManager.getStats(organizationId);
-
-    // Emit individual device update even in error case
-    try {
-      const deviceData: singleDeviceResponse = {
-        deviceId,
-        name,
-        type,
-        status,
-        location,
-        ipAddress,
-        macAddress,
-        serialNumber,
-        firmwareVersion,
-        lastActive: lastActiveDate.toISOString(),
-        organizationId,
-        lastSeen: new Date(),
-        connectionStatus: 'online',
-        dbId: undefined
-      };
-
-      emitDeviceUpdate('deviceUpdated', deviceData);
-    } catch (socketError) {
-      console.warn('Failed to emit device update via Socket.IO:', socketError);
-    }
-
     return new Response(JSON.stringify({
       success: true,
-      deviceId,
-      warning: 'Device cached but database operation failed',
+      deviceId: macAddress,
       error: error instanceof Error ? error.message : 'Unknown error',
-      totalDevices: stats.total,
-      organizationId,
-      cached: true
     }), { status: 200 });
   }
 }
 
-async function getCurrentDeviceData(organizationId: string): Promise<DeviceResponse> {
-  try {
-    const dbDevicesResponse = await getDevices(organizationId);
-    const dbDevices = dbDevicesResponse.devices;
-    const allDevices = new Map<string, ApiDevice>();
+// async function getCurrentDeviceData(organizationId: string): Promise<DeviceResponse> {
+//   try {
+//     const dbDevicesResponse = await getDevices(organizationId);
+//     const dbDevices = dbDevicesResponse.devices;
+//     const allDevices = new Map<string, ApiDevice>();
 
-    // Add database devices
-    dbDevices.forEach(device => {
-      return allDevices.set(device.macAddress!, {
-        ...device,
-        lastActive: device.lastActive,
-        lastSeen: device.lastActive!,
-        connectionStatus: 'offline',
-        source: 'database',
-      });
-    });
+//     // Add database devices
+//     dbDevices.forEach(device => {
+//       return allDevices.set(device.macAddress!, {
+//         ...device,
+//         lastActive: device.lastActive,
+//         lastSeen: device.lastActive!,
+//         connectionStatus: 'offline',
+//         source: 'database',
+//       });
+//     });
 
-    // Add/update with cached devices for this organization only
-    const cachedDevices = await DeviceCacheManager.getAllDevices(organizationId);
-    cachedDevices.forEach((data, macAddress) => {
-      const existingDevice = allDevices.get(macAddress);
-      allDevices.set(macAddress, {
-        deviceId: macAddress,
-        id: data.device.id || existingDevice?.id || "",
-        ...data.device,
-        lastSeen: data.lastSeen,
-        connectionStatus: data.status,
-        source: data.device.id ? 'database+cache' : 'cache-only',
-      });
-    });
+//     // Add/update with cached devices for this organization only
+//     const cachedDevices = await DeviceCacheManager.getAll(organizationId);
+//     cachedDevices.forEach((data, macAddress) => {
+//       const existingDevice = allDevices.get(macAddress);
+//       allDevices.set(macAddress, {
+//         deviceId: macAddress,
+//         id: data.device.id || existingDevice?.id || "",
+//         ...data.device,
+//         lastSeen: data.lastSeen,
+//         connectionStatus: data.status,
+//         source: data.device.id ? 'database+cache' : 'cache-only',
+//       });
+//     });
 
-    const devices = Array.from(allDevices.values());
-    const stats = await DeviceCacheManager.getStats(organizationId);
+//     const devices = Array.from(allDevices.values());
+//     const stats = await DeviceCacheManager.getStats(organizationId);
 
-    return {
-      devices,
-      totalDevices: devices.length,
-      cacheCount: stats.cacheOnly,
-      dbCount: stats.linkedToDb,
-      stats
-    };
-  } catch (error) {
-    console.error('Error in getCurrentDeviceData:', error);
-    // Fallback to cache-only for this organization
-    const cachedDevices = await DeviceCacheManager.getAllDevices(organizationId);
-    const devices = Array.from(cachedDevices.entries()).map(([id, data]) => ({
-      deviceId: id,
-      id: data.device.id || "",
-      ...data.device,
-      lastSeen: data.lastSeen,
-      connectionStatus: data.status,
-      source: 'cache-only' as const,
-    }));
+//     return {
+//       devices,
+//       totalDevices: devices.length,
+//       cacheCount: stats.cacheOnly,
+//       dbCount: stats.linkedToDb,
+//       stats
+//     };
+//   } catch (error) {
+//     console.error('Error in getCurrentDeviceData:', error);
+//     // Fallback to cache-only for this organization
+//     const cachedDevices = await DeviceCacheManager.getAll(organizationId);
+//     const devices = Array.from(cachedDevices.entries()).map(([id, data]) => ({
+//       deviceId: id,
+//       id: data.device.id || "",
+//       ...data.device,
+//       lastSeen: data.lastSeen,
+//       connectionStatus: data.status,
+//       source: 'cache-only' as const,
+//     }));
 
-    const stats = await DeviceCacheManager.getStats(organizationId);
-    return {
-      devices,
-      totalDevices: devices.length,
-      cacheCount: stats.cacheOnly,
-      dbCount: stats.linkedToDb,
-      stats
-    };
-  }
-}
+//     const stats = await DeviceCacheManager.getStats(organizationId);
+//     return {
+//       devices,
+//       totalDevices: devices.length,
+//       cacheCount: stats.cacheOnly,
+//       dbCount: stats.linkedToDb,
+//       stats
+//     };
+//   }
+// }
 // // GET endpoint to retrieve device status
 // // export async function GET(request: Request) {
 // //   const url = new URL(request.url);

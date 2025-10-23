@@ -42,20 +42,35 @@ export interface singleDeviceResponse {
   dbId?: string;
 }
 
-export async function getDevices(organizationId: string) {
-  return DeviceCacheManager.getDevicesWithCache(organizationId);
+export async function getDevices(organizationId: string): Promise<DeviceResponse> {
+  const cachedDevices = await DeviceCacheManager.getAll(organizationId);
+  const devicesArray = Array.from(cachedDevices.values()).map(data => ({
+    deviceId: data.device.macAddress,
+    ...data.device,
+    lastSeen: data.lastSeen,
+    connectionStatus: data.status,
+    source: data.device.id ? ('database+cache' as const) : ('cache-only' as const),
+  }));
+
+  const stats = await DeviceCacheManager.getStats(organizationId);
+
+  return {
+    devices: devicesArray,
+    totalDevices: devicesArray.length,
+    cacheCount: stats.cacheOnly,
+    dbCount: stats.linkedToDb,
+    stats,
+  };
 }
 
 export async function getDevice(organizationId: string, deviceId: string) {
-  const device = await DeviceCacheManager.getDevice(deviceId);
+  const device = await DeviceCacheManager.get(deviceId);
   if (device && device.device.organizationId === organizationId) {
     return {
       deviceId: device.device.macAddress,
       ...device.device,
       lastSeen: device.lastSeen,
       connectionStatus: device.status,
-      dbId: device.device.id,
-      orgId: device.device.organizationId,
     };
   }
   return null;
@@ -64,23 +79,21 @@ export async function getDevice(organizationId: string, deviceId: string) {
 // Database mutation helpers that sync with cache
 export async function createDevice(device: Omit<Device, 'id'>) {
   const [newDevice] = await Drizzle.insert(devices).values(device).returning();
-  const deviceForCache = {
-    ...newDevice,
-    lastActive: new Date(newDevice.lastActive)
-  };
-  await DeviceCacheManager.syncDatabaseCreate(deviceForCache);
+  
+  // Add to cache
+  DeviceCacheManager.set(newDevice.macAddress, {
+    device: newDevice,
+    lastSeen: new Date(newDevice.lastActive),
+    status: 'offline',
+  });
+  
   return newDevice;
 }
 
 export async function updateDevice(deviceId: string, organizationId: string, updates: Record<string, unknown>) {
-  // Filter out undefined values
   const filteredUpdates = Object.entries(updates).reduce((acc, [key, value]) => {
     if (value !== undefined) {
-      if (key === 'lastActive' && value instanceof Date) {
-        acc[key] = value.toISOString();
-      } else {
-        acc[key] = value;
-      }
+      acc[key] = key === 'lastActive' && value instanceof Date ? value.toISOString() : value;
     }
     return acc;
   }, {} as Record<string, unknown>);
@@ -98,12 +111,15 @@ export async function updateDevice(deviceId: string, organizationId: string, upd
     .returning();
 
   if (updatedDevice) {
-    const deviceForCache = {
-      ...updatedDevice,
-      lastActive: new Date(updatedDevice.lastActive)
-    };
-    await DeviceCacheManager.syncDatabaseUpdate(deviceForCache);
+    // Update cache
+    const existing = await DeviceCacheManager.get(updatedDevice.macAddress);
+    DeviceCacheManager.set(updatedDevice.macAddress, {
+      device: updatedDevice,
+      lastSeen: existing?.lastSeen || new Date(updatedDevice.lastActive),
+      status: existing?.status || 'offline',
+    });
   }
+  
   return updatedDevice;
 }
 
@@ -114,5 +130,5 @@ export async function deleteDevice(deviceId: string, organizationId: string) {
       eq(devices.organizationId, organizationId)
     ));
 
-  await DeviceCacheManager.syncDatabaseDelete(deviceId, organizationId);
+  DeviceCacheManager.remove(deviceId);
 }

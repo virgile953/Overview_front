@@ -8,8 +8,8 @@ export async function GET(request: Request) {
   try {
     switch (action) {
       case 'stats':
-        const stats = DeviceCacheManager.getStats();
-        const allDevices = DeviceCacheManager.getAllDevices();
+        const stats = await DeviceCacheManager.getStats();
+        const allDevices = await DeviceCacheManager.getAll();
 
         return new Response(JSON.stringify({
           stats,
@@ -18,12 +18,12 @@ export async function GET(request: Request) {
             name: data.device.name,
             status: data.status,
             lastSeen: data.lastSeen,
-            hasDbId: !!data.dbId,
-            dbId: data.dbId
+            hasDbId: !!data.device.id,
+            dbId: data.device.id
           }))
         }), { status: 200 });
       case 'clear':
-        DeviceCacheManager.clearAll();
+        DeviceCacheManager.clear();
         return new Response(JSON.stringify({
           success: true,
           message: "Cache cleared successfully"
@@ -60,10 +60,10 @@ export async function POST(request: Request) {
           return new Response(JSON.stringify({ error: "macAddresses array is required" }), { status: 400 });
         }
 
-        results = macAddresses.map(mac => ({
+        results = await Promise.all(macAddresses.map(async mac => ({
           macAddress: mac,
-          success: DeviceCacheManager.markOffline(mac)
-        }));
+          success: await DeviceCacheManager.markOffline(mac)
+        })));
         break;
 
       case 'mark-online':
@@ -71,10 +71,10 @@ export async function POST(request: Request) {
           return new Response(JSON.stringify({ error: "macAddresses array is required" }), { status: 400 });
         }
 
-        results = macAddresses.map(mac => ({
+        results = await Promise.all(macAddresses.map(async mac => ({
           macAddress: mac,
-          success: DeviceCacheManager.markOnline(mac)
-        }));
+          success: await DeviceCacheManager.markOnline(mac)
+        })));
         break;
 
       case 'remove':
@@ -82,10 +82,10 @@ export async function POST(request: Request) {
           return new Response(JSON.stringify({ error: "macAddresses array is required" }), { status: 400 });
         }
 
-        results = macAddresses.map(mac => ({
+        results = await Promise.all(macAddresses.map(async mac => ({
           macAddress: mac,
-          success: DeviceCacheManager.removeDevice(mac)
-        }));
+          success: await DeviceCacheManager.remove(mac)
+        })));
         break;
 
       default:
@@ -94,7 +94,7 @@ export async function POST(request: Request) {
         }), { status: 400 });
     }
 
-    const stats = DeviceCacheManager.getStats();
+    const stats = await DeviceCacheManager.getStats();
 
     return new Response(JSON.stringify({
       success: true,

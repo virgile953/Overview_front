@@ -27,12 +27,13 @@ export async function POST(request: Request) {
       organizationId: organizationId
     });
 
-    const existingCacheEntry = DeviceCacheManager.getDevice(macAddress);
+    const existingCacheEntry = DeviceCacheManager.get(macAddress);
     if (existingCacheEntry) {
       // Update existing cache entry with database ID
-      DeviceCacheManager.updateDevice(macAddress, {
+      DeviceCacheManager.set(macAddress, {
         ...existingCacheEntry,
         device: {
+          id: newDevice.id,
           name,
           type,
           status,
@@ -44,12 +45,14 @@ export async function POST(request: Request) {
           lastActive: newDevice.lastActive,
           organizationId,
         },
-        dbId: newDevice.id // Now it has a database ID
+        lastSeen: new Date(),
+        status: "online"
       });
     } else {
       // Add new cache entry
-      DeviceCacheManager.updateDevice(macAddress, {
+      DeviceCacheManager.set(macAddress, {
         device: {
+          id: newDevice.id,
           name,
           type,
           status,
@@ -63,12 +66,10 @@ export async function POST(request: Request) {
         },
         lastSeen: new Date(),
         status: 'offline', // Default to offline since it's manually added
-        dbId: newDevice.id,
-        organizationId: organizationId
       });
     }
 
-    const stats = DeviceCacheManager.getStats();
+    const stats = await DeviceCacheManager.getStats();
 
     return new Response(JSON.stringify({
       success: true,
@@ -102,9 +103,9 @@ export async function DELETE(request: Request) {
 
   try {
     // Remove from cache using DeviceCacheManager
-    const wasInCache = DeviceCacheManager.getDevice(macAddress) !== undefined;
-    const removed = DeviceCacheManager.removeDevice(macAddress);
-    const stats = DeviceCacheManager.getStats();
+    const wasInCache = await DeviceCacheManager.get(macAddress) !== undefined;
+    const removed = await DeviceCacheManager.remove(macAddress);
+    const stats = await DeviceCacheManager.getStats();
 
     // Remove from database if dbId is provided
     if (dbId) {
