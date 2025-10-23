@@ -93,15 +93,13 @@ export default function Devices() {
             lastSeen: new Date(data.lastSeen),
             connectionStatus: data.connectionStatus,
             source: data.dbId ? 'database+cache' : 'cache-only',
-            dbId: data.dbId,
-            orgId: data.organizationId
           };
           updatedDevices.push(newDevice);
         }
 
         const onlineCount = updatedDevices.filter(d => d.connectionStatus === 'online').length;
         const cacheOnlyCount = updatedDevices.filter(d => d.source === 'cache-only').length;
-        const linkedToDbCount = updatedDevices.filter(d => d.dbId).length;
+        const linkedToDbCount = updatedDevices.filter(d => d.deviceId).length;
 
         return {
           ...prevData,
@@ -224,7 +222,7 @@ export default function Devices() {
             {devices.map((device) => (
               <div
                 key={device.deviceId || device.id}
-                className={`transition-all rounded-lg duration-200 ${recentlyUpdatedDevices.has(device.deviceId)
+                className={`transition-all rounded-lg duration-200 ${recentlyUpdatedDevices.has(device.id!)
                   ? 'ring-2 ring-emerald-400 ring-opacity-75 shadow-lg'
                   : ''
                   }`}
