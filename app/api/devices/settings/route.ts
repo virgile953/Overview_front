@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { DeviceCacheSettingsManager } from "@/lib/deviceCacheSettings";
-import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 import { auth } from "@/lib/auth";
 
 export async function GET() {
@@ -66,9 +65,6 @@ export async function PUT(req: NextRequest) {
       checkIntervalMs,
     });
 
-    // Restart intervals with new settings
-    DeviceCacheManager.restartCleanupIntervals();
-
     const settings = DeviceCacheSettingsManager.getSettings();
     return NextResponse.json(settings);
   } catch (error) {
@@ -91,7 +87,6 @@ export async function POST(req: NextRequest) {
     }
 
     DeviceCacheSettingsManager.resetToDefaults();
-    DeviceCacheManager.restartCleanupIntervals();
 
     const settings = DeviceCacheSettingsManager.getSettings();
     return NextResponse.json({ message: "Settings reset to defaults", settings });
