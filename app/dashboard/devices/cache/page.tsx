@@ -16,10 +16,6 @@ export default async function CacheManagementPage() {
     return <></>
   }
 
-  // console.log("=== CACHE PAGE RENDER ===");
-  // console.log("Organization ID:", session.session.activeOrganizationId);
-  // console.log("Timestamp:", new Date().toISOString());
-
   const cachedDevices = await DeviceCacheManager.getAll(session.session.activeOrganizationId!);
   const stats = await DeviceCacheManager.getStats(session.session.activeOrganizationId!);
   const cacheInfo = await DeviceCacheManager.getCacheInfo();

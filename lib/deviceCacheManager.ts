@@ -1,26 +1,21 @@
 import { Device } from "./db/schema";
 import { getRedisClient } from "./redis";
 
-// Simple cache device structure
 interface CacheDevice {
   device: Partial<Device>;
   lastSeen: Date;
   status: 'online' | 'offline';
 }
 
-// In-memory cache as fallback
 const memoryCache = new Map<string, CacheDevice>();
 
-// Redis key prefixes
 const DEVICE_KEY_PREFIX = 'device:';
 const ORG_DEVICES_KEY = 'org:devices:';
 const DEVICE_TTL = 3600; // 1 hour
 
-// Simple cache manager with Redis
 export class DeviceCacheManager {
   private static useRedis = true;
 
-  // Helper to get Redis client or fall back to memory
   private static async getClient() {
     if (!this.useRedis) return null;
     
@@ -100,18 +95,15 @@ export class DeviceCacheManager {
       }
     }
 
-    // Fallback to memory
     return memoryCache.get(macAddress);
   }
 
-  // Get all devices, optionally filtered by organization
   static async getAll(organizationId?: string): Promise<Map<string, CacheDevice>> {
     const redis = await this.getClient();
 
     if (redis) {
       try {
         if (organizationId) {
-          // Get devices for specific organization
           const orgKey = this.orgDevicesKey(organizationId);
           const macAddresses = await redis.sMembers(orgKey);
           
@@ -126,7 +118,6 @@ export class DeviceCacheManager {
           
           return devices;
         } else {
-          // Get all devices (scan all keys)
           const keys: string[] = [];
           let cursor = 0;
           

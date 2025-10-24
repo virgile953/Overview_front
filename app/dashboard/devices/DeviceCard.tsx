@@ -174,7 +174,7 @@ export default function DeviceCard({
                 <span className="ml-2 text-muted-foreground">{getLastSeenTime(device)}</span>
               </TooltipTrigger>
               <TooltipContent className="text-sm">
-                <span>{device.lastActive?.toLocaleTimeString('fr-FR')}</span>
+                <span>{device.lastSeen?.toLocaleTimeString('fr-FR')}</span>
               </TooltipContent>
             </Tooltip>
           </div>

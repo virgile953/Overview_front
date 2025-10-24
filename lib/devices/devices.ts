@@ -6,7 +6,7 @@ import { Device } from "../db/schema";
 
 export interface ApiDevice extends Partial<Device> {
   deviceId?: string;
-  lastSeen: Date | string;
+  lastSeen: Date;
   connectionStatus: string;
   source: 'database' | 'database+cache' | 'cache-only';
 }
@@ -35,9 +35,9 @@ export interface singleDeviceResponse {
   macAddress: string;
   serialNumber?: string;
   firmwareVersion?: string;
-  lastActive: string;
+  lastActive: Date;
   organizationId: string;
-  lastSeen: Date | string;
+  lastSeen: Date;
   connectionStatus: string;
   dbId?: string;
 }
