@@ -37,7 +37,7 @@ export default function UserCard({ user }: UserCardProps) {
           <span className="text-sm font-semibold">Groups:</span>
           <ul className="list-disc list-inside text-xs">
             {user.groups.slice(0, 3).map((group, index) => (
-              <li key={typeof group === 'string' ? group : group.$id || index}>
+              <li key={typeof group === 'string' ? group : group.id || index}>
                 {typeof group === 'string' ? group : group.name}
               </li>
             ))}
@@ -49,7 +49,7 @@ export default function UserCard({ user }: UserCardProps) {
                 <TooltipContent side="bottom" className="max-w-xs">
                   <ul className="list-disc list-inside">
                     {user.groups.slice(3).map((group, index) => (
-                      <li key={typeof group === 'string' ? group : group.$id || index}>
+                      <li key={typeof group === 'string' ? group : group.id || index}>
                         {typeof group === 'string' ? group : group.name}
                       </li>
                     ))}
