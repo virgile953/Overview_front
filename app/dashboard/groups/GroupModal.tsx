@@ -1,10 +1,10 @@
 "use client";
 import Modal from "@/app/ui/Modal/Modal";
 import InputField from "@/app/ui/InputField";
-import { Group } from "@/models/server/groups";
 import DeviceSelector from "@/app/ui/DeviceSelector";
 import UserSelector from "@/app/ui/UserSelector";
 import { useEffect, useState } from "react";
+import { Group } from "@/lib/groups/groups";
 
 interface groupModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ export default function GroupModal({ isOpen, onClose, onSave, group }: groupModa
   const [localGroup, setLocalGroup] = useState<Group>(group);
 
   async function saveGroup() {
-    const res = await fetch(`/api/groups/${localGroup.$id}`, {
+    const res = await fetch(`/api/groups/${localGroup.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(localGroup),

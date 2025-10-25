@@ -11,7 +11,7 @@ export interface Group {
   name: string;
   localisation: string;
   description: string;
-  users: User[];
+  users: Users[];
   devices: Device[];
 }
 

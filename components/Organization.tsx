@@ -48,9 +48,10 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger className="text-start w-full p-2 bg-sidebar-accent rounded-lg">
-          {currentSession && (
-            <div className="">
+        <PopoverTrigger asChild>
+          <button className="text-start w-full p-2 bg-sidebar-accent rounded-lg">
+            {currentSession && (
+              <div className="">
               {currentOrgs && currentOrgs.length > 0 && activeOrg && (
                 <div className="flex justify-between text-center gap-2">
                   <div className="flex flex-row">
@@ -67,11 +68,11 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
                   </div>
 
                   <ChevronsUpDown className="size-4 self-center" />
-
                 </div>
               )}
-            </div>
-          )}
+              </div>
+            )}
+          </button>
         </PopoverTrigger>
         <PopoverContent side="right" className="p-1">
           {currentOrgs && currentOrgs.length > 0 ? (

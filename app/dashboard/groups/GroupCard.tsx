@@ -1,7 +1,6 @@
-import { Group } from "@/models/server/groups";
-import { User } from "@/models/server/users";
 import EditGroupButton from "./EditGroupButton";
-import { Device } from "@/lib/db/schema";
+import { Device, Users } from "@/lib/db/schema";
+import { Group } from "@/lib/groups/groups";
 
 interface GroupCardProps {
   group: Group;
@@ -16,15 +15,15 @@ export default function GroupCard({ group }: GroupCardProps) {
       <div className="mt-2">
         <span className="text-sm font-semibold">Users:</span>
         <ul className="list-disc list-inside">
-          {group.users.map((user: User) => (
-            <li key={user.$id}>{user.name}</li>
+          {group.users?.map((user: Users) => (
+            <li key={user.id}>{user.name}</li>
           ))}
         </ul>
       </div>
       <div className="mt-2">
         <span className="text-sm font-semibold">Devices:</span>
         <ul className="list-disc list-inside">
-          {group.devices.map((device: Device) => (
+          {group.devices?.map((device: Device) => (
             <li key={device.id}>{device.name}</li>
           ))}
         </ul>

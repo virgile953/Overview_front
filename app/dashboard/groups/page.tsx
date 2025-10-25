@@ -1,4 +1,3 @@
-import { getGroups as coucou } from "@/models/server/groups";
 import GroupCard from "./GroupCard";
 import CreateGroupButton from "./CreateGroupButton";
 import GroupsClientWrapper from "./GroupsClientWrapper";
@@ -22,10 +21,8 @@ export default async function Groups() {
     return <div>No active organization</div>;
   }
 
-  const groups = await coucou();
-  const pgGroups = await getGroups(organizationId);
+  const groups = await getGroups(organizationId);
   console.log(groups);
-  console.log(pgGroups);
   return (
     <GroupsClientWrapper>
       <div>
@@ -36,7 +33,7 @@ export default async function Groups() {
         {groups.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
             {groups.map((group) => (
-              <div key={group.$id} className="">
+              <div key={group.id} className="">
                 <GroupCard group={group} />
               </div>
             ))}

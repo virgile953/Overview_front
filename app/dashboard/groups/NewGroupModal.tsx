@@ -1,9 +1,10 @@
 import Modal from "@/app/ui/Modal/Modal";
 import InputField from "@/app/ui/InputField";
 import { useEffect, useState } from "react";
-import { Group } from "@/models/server/groups";
 import UserSelector from "@/app/ui/UserSelector";
 import DeviceSelector from "@/app/ui/DeviceSelector";
+import { createGroup, Group } from "@/lib/groups/groups";
+import { useSession } from "@/lib/auth-client";
 
 interface NewGroupModalProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ interface NewGroupModalProps {
 export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGroupModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const session = useSession();
   // Form state with string arrays for easier form handling
   const [formData, setFormData] = useState<Partial<Group>>({
     name: "",
@@ -27,22 +28,36 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
   async function handleCreate() {
     setLoading(true);
     setError(null);
+    if (!session?.data?.session.activeOrganizationId) {
+      setError("No active organization");
+      setLoading(false);
+      return;
+    }
     try {
       // Convert form data to proper Group format for API
       const groupData = {
-        name: formData.name,
-        localisation: formData.localisation,
-        description: formData.description,
-        users: (formData.users ?? []).map(user => user && user.$id ? user.$id.trim() : "").filter(Boolean),
-        devices: (formData.devices ?? []).map(device => device && device.id ? device.id.trim() : "").filter(Boolean),
+        name: formData.name || "",
+        localisation: formData.localisation || "",
+        description: formData.description || "",
+        users: formData.users ?? [],
+        devices: formData.devices ?? [],
       };
-
-      const res = await fetch("/api/groups", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(groupData),
+      const newGroup = await createGroup({
+        name: groupData.name,
+        localisation: groupData.localisation,
+        description: groupData.description,
+        organizationId: session?.data?.session.activeOrganizationId,
+        devices: groupData.devices,
+        users: groupData.users,
       });
-      if (!res.ok) throw new Error("Failed to create group");
+      console.log("Created group:", newGroup);
+      // const res = await fetch("/api/groups", {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify(groupData),
+      // });
+      // if (!res.ok) throw new Error("Failed to create group");
+      if (!newGroup) throw new Error("Failed to create group");
       onGroupCreated();
       onClose();
       // Reset form

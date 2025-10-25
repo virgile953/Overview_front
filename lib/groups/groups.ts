@@ -1,3 +1,5 @@
+"use server";
+
 import { eq, and } from "drizzle-orm";
 import Drizzle from "../db/db";
 import { Device, groups, groupDevices, groupUsers, users, Users, devices } from "../db/schema";

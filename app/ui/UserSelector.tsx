@@ -1,16 +1,16 @@
 "use client";
-import { User } from "@/models/server/users";
+import { Users } from "@/lib/db/schema";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
 interface UserSelectorProps {
-  onChange?: (selected: User[]) => void;
-  initialValue?: User[];
+  onChange?: (selected: Users[]) => void;
+  initialValue?: Users[];
 }
 
 export default function UserSelector({ onChange, initialValue }: UserSelectorProps) {
 
-  const [users, setUsers] = useState<User[] | null>(null);
+  const [users, setUsers] = useState<Users[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,13 +46,13 @@ export default function UserSelector({ onChange, initialValue }: UserSelectorPro
       <Select
         options={
           users ? users.map((user) => ({
-            value: user.$id,
+            value: user.id,
             label: user.name,
           })) : []
         }
         value={
           initialValue ? initialValue.map(user => ({
-            value: user.$id,
+            value: user.id,
             label: user.name,
           })) : []
         }
@@ -168,8 +168,8 @@ export default function UserSelector({ onChange, initialValue }: UserSelectorPro
           if (onChange && users) {
             // Map selected options back to full User objects
             const selectedUsers = (selected as Array<{ value: string, label: string }>)
-              .map(option => users.find(user => user.$id === option.value))
-              .filter((user): user is User => user !== undefined);
+              .map(option => users.find(user => user.id === option.value))
+              .filter((user): user is Users => user !== undefined);
 
             onChange(selectedUsers);
           }

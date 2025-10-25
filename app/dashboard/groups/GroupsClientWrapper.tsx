@@ -1,9 +1,9 @@
 "use client";
 import { useState, createContext, useContext } from "react";
-import { Group } from "@/models/server/groups";
 import NewGroupModal from "./NewGroupModal";
 import GroupModal from "./GroupModal";
 import { useRouter } from "next/navigation";
+import { Group } from "@/lib/groups/groups";
 
 interface GroupsContextType {
   openNewGroupModal: () => void;
