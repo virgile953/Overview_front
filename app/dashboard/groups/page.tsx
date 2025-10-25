@@ -1,11 +1,31 @@
-import { getGroups } from "@/models/server/groups";
+import { getGroups as coucou } from "@/models/server/groups";
 import GroupCard from "./GroupCard";
 import CreateGroupButton from "./CreateGroupButton";
 import GroupsClientWrapper from "./GroupsClientWrapper";
+import { getGroups } from "@/lib/groups/groups";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function Groups() {
-  const groups = await getGroups();
 
+  const session = await auth.api.getSession(
+    {
+      headers: await headers()
+    }
+  );
+  if (!auth) {
+    return <div>Unauthorized</div>;
+  }
+
+  const organizationId = session?.session.activeOrganizationId;
+  if (!organizationId) {
+    return <div>No active organization</div>;
+  }
+
+  const groups = await coucou();
+  const pgGroups = await getGroups(organizationId);
+  console.log(groups);
+  console.log(pgGroups);
   return (
     <GroupsClientWrapper>
       <div>

@@ -1,4 +1,84 @@
-import { pgTable, foreignKey, text, timestamp, index, uuid, unique, boolean, integer, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, index, foreignKey, uuid, text, timestamp, unique, boolean, integer, primaryKey } from "drizzle-orm/pg-core"
+
+export const groups = pgTable("groups", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: text("organization_id").notNull(),
+	name: text().notNull(),
+	localisation: text().notNull(),
+	description: text().notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("groups_name_idx").using("btree", table.name.asc().nullsLast().op("text_ops")),
+	index("groups_org_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "groups_organization_id_organization_id_fk"
+		}).onDelete("cascade"),
+]);
+
+export const groupDevices = pgTable("group_devices", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	groupId: uuid("group_id").notNull(),
+	deviceId: uuid("device_id").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("group_devices_device_idx").using("btree", table.deviceId.asc().nullsLast().op("uuid_ops")),
+	index("group_devices_group_idx").using("btree", table.groupId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.deviceId],
+			foreignColumns: [devices.id],
+			name: "group_devices_device_id_devices_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.groupId],
+			foreignColumns: [groups.id],
+			name: "group_devices_group_id_groups_id_fk"
+		}).onDelete("cascade"),
+]);
+
+export const groupUsers = pgTable("group_users", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	groupId: uuid("group_id").notNull(),
+	userId: uuid("user_id").notNull(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("group_users_group_idx").using("btree", table.groupId.asc().nullsLast().op("uuid_ops")),
+	index("group_users_user_idx").using("btree", table.userId.asc().nullsLast().op("uuid_ops")),
+	foreignKey({
+			columns: [table.groupId],
+			foreignColumns: [groups.id],
+			name: "group_users_group_id_groups_id_fk"
+		}).onDelete("cascade"),
+	foreignKey({
+			columns: [table.userId],
+			foreignColumns: [users.id],
+			name: "group_users_user_id_users_id_fk"
+		}).onDelete("cascade"),
+]);
+
+export const users = pgTable("users", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: text("organization_id").notNull(),
+	name: text().notNull(),
+	lastName: text("last_name").notNull(),
+	email: text().notNull(),
+	function: text().notNull(),
+	service: text().notNull(),
+	title: text(),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("users_email_idx").using("btree", table.email.asc().nullsLast().op("text_ops")),
+	index("users_name_idx").using("btree", table.name.asc().nullsLast().op("text_ops")),
+	index("users_org_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "users_organization_id_organization_id_fk"
+		}).onDelete("cascade"),
+]);
 
 export const account = pgTable("account", {
 	id: text().primaryKey().notNull(),
@@ -45,7 +125,7 @@ export const devices = pgTable("devices", {
 	macAddress: text("mac_address").notNull(),
 	serialNumber: text("serial_number").notNull(),
 	firmwareVersion: text("firmware_version").notNull(),
-	lastActive: timestamp("last_active").notNull(),
+	lastActive: timestamp("last_active", { mode: 'date' }).notNull(),
 	organizationId: text("organization_id").notNull(),
 }, (table) => [
 	index("devices_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),

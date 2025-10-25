@@ -2,7 +2,7 @@ import { getDevices } from "@/lib/devices/devices";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
-export async function GET(request: Request) {
+export async function GET() {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -10,8 +10,6 @@ export async function GET(request: Request) {
   if (!session) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
-
-  const { searchParams } = new URL(request.url);
 
   const organizationId = session.session.activeOrganizationId;
 

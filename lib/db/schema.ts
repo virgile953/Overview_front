@@ -1,4 +1,5 @@
 import { pgTable, index, primaryKey, uuid, text, timestamp, integer, boolean } from "drizzle-orm/pg-core"
+import { relations } from "drizzle-orm"
 
 export const deviceLogs = pgTable("device_logs", {
 	id: uuid().defaultRandom().notNull(),
@@ -158,17 +159,121 @@ export const devices = pgTable('devices', {
 	macAddress: text('mac_address').notNull(),
 	serialNumber: text('serial_number').notNull(),
 	firmwareVersion: text('firmware_version').notNull(),
-	lastActive: timestamp('last_active').notNull(),
-}
-	, (table) => [
-		index('devices_org_idx').using('btree', table.organizationId),
-		index('devices_id_idx').using('btree', table.id),
-		index('devices_mac_idx').using('btree', table.macAddress),
-		index('devices_name_idx').using('btree', table.name),
-		index('devices_serial_idx').using('btree', table.serialNumber),
-		index('devices_ip_idx').using('btree', table.ipAddress),
-	]);
+	lastActive: timestamp('last_active', { mode: "date" }).notNull(),
+}, (table) => [
+	index('devices_org_idx').using('btree', table.organizationId),
+	index('devices_id_idx').using('btree', table.id),
+	index('devices_mac_idx').using('btree', table.macAddress),
+	index('devices_name_idx').using('btree', table.name),
+	index('devices_serial_idx').using('btree', table.serialNumber),
+	index('devices_ip_idx').using('btree', table.ipAddress),
+]);
 
+export const users = pgTable('users', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	name: text('name').notNull(),
+	lastName: text('last_name').notNull(),
+	email: text('email').notNull(),
+	function: text('function').notNull(),
+	service: text('service').notNull(),
+	title: text('title'),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at')
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+}, (table) => [
+	index('users_org_idx').using('btree', table.organizationId),
+	index('users_email_idx').using('btree', table.email),
+	index('users_name_idx').using('btree', table.name),
+]);
+
+export const groups = pgTable('groups', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	name: text('name').notNull(),
+	localisation: text('localisation').notNull(),
+	description: text('description').notNull(),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at')
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+}, (table) => [
+	index('groups_org_idx').using('btree', table.organizationId),
+	index('groups_name_idx').using('btree', table.name),
+]);
+
+// Many-to-many relationship between groups and users
+export const groupUsers = pgTable('group_users', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	groupId: uuid('group_id')
+		.notNull()
+		.references(() => groups.id, { onDelete: "cascade" }),
+	userId: uuid('user_id')
+		.notNull()
+		.references(() => users.id, { onDelete: "cascade" }),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+	index('group_users_group_idx').using('btree', table.groupId),
+	index('group_users_user_idx').using('btree', table.userId),
+]);
+
+// Many-to-many relationship between groups and devices
+export const groupDevices = pgTable('group_devices', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	groupId: uuid('group_id')
+		.notNull()
+		.references(() => groups.id, { onDelete: "cascade" }),
+	deviceId: uuid('device_id')
+		.notNull()
+		.references(() => devices.id, { onDelete: "cascade" }),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => [
+	index('group_devices_group_idx').using('btree', table.groupId),
+	index('group_devices_device_idx').using('btree', table.deviceId),
+]);
+
+// Add relations after table definitions
+export const groupsRelations = relations(groups, ({ many }) => ({
+	groupUsers: many(groupUsers),
+	groupDevices: many(groupDevices),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+	groupUsers: many(groupUsers),
+}));
+
+export const devicesRelations = relations(devices, ({ many }) => ({
+	groupDevices: many(groupDevices),
+}));
+
+export const groupUsersRelations = relations(groupUsers, ({ one }) => ({
+	group: one(groups, {
+		fields: [groupUsers.groupId],
+		references: [groups.id],
+	}),
+	user: one(users, {
+		fields: [groupUsers.userId],
+		references: [users.id],
+	}),
+}));
+
+export const groupDevicesRelations = relations(groupDevices, ({ one }) => ({
+	group: one(groups, {
+		fields: [groupDevices.groupId],
+		references: [groups.id],
+	}),
+	device: one(devices, {
+		fields: [groupDevices.deviceId],
+		references: [devices.id],
+	}),
+}));
 
 export type DeviceLogs = typeof deviceLogs.$inferSelect;
 export type NewDeviceLogs = typeof deviceLogs.$inferInsert;
@@ -192,3 +297,11 @@ export type Apikey = typeof apikey.$inferSelect;
 export type NewApikey = typeof apikey.$inferInsert;
 export type Device = typeof devices.$inferSelect;
 export type NewDevice = typeof devices.$inferInsert;
+export type Users = typeof users.$inferSelect;
+export type NewUsers = typeof users.$inferInsert;
+export type Group = typeof groups.$inferSelect;
+export type NewGroup = typeof groups.$inferInsert;
+export type GroupUser = typeof groupUsers.$inferSelect;
+export type NewGroupUser = typeof groupUsers.$inferInsert;
+export type GroupDevice = typeof groupDevices.$inferSelect;
+export type NewGroupDevice = typeof groupDevices.$inferInsert;

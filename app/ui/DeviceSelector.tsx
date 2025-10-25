@@ -14,6 +14,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
   const [devices, setDevices] = useState<Device[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  console.log("Initial Value:", initialValue);
 
   useEffect(() => {
     async function fetchDevices() {
@@ -24,6 +25,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
         if (!res.ok) throw new Error("Failed to fetch devices");
         const data = await res.json();
         setDevices(data);
+        console.log("Fetched Devices:", data);
       } catch (error) {
         console.error("Error fetching devices:", error);
         setError(error instanceof Error ? error.message : "Unknown error occurred");
@@ -46,7 +48,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
 
       <Select
         options={
-          devices ? devices.map((device) => ({
+          devices && Array.isArray(devices) ? devices.map((device) => ({
             value: device.id,
             label: device.name,
           })) : []
