@@ -1,7 +1,7 @@
 "use server";
 import { auth } from '@/lib/auth';
 import Drizzle from '@/lib/db/db';
-import { devices, NewDevice } from '@/lib/db/schema';
+import { devices } from '@/lib/db/schema';
 import { headers } from 'next/headers';
 import { DeviceCacheManager } from '@/lib/deviceCacheManager';
 import { eq } from 'drizzle-orm';
