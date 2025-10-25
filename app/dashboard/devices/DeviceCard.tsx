@@ -3,8 +3,8 @@ import { Device, NewDevice } from "@/lib/db/schema";
 import { CirclePlus, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { addDeviceToDb } from "./actions";
-import { ApiDevice } from "@/lib/devices/devices";
+import { ApiDevice, createDevice, deleteDevice } from "@/lib/devices/devices";
+import { useSession } from "@/lib/auth-client";
 
 // Device Card Component
 export default function DeviceCard({
@@ -16,6 +16,7 @@ export default function DeviceCard({
 }) {
   const [isAdding, setIsAdding] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+  const { data: session } = useSession();
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -69,15 +70,9 @@ export default function DeviceCard({
     if (isRemoving) return;
     setIsRemoving(true);
     try {
-      const response = await fetch(`/api/device/admin?dbId=${device.id}&macAddress=${device.macAddress}`, {
-        method: 'DELETE',
-        headers:
-        {
-          'Content-Type': 'application/json',
-        },
-      })
-      const result = await response.json();
-      if (response.ok && result.success) {
+      const response = await deleteDevice(device.id!, device.organizationId!);
+
+      if (response) {
         onDeviceAdded();
       }
     } catch {
@@ -96,17 +91,34 @@ export default function DeviceCard({
         !device.firmwareVersion || !device.lastActive) {
         throw new Error('Missing required device fields');
       }
-
-      const response = await addDeviceToDb(device as NewDevice);
-
+      if (!session || !session.session.activeOrganizationId) {
+        throw new Error('Unauthorized');
+      }
+      
+      // Ensure lastActive is a proper Date object
+      const deviceToAdd: NewDevice = {
+        name: device.name,
+        type: device.type,
+        status: device.status,
+        location: device.location,
+        ipAddress: device.ipAddress,
+        macAddress: device.macAddress,
+        serialNumber: device.serialNumber,
+        firmwareVersion: device.firmwareVersion,
+        lastActive: device.lastActive instanceof Date 
+          ? device.lastActive 
+          : new Date(device.lastActive),
+        organizationId: session.session.activeOrganizationId,
+      };
+      
+      const response = await createDevice(deviceToAdd);
       if (response) {
         onDeviceAdded();
       }
-    } catch {
+    } catch (error) {
+      console.error('Failed to add device:', error);
     } finally {
       setIsAdding(false);
-      setTimeout(() => {
-      }, 3000);
     }
   }
 
@@ -130,8 +142,11 @@ export default function DeviceCard({
     <div className={`h-full w-full bg-sidebar-accent border rounded-lg p-4 hover:shadow-md transition-shadow ${getSourceColor(device)}`}>
       <div className="flex items-start justify-between mb-3">
         <div>
-
-          <Link className="text-sm text-muted-foreground" href={`/dashboard/devices/${device.name}`}>{device.name}</Link>
+          {device.id ? (
+            <Link className="text-sm font-medium" href={`/dashboard/devices/${device.id}`}>{device.name}</Link>
+          ) : (
+            <div className="text-sm text-muted-foreground">{device.name}</div>
+          )}
           {'source' in device && (
             <p className="text-xs text-muted-foreground mt-1">
               Source: {device.source}
