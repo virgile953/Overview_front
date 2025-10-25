@@ -13,6 +13,7 @@ import {
   Settings,
   Group,
   BookUser,
+  Mails,
 } from "lucide-react";
 
 import {
@@ -39,6 +40,7 @@ import Image from "next/image";
 import logo from '@/public/logo/logo.svg';
 import { Organization, Session } from "@/lib/db/schema";
 import { OrganizationMenu } from "@/components/Organization";
+import { title } from "process";
 
 const navigation = [
   {
@@ -109,6 +111,11 @@ const navigation = [
         url: "/dashboard/groups",
         icon: Group,
       },
+      {
+        title: "Email templates",
+        url: "/dashboard/emails",
+        icon: Mails
+      }
     ],
   },
 ];
