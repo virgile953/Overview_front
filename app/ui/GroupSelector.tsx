@@ -1,5 +1,5 @@
 "use client";
-import { Group } from "@/models/server/groups";
+import { Group } from "@/lib/groups/groups";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
@@ -46,20 +46,20 @@ export default function GroupSelector({ onChange, initialValue }: GroupSelectorP
       <Select
         options={
           groups ? groups.map((group) => ({
-            value: group.$id,
+            value: group.id,
             label: group.name,
           })) : []
         }
         value={
           initialValue ? initialValue.map(group => ({
-            value: group.$id,
+            value: group.id,
             label: group.name,
           })) : null
         }
         onChange={(selectedOptions) => {
           if (onChange) {
             const selectedGroups = (selectedOptions as { value: string; label: string }[]).map(option => {
-              const group = groups?.find(g => g.$id === option.value);
+              const group = groups?.find(g => g.id === option.value);
               return group!;
             });
             onChange(selectedGroups);

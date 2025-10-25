@@ -1,14 +1,15 @@
 "use server";
+import { getGroups } from "@/lib/groups/groups";
 import { getUsers } from "./users";
-import { getGroups } from "./groups";
 
-export async function getUsersStats() {
+export async function getUsersStats(organizationId: string) {
   const result = await getUsers();
+  console.log(organizationId);
   return result.length;
 }
 
-export async function getGroupsStats() {
-  const result = await getGroups();
+export async function getGroupsStats(organizationId: string) {
+  const result = await getGroups(organizationId);
   return result.length;
 }
 

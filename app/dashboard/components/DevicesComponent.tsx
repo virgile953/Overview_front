@@ -10,7 +10,7 @@ export default async function DevicesDashboard({ orgId, className }: { orgId: st
   const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
   const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
   const stats = await {
-    ...DeviceCacheManager.getStats(),
+    ...DeviceCacheManager.getStats(orgId),
     dbOnly: dbOnlyDevices.length
   };
   stats.total += dbOnlyDevices.length;
@@ -26,7 +26,7 @@ export default async function DevicesDashboard({ orgId, className }: { orgId: st
       </div>
       {stats && (
         <>
-          <div className="text-3xl font-bold text-foreground">{stats?.total}</div>
+          <div className="text-3xl font-bold text-foreground">{stats ? stats.total : 0}</div>
           <div className="mt-2 text-sm text-muted-foreground mb-4">Total Devices</div>
         </>
       )

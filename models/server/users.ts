@@ -2,7 +2,7 @@
 import { Query } from "node-appwrite";
 import { db, userCollection } from "../name";
 import { databases } from "./config";
-import { Group, isGroup } from "./groups";
+import { Group } from "@/lib/groups/groups";
 
 
 export interface User {
@@ -22,8 +22,7 @@ export async function isUser(doc: unknown): Promise<boolean> {
     doc !== null &&
     typeof (doc as User).$id === "string" &&
     typeof (doc as User).name === "string" &&
-    typeof (doc as User).service === "string" &&
-    Array.isArray((doc as User).groups) && (doc as User).groups.every(d => isGroup(d))
+    typeof (doc as User).service === "string"
   ) {
     return true;
   }
@@ -46,7 +45,7 @@ export async function addUser(user: Omit<User, '$id'>): Promise<User> {
     function: newUser.function,
     last_name: newUser.last_name,
     email: newUser.email,
-    groups: newUser.groups.map(g => g.$id)
+    groups: newUser.groups.map(g => g.id)
   });
   return {
     $id: result.$id,
@@ -101,7 +100,7 @@ export async function updateUser(user: User): Promise<User | null> {
       service: updatedUser.service,
       function: updatedUser.function,
       title: updatedUser.title,
-      groups: updatedUser.groups.map(g => g.$id)
+      groups: updatedUser.groups.map(g => g.id)
     });
     return updatedUser;
   } catch (error) {

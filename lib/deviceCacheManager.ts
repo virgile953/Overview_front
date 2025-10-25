@@ -18,7 +18,7 @@ export class DeviceCacheManager {
 
   private static async getClient() {
     if (!this.useRedis) return null;
-    
+
     try {
       return await getRedisClient();
     } catch (error) {
@@ -80,7 +80,7 @@ export class DeviceCacheManager {
       try {
         const key = this.deviceKey(macAddress);
         const data = await redis.get(key);
-        
+
         if (data) {
           const parsed = JSON.parse(data);
           return {
@@ -106,21 +106,21 @@ export class DeviceCacheManager {
         if (organizationId) {
           const orgKey = this.orgDevicesKey(organizationId);
           const macAddresses = await redis.sMembers(orgKey);
-          
+
           const devices = new Map<string, CacheDevice>();
-          
+
           for (const mac of macAddresses) {
             const device = await this.get(mac);
             if (device) {
               devices.set(mac, device);
             }
           }
-          
+
           return devices;
         } else {
           const keys: string[] = [];
           let cursor = 0;
-          
+
           do {
             const result = await redis.scan(cursor.toString(), {
               MATCH: `${DEVICE_KEY_PREFIX}*`,
@@ -131,7 +131,7 @@ export class DeviceCacheManager {
           } while (cursor !== 0);
 
           const devices = new Map<string, CacheDevice>();
-          
+
           for (const key of keys) {
             const mac = key.replace(DEVICE_KEY_PREFIX, '');
             const device = await this.get(mac);
@@ -139,7 +139,7 @@ export class DeviceCacheManager {
               devices.set(mac, device);
             }
           }
-          
+
           return devices;
         }
       } catch (error) {
@@ -198,7 +198,7 @@ export class DeviceCacheManager {
         // Clear all device keys
         const keys: string[] = [];
         let cursor = 0;
-        
+
         do {
           const result = await redis.scan(cursor.toString(), {
             MATCH: `${DEVICE_KEY_PREFIX}*`,
@@ -215,7 +215,7 @@ export class DeviceCacheManager {
         // Clear all org keys
         const orgKeys: string[] = [];
         cursor = 0;
-        
+
         do {
           const result = await redis.scan(cursor.toString(), {
             MATCH: `${ORG_DEVICES_KEY}*`,
@@ -241,7 +241,13 @@ export class DeviceCacheManager {
   }
 
   // Get stats for an organization
-  static async getStats(organizationId?: string) {
+  static async getStats(organizationId?: string): Promise<{
+    total: number;
+    online: number;
+    offline: number;
+    linkedToDb: number;
+    cacheOnly: number;
+  }> {
     const devices = Array.from((await this.getAll(organizationId)).values());
 
     return {
@@ -278,7 +284,7 @@ export class DeviceCacheManager {
   // Get cache backend info
   static async getCacheInfo() {
     const redis = await this.getClient();
-    
+
     return {
       backend: redis ? 'redis' : 'memory',
       connected: !!redis,

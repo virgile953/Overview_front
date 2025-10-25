@@ -3,8 +3,8 @@ import { EllipsisVertical, SquareArrowOutUpRight, Users } from "lucide-react";
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 
-export async function UsersComponent({ className }: { className?: string }) {
-  const userCount = await getUsersStats();
+export async function UsersComponent({ className, orgId }: { className?: string, orgId: string }) {
+  const userCount = await getUsersStats(orgId);
 
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>

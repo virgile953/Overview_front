@@ -110,3 +110,50 @@ export async function createGroup(group: Omit<Group, 'id'> & { organizationId: s
   newGroup.devices = [];
   return newGroup;
 }
+
+export async function deleteGroup(groupId: string): Promise<Group | null> {
+  // First, retrieve the group to return later
+  const groupToDelete = await Drizzle.select().from(groups).where(eq(groups.id, groupId)).then(results => results[0]);
+
+  if (!groupToDelete) {
+    return null;
+  }
+
+  // Delete associated users and devices
+  await Drizzle.delete(groupUsers).where(eq(groupUsers.groupId, groupId));
+  await Drizzle.delete(groupDevices).where(eq(groupDevices.groupId, groupId));
+
+  // Delete the group itself
+  await Drizzle.delete(groups).where(eq(groups.id, groupId));
+
+  return groupToDelete;
+}
+
+export async function updateGroup(groupId: string, updates: Partial<Group>): Promise<Group | null> {
+  const filteredUpdates: Record<string, unknown> = {};
+  if (updates.name !== undefined) filteredUpdates['name'] = updates.name;
+  if (updates.localisation !== undefined) filteredUpdates['localisation'] = updates.localisation;
+  if (updates.description !== undefined) filteredUpdates['description'] = updates.description;
+
+  if (Object.keys(filteredUpdates).length === 0) {
+    throw new Error('No valid updates provided');
+  }
+  const [updatedGroup] = await Drizzle.update(groups)
+    .set(filteredUpdates)
+    .where(eq(groups.id, groupId))
+    .returning();
+
+  if (!updatedGroup) {
+    return null;
+  }
+
+  // Fetch updated users and devices
+  const groupUsersList = await getUsersForGroup(updatedGroup.id);
+  const groupDevicesList = await getDevicesForGroup(updatedGroup.id);
+
+  return {
+    ...updatedGroup,
+    users: groupUsersList,
+    devices: groupDevicesList,
+  };
+}

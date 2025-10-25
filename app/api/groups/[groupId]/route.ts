@@ -1,4 +1,4 @@
-import { updateGroup } from "@/models/server/groups";
+import { updateGroup } from "@/lib/groups/groups";
 import { NextResponse } from "next/server";
 
 export async function PUT(
@@ -7,11 +7,11 @@ export async function PUT(
 ) {
 
   try {
-    const { $id, name, localisation, description, users, devices } = await request.json();
-    if (!$id || typeof $id !== 'string') {
+    const { id, name, localisation, description, users, devices } = await request.json();
+    if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Invalid group ID' }, { status: 400 });
     }
-    const updatedGroup = await updateGroup({ $id, name, localisation, description, users, devices });
+    const updatedGroup = await updateGroup(id, { name, localisation, description, users, devices });
     if (!updatedGroup) {
       return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }
