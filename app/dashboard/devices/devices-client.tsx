@@ -7,6 +7,7 @@ import DeviceCard from "./DeviceCard";
 import Legend from "./legend";
 import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/lib/devices/devices";
 import { Device } from "@/lib/db/schema";
+import { fetchDevices } from "./actions";
 
 interface DevicesClientProps {
   initialDevices: Map<string, {
@@ -17,31 +18,37 @@ interface DevicesClientProps {
   organizationId: string;
 }
 
-export function DevicesClient({ initialDevices, organizationId }: DevicesClientProps) {
-  const [deviceData, setDeviceData] = useState<DeviceResponse>(() => {
-    // Convert initial Map to DeviceResponse format
-    const devices = Array.from(initialDevices.values()).map(data => ({
-      deviceId: data.device.macAddress!,
-      ...data.device,
-      lastSeen: data.lastSeen,
-      connectionStatus: data.status,
-      source: data.device.id ? ('database+cache' as const) : ('cache-only' as const),
-    }));
 
-    return {
-      devices,
-      totalDevices: devices.length,
-      cacheCount: devices.filter(d => !d.id).length,
-      dbCount: devices.filter(d => d.id).length,
-      stats: {
-        total: devices.length,
-        online: devices.filter(d => d.connectionStatus === 'online').length,
-        offline: devices.filter(d => d.connectionStatus === 'offline').length,
-        linkedToDb: devices.filter(d => d.id).length,
-        cacheOnly: devices.filter(d => !d.id).length,
-      },
-    };
-  });
+function parseInitialDevices(initialDevices: Map<string, {
+  device: Partial<Device>;
+  lastSeen: Date;
+  status: 'online' | 'offline';
+}>): DeviceResponse {
+  const devices = Array.from(initialDevices.values()).map(data => ({
+    deviceId: data.device.macAddress!,
+    ...data.device,
+    lastSeen: data.lastSeen,
+    connectionStatus: data.status,
+    source: data.device.id ? ('database+cache' as const) : ('cache-only' as const),
+  }));
+
+  return {
+    devices,
+    totalDevices: devices.length,
+    cacheCount: devices.filter(d => !d.id).length,
+    dbCount: devices.filter(d => d.id).length,
+    stats: {
+      total: devices.length,
+      online: devices.filter(d => d.connectionStatus === 'online').length,
+      offline: devices.filter(d => d.connectionStatus === 'offline').length,
+      linkedToDb: devices.filter(d => d.id).length,
+      cacheOnly: devices.filter(d => !d.id).length,
+    },
+  };
+}
+
+export function DevicesClient({ initialDevices, organizationId }: DevicesClientProps) {
+  const [deviceData, setDeviceData] = useState<DeviceResponse>(parseInitialDevices(initialDevices));
 
   const [refreshing, setRefreshing] = useState(false);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
@@ -50,11 +57,10 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const response = await fetch(`/api/devices`);
-      if (response.ok) {
-        const data: DeviceResponse = await response.json();
-        setDeviceData(data);
-      }
+      const response = await fetchDevices();
+      setDeviceData(
+        parseInitialDevices(response)
+      );
     } catch (error) {
       console.error('Failed to refresh devices:', error);
     } finally {
@@ -86,7 +92,7 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
     // Handle individual device updates
     socket.on('deviceUpdated', (data: singleDeviceResponse) => {
       console.log('Device updated:', data);
-      
+
       // Flash animation
       setRecentlyUpdatedDevices(prev => new Set([...prev, data.deviceId]));
       setTimeout(() => {
@@ -206,11 +212,10 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
             {devices.map((device) => (
               <div
                 key={device.deviceId || device.id}
-                className={`transition-all rounded-lg duration-200 ${
-                  recentlyUpdatedDevices.has(device.id!)
-                    ? 'ring-2 ring-emerald-400 ring-opacity-75 shadow-lg'
-                    : ''
-                }`}
+                className={`transition-all rounded-lg duration-200 ${recentlyUpdatedDevices.has(device.id!)
+                  ? 'ring-2 ring-emerald-400 ring-opacity-75 shadow-lg'
+                  : ''
+                  }`}
               >
                 <DeviceCard
                   device={device}
