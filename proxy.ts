@@ -4,7 +4,7 @@ import { setClientDeviceCookie } from './lib/clientDeviceHandler';
 import { cookies } from 'next/headers';
 import { auth } from "@/lib/auth";
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const cookieStore = await cookies();
   const url = request.nextUrl.clone()
 
@@ -35,8 +35,7 @@ export async function middleware(request: NextRequest) {
 
 // See "Matching Paths" below to learn more
 export const config = {
-  runtime: "nodejs",
   matcher: [
     '/((?!_next/static|_next/image|.well-known|api/socket|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$|.*\\.ico$).*)',
-  ],
+  ]
 }
