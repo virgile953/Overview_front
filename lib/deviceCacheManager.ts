@@ -1,5 +1,6 @@
 import { Device } from "./db/schema";
 import { getRedisClient } from "./redis";
+import { emitDeviceUpdate } from './socketUtils';
 
 interface CacheDevice {
   device: Partial<Device>;
@@ -40,11 +41,10 @@ export class DeviceCacheManager {
   // Emit socket update for device changes
   private static emitDeviceUpdate(macAddress: string, deviceData: CacheDevice) {
     if (typeof window !== 'undefined') return; // Only emit on server
-    
+
     try {
       // Dynamically import to avoid circular dependencies
-      const { emitDeviceUpdate } = require('./socketUtils');
-      
+
       if (deviceData.device.organizationId) {
         emitDeviceUpdate('deviceUpdated', {
           deviceId: macAddress,
@@ -103,7 +103,7 @@ export class DeviceCacheManager {
 
     // Fallback to memory
     memoryCache.set(macAddress, deviceData);
-    
+
     // Emit socket update for memory cache as well
     this.emitDeviceUpdate(macAddress, deviceData);
   }

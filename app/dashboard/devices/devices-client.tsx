@@ -56,15 +56,16 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
   const [recentlyUpdatedDevices, setRecentlyUpdatedDevices] = useState<Set<string>>(new Set());
   const [orgId, setOrganizationId] = useState<string>(organizationId);
   const session = useSession();
+
   useEffect(() => {
-    if (!session.isRefetching) {
-      const newOrg = session.data?.session.activeOrganizationId!;
+    if (session.isRefetching == false) {
+      const newOrg = session.data!.session.activeOrganizationId!;
       if (newOrg !== orgId) {
-        setOrganizationId(session.data?.session.activeOrganizationId!);
+        setOrganizationId(newOrg);
         handleRefresh();
       }
     }
-  }, [session]);
+  }, [session, orgId]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -182,7 +183,7 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
       socket.emit('leave-organization', orgId);
       socket.disconnect();
     };
-  }, [orgId]);
+  }, [orgId, organizationId]);
 
   const devices = deviceData.devices;
   const stats = deviceData.stats;
