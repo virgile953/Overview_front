@@ -1,7 +1,5 @@
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 import { getDevices, updateDevice } from "@/lib/devices/devices";
-// import { emitDevicesUpdate, emitDeviceUpdate } from "@/lib/socketUtils";
-// import { addDeviceLog } from "@/models/server/logs";
 
 export async function POST(request: Request) {
   const requestData = await request.json();
@@ -49,7 +47,7 @@ export async function POST(request: Request) {
       action = 'updated';
     }
 
-    // Always update cache (also sanitize cache data)
+    // Update cache - this will automatically emit socket update
     await DeviceCacheManager.set(sanitize(macAddress)!, {
       device: {
         id: dbId,
@@ -84,7 +82,7 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error handling device POST:', error);
 
-    // Cache even on error (sanitized)
+    // Cache even on error - socket update will be emitted automatically
     await DeviceCacheManager.set(sanitize(macAddress)!, {
       device: { 
         name: sanitize(name), 

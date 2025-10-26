@@ -74,8 +74,13 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
     socket.on('connect', () => {
       console.log('Socket connected');
       setIsSocketConnected(true);
-      // Join organization room
+      // Join organization-specific room
       socket.emit('join-organization', organizationId);
+    });
+
+    // Optional: Confirm when joined organization
+    socket.on('joined-organization', ({ organizationId: joinedOrgId }) => {
+      console.log(`✅ Joined organization room: ${joinedOrgId}`);
     });
 
     socket.on('disconnect', () => {
@@ -83,15 +88,15 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
       setIsSocketConnected(false);
     });
 
-    // Handle full device list updates
+    // Handle full device list updates (organization-scoped)
     socket.on('devicesUpdated', (data: DeviceResponse) => {
-      console.log('Devices updated:', data);
+      console.log('📦 Devices updated for organization:', organizationId);
       setDeviceData(data);
     });
 
-    // Handle individual device updates
+    // Handle individual device updates (organization-scoped)
     socket.on('deviceUpdated', (data: singleDeviceResponse) => {
-      console.log('Device updated:', data);
+      console.log('🔄 Device updated:', data.deviceId, 'for org:', organizationId);
 
       // Flash animation
       setRecentlyUpdatedDevices(prev => new Set([...prev, data.deviceId]));

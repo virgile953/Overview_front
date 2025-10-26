@@ -37,6 +37,37 @@ export class DeviceCacheManager {
     return `${ORG_DEVICES_KEY}${organizationId}`;
   }
 
+  // Emit socket update for device changes
+  private static emitDeviceUpdate(macAddress: string, deviceData: CacheDevice) {
+    if (typeof window !== 'undefined') return; // Only emit on server
+    
+    try {
+      // Dynamically import to avoid circular dependencies
+      const { emitDeviceUpdate } = require('./socketUtils');
+      
+      if (deviceData.device.organizationId) {
+        emitDeviceUpdate('deviceUpdated', {
+          deviceId: macAddress,
+          name: deviceData.device.name || '',
+          type: deviceData.device.type || '',
+          status: deviceData.device.status || '',
+          location: deviceData.device.location,
+          ipAddress: deviceData.device.ipAddress,
+          macAddress: macAddress,
+          serialNumber: deviceData.device.serialNumber,
+          firmwareVersion: deviceData.device.firmwareVersion,
+          lastActive: deviceData.device.lastActive || new Date(),
+          organizationId: deviceData.device.organizationId,
+          lastSeen: deviceData.lastSeen,
+          connectionStatus: deviceData.status,
+          dbId: deviceData.device.id,
+        }, deviceData.device.organizationId);
+      }
+    } catch (error) {
+      console.warn('Failed to emit socket update:', error);
+    }
+  }
+
   // Add or update a device
   static async set(macAddress: string, deviceData: CacheDevice): Promise<void> {
     const redis = await this.getClient();
@@ -61,6 +92,8 @@ export class DeviceCacheManager {
           await redis.expire(orgKey, DEVICE_TTL);
         }
 
+        // Emit socket update after successful cache update
+        this.emitDeviceUpdate(macAddress, deviceData);
         return;
       } catch (error) {
         console.error('Redis set error:', error);
@@ -70,6 +103,9 @@ export class DeviceCacheManager {
 
     // Fallback to memory
     memoryCache.set(macAddress, deviceData);
+    
+    // Emit socket update for memory cache as well
+    this.emitDeviceUpdate(macAddress, deviceData);
   }
 
   // Get a single device
@@ -259,13 +295,13 @@ export class DeviceCacheManager {
     };
   }
 
-  // Mark device online/offline
+  // Mark device online/offline with socket emission
   static async markOnline(macAddress: string): Promise<boolean> {
     const device = await this.get(macAddress);
     if (device) {
       device.status = 'online';
       device.lastSeen = new Date();
-      await this.set(macAddress, device);
+      await this.set(macAddress, device); // This will emit the socket update
       return true;
     }
     return false;
@@ -275,7 +311,7 @@ export class DeviceCacheManager {
     const device = await this.get(macAddress);
     if (device) {
       device.status = 'offline';
-      await this.set(macAddress, device);
+      await this.set(macAddress, device); // This will emit the socket update
       return true;
     }
     return false;

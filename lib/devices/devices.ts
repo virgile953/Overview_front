@@ -137,8 +137,9 @@ export async function updateDevice(deviceId: string, organizationId: string, dev
       eq(devices.organizationId, organizationId)
     ))
     .returning();
+    
   if (updatedDevice) {
-    // Update cache
+    // Update cache - this will automatically emit socket update
     const existing = await DeviceCacheManager.get(updatedDevice.macAddress);
     await DeviceCacheManager.set(updatedDevice.macAddress, {
       device: updatedDevice,

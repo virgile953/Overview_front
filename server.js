@@ -30,7 +30,37 @@ app.prepare().then(() => {
   global.io = io;
 
   io.on("connection", (socket) => {
+    console.log("Client connected:", socket.id);
+
+    // Join organization room
+    socket.on("join-organization", (organizationId) => {
+      if (!organizationId) {
+        console.warn("No organization ID provided");
+        return;
+      }
+
+      // Leave all previous rooms (except default rooms)
+      const rooms = Array.from(socket.rooms).filter((room) => room !== socket.id);
+      rooms.forEach((room) => socket.leave(room));
+
+      // Join new organization room
+      socket.join(`org:${organizationId}`);
+      console.log(`Socket ${socket.id} joined organization: ${organizationId}`);
+
+      // Optionally send confirmation
+      socket.emit("joined-organization", { organizationId });
+    });
+
+    // Leave organization room
+    socket.on("leave-organization", (organizationId) => {
+      if (organizationId) {
+        socket.leave(`org:${organizationId}`);
+        console.log(`Socket ${socket.id} left organization: ${organizationId}`);
+      }
+    });
+
     socket.on("disconnect", () => {
+      console.log("Client disconnected:", socket.id);
     });
   });
 
