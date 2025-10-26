@@ -8,6 +8,7 @@ import Legend from "./legend";
 import { ApiDevice, DeviceResponse, singleDeviceResponse } from "@/lib/devices/devices";
 import { Device } from "@/lib/db/schema";
 import { fetchDevices } from "./actions";
+import { useSession } from "@/lib/auth-client";
 
 interface DevicesClientProps {
   initialDevices: Map<string, {
@@ -53,6 +54,17 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
   const [refreshing, setRefreshing] = useState(false);
   const [isSocketConnected, setIsSocketConnected] = useState(false);
   const [recentlyUpdatedDevices, setRecentlyUpdatedDevices] = useState<Set<string>>(new Set());
+  const [orgId, setOrganizationId] = useState<string>(organizationId);
+  const session = useSession();
+  useEffect(() => {
+    if (!session.isRefetching) {
+      const newOrg = session.data?.session.activeOrganizationId!;
+      if (newOrg !== orgId) {
+        setOrganizationId(session.data?.session.activeOrganizationId!);
+        handleRefresh();
+      }
+    }
+  }, [session]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -96,7 +108,7 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
 
     // Handle individual device updates (organization-scoped)
     socket.on('deviceUpdated', (data: singleDeviceResponse) => {
-      console.log('🔄 Device updated:', data.deviceId, 'for org:', organizationId);
+      console.log('🔄 Device updated:', data.deviceId, 'for org:', orgId);
 
       // Flash animation
       setRecentlyUpdatedDevices(prev => new Set([...prev, data.deviceId]));
@@ -167,10 +179,10 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
     });
 
     return () => {
-      socket.emit('leave-organization', organizationId);
+      socket.emit('leave-organization', orgId);
       socket.disconnect();
     };
-  }, [organizationId]);
+  }, [orgId]);
 
   const devices = deviceData.devices;
   const stats = deviceData.stats;
