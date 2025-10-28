@@ -1,6 +1,5 @@
 "use client";
 import { useSession } from "@/lib/auth-client";
-import { Device } from "@/lib/db/schema";
 import { ApiDevice, getDevices } from "@/lib/devices/devices";
 import { useEffect, useState } from "react";
 import Select from "react-select";
@@ -42,7 +41,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
       }
     }
     fetchDevices();
-  }, []);
+  }, [data]);
 
   return (
     <div className="p-4 border border-gray-300 rounded">
