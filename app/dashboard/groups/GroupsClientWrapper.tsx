@@ -3,11 +3,11 @@ import { useState, createContext, useContext } from "react";
 import NewGroupModal from "./NewGroupModal";
 import GroupModal from "./GroupModal";
 import { useRouter } from "next/navigation";
-import { Group } from "@/lib/groups/groups";
+import { GroupWithRelations } from "@/lib/db/schema";
 
 interface GroupsContextType {
   openNewGroupModal: () => void;
-  editGroup: (group: Group) => void;
+  editGroup: (group: GroupWithRelations) => void;
 }
 
 const GroupsContext = createContext<GroupsContextType | null>(null);
@@ -26,7 +26,7 @@ interface GroupsClientWrapperProps {
 
 export default function GroupsClientWrapper({ children }: GroupsClientWrapperProps) {
   const [isNewGroupModalOpen, setIsNewGroupModalOpen] = useState(false);
-  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<GroupWithRelations | null>(null);
   const router = useRouter();
 
   const handleGroupCreated = () => {
@@ -43,7 +43,7 @@ export default function GroupsClientWrapper({ children }: GroupsClientWrapperPro
     setIsNewGroupModalOpen(true);
   };
 
-  const editGroup = (group: Group) => {
+  const editGroup = (group: GroupWithRelations) => {
     setSelectedGroup(group);
   };
 

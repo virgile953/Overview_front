@@ -2,7 +2,7 @@
 import { Query } from "node-appwrite";
 import { db, userCollection } from "../name";
 import { databases } from "./config";
-import { Group } from "@/lib/groups/groups";
+import { GroupWithDevices } from "@/lib/db/schema";
 
 
 export interface User {
@@ -13,7 +13,7 @@ export interface User {
   service?: string;
   function?: string;
   title?: string;
-  groups: Group[];
+  groups: GroupWithDevices[];
 }
 
 export async function isUser(doc: unknown): Promise<boolean> {

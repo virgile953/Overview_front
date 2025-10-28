@@ -4,18 +4,18 @@ import InputField from "@/app/ui/InputField";
 import DeviceSelector from "@/app/ui/DeviceSelector";
 import UserSelector from "@/app/ui/UserSelector";
 import { useEffect, useState } from "react";
-import { Group } from "@/lib/groups/groups";
+import { GroupWithRelations } from "@/lib/db/schema";
 
 interface groupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (group: Group) => void;
-  group: Group;
+  onSave: (group: GroupWithRelations) => void;
+  group: GroupWithRelations;
 }
 
 export default function GroupModal({ isOpen, onClose, onSave, group }: groupModalProps) {
 
-  const [localGroup, setLocalGroup] = useState<Group>(group);
+  const [localGroup, setLocalGroup] = useState<GroupWithRelations>(group);
 
   async function saveGroup() {
     const res = await fetch(`/api/groups/${localGroup.id}`, {
