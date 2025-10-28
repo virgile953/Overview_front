@@ -90,8 +90,11 @@ export default function UserModal({ isOpen, onClose, onSave, user }: UserModalPr
         />
 
         <GroupSelector
-          initialValue={localUser.groups}
-          onChange={(groups) => setLocalUser({ ...localUser, groups })}
+          selectedGroupIds={localUser.groups.map(group => group.id)}
+          onChange={(groupIds) => {
+            const selectedGroups = localUser.groups.filter(group => groupIds.includes(group.id));
+            setLocalUser({ ...localUser, groups: selectedGroups });
+          }}
         />
 
         <div className="flex justify-end gap-4 mt-4">

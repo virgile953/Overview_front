@@ -132,15 +132,41 @@ export async function deleteGroup(groupId: string): Promise<GroupBase | null> {
   return groupToDelete;
 }
 
-export async function updateGroup(groupId: string, updates: Partial<GroupBase>): Promise<GroupWithRelations | null> {
+export async function updateGroup(groupId: string,
+  updates: Partial<GroupBase>,
+  users?: string[],
+  devices?: string[]
+): Promise<GroupWithRelations | null> {
+
+  //update groups's users first (delete all existing and re-insert)
+  await Drizzle.delete(groupUsers)
+    .where(eq(groupUsers.groupId, groupId))
+    .returning();
+
+  if (users && users.length > 0) {
+    const userInserts = users.map(userId => ({
+      groupId,
+      userId,
+    }));
+    await Drizzle.insert(groupUsers).values(userInserts);
+  }
+
+  //update groups's devices next (delete all existing and re-insert)
+  await Drizzle.delete(groupDevices)
+    .where(eq(groupDevices.groupId, groupId));
+
+  if (devices && devices.length > 0) {
+    const deviceInserts = devices.map(deviceId => ({
+      groupId,
+      deviceId,
+    }));
+    await Drizzle.insert(groupDevices).values(deviceInserts);
+  }
+
   const filteredUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) filteredUpdates['name'] = updates.name;
   if (updates.localisation !== undefined) filteredUpdates['localisation'] = updates.localisation;
   if (updates.description !== undefined) filteredUpdates['description'] = updates.description;
-
-  if (Object.keys(filteredUpdates).length === 0) {
-    throw new Error('No valid updates provided');
-  }
 
   const [updatedGroup] = await Drizzle.update(groups)
     .set(filteredUpdates)
