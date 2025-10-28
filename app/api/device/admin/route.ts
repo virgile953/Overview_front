@@ -1,5 +1,6 @@
-import { addDevice, deleteDevice } from "@/lib/devices";
+import { createDevice, deleteDevice } from "@/lib/devices/devices";
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
+import { auth } from "@/lib/auth";
 
 // Admin route to manually add devices to the database
 export async function POST(request: Request) {
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
 
   try {
     // Add device to database
-    const newDevice = await addDevice({
+    const newDevice = await createDevice({
       name,
       type,
       status,
@@ -93,6 +94,15 @@ export async function POST(request: Request) {
 // Admin route to remove device from both DB and cache
 export async function DELETE(request: Request) {
   const url = new URL(request.url);
+  const headers = request.headers;
+
+  const session = await auth.api.getSession({
+    headers: headers
+  })
+  if (!session || !session.user || !session.session.activeOrganizationId) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
+  }
+  const organizationId = session.session.activeOrganizationId;
 
   const macAddress = url.searchParams.get('macAddress');
   const dbId = url.searchParams.get('dbId')
@@ -109,7 +119,7 @@ export async function DELETE(request: Request) {
 
     // Remove from database if dbId is provided
     if (dbId) {
-      await deleteDevice(dbId);
+      await deleteDevice(dbId, organizationId);
     }
     return new Response(JSON.stringify({
       success: true,

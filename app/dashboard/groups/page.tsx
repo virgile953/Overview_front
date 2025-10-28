@@ -22,7 +22,6 @@ export default async function Groups() {
   }
 
   const groups = await getGroups(organizationId);
-  console.log(groups);
   return (
     <GroupsClientWrapper>
       <div>

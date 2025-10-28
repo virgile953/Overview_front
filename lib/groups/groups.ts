@@ -119,7 +119,6 @@ export async function deleteGroup(groupId: string): Promise<Group | null> {
     return null;
   }
 
-  // Delete associated users and devices
   await Drizzle.delete(groupUsers).where(eq(groupUsers.groupId, groupId));
   await Drizzle.delete(groupDevices).where(eq(groupDevices.groupId, groupId));
 
