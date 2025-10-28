@@ -6,6 +6,7 @@ import DeviceSelector from "@/app/ui/DeviceSelector";
 import { createGroup } from "@/lib/groups/groups";
 import { useSession } from "@/lib/auth-client";
 import { GroupWithRelations } from "@/lib/db/schema";
+import { ApiDevice } from "@/lib/devices/devices";
 
 interface NewGroupModalProps {
   isOpen: boolean;
@@ -115,8 +116,9 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
           initialValue={formData.users}
         />
         <DeviceSelector
-          onChange={(selected) => setFormData({ ...formData, devices: selected })}
-          initialValue={formData.devices}
+          onChange={(selected) =>
+            setFormData({ ...formData, devices: selected.filter(device => device.id !== undefined) as any })}
+          initialValue={formData.devices as unknown as ApiDevice[]}
         />
         {error && <div className="text-red-600 text-sm bg-red-50 p-2 rounded">{error}</div>}
 

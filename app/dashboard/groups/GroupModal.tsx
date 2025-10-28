@@ -5,6 +5,8 @@ import DeviceSelector from "@/app/ui/DeviceSelector";
 import UserSelector from "@/app/ui/UserSelector";
 import { useEffect, useState } from "react";
 import { GroupWithRelations } from "@/lib/db/schema";
+import { updateGroup } from "@/lib/groups/groups";
+import { ApiDevice } from "@/lib/devices/devices";
 
 interface groupModalProps {
   isOpen: boolean;
@@ -18,16 +20,16 @@ export default function GroupModal({ isOpen, onClose, onSave, group }: groupModa
   const [localGroup, setLocalGroup] = useState<GroupWithRelations>(group);
 
   async function saveGroup() {
-    const res = await fetch(`/api/groups/${localGroup.id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(localGroup),
-    });
-    if (!res.ok) {
+    const updatedGroup = await updateGroup(localGroup.id, {
+      name: localGroup.name,
+      localisation: localGroup.localisation,
+      description: localGroup.description,
+    }
+      , localGroup.users?.map(u => u.id), localGroup.devices?.map(d => d.id));
+    if (updatedGroup == null) {
       console.error("Failed to save group");
       return;
     }
-    const updatedGroup = await res.json();
     onSave(updatedGroup);
     onClose();
   }
@@ -70,9 +72,15 @@ export default function GroupModal({ isOpen, onClose, onSave, group }: groupModa
         />
 
         <DeviceSelector
-          initialValue={localGroup.devices}
-          onChange={selected => setLocalGroup({ ...localGroup, devices: selected })}
+          initialValue={localGroup.devices as unknown as ApiDevice[]}
+
+          onChange={selected => setLocalGroup({ ...localGroup, devices: selected as unknown as GroupWithRelations["devices"] })}
         />
+        {/* <DeviceSelector
+                  onChange={(selected) =>
+                    setFormData({ ...localGroup, devices: selected.filter(device => device.id !== undefined) as any })}
+                  initialValue={formData.devices as unknown as ApiDevice[]}
+                /> */}
 
         <div className="flex justify-end gap-4 mt-4">
           <button

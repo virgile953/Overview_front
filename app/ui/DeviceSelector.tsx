@@ -1,30 +1,38 @@
 "use client";
+import { useSession } from "@/lib/auth-client";
 import { Device } from "@/lib/db/schema";
+import { ApiDevice, getDevices } from "@/lib/devices/devices";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
 interface DeviceSelectorProps {
-  onChange?: (selected: Device[]) => void;
-  initialValue?: Device[]; // Added initialValue prop to set selected devices from outside
+  onChange?: (selected: ApiDevice[]) => void;
+  initialValue?: ApiDevice[]; // Added initialValue prop to set selected devices from outside
 }
 
 
 export default function DeviceSelector({ onChange, initialValue }: DeviceSelectorProps) {
-
-  const [devices, setDevices] = useState<Device[] | null>(null);
+  const [devices, setDevices] = useState<ApiDevice[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { data } = useSession();
+
   console.log("Initial Value:", initialValue);
 
   useEffect(() => {
+    if (!data || !data.session.activeOrganizationId) {
+      setError("No active organization");
+      setLoading(false);
+      return;
+    }
     async function fetchDevices() {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch("/api/devices");
-        if (!res.ok) throw new Error("Failed to fetch devices");
-        const data = await res.json();
-        setDevices(data);
+        const res = await getDevices(data!.session!.activeOrganizationId!);
+        if (res == null) throw new Error("Failed to fetch devices");
+        setDevices(res.devices);
         console.log("Fetched Devices:", data);
       } catch (error) {
         console.error("Error fetching devices:", error);
@@ -48,10 +56,12 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
 
       <Select
         options={
-          devices && Array.isArray(devices) ? devices.map((device) => ({
-            value: device.id,
-            label: device.name,
-          })) : []
+          devices && Array.isArray(devices) ? devices
+            .filter((device) => device.id && device.name)
+            .map((device) => ({
+              value: device.id!,
+              label: device.name!,
+            })) : []
         }
         value={
           initialValue ? initialValue.map(device => ({
@@ -172,7 +182,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
             // Map selected options back to full Device objects
             const selectedDevices = (selected as Array<{ value: string, label: string }>)
               .map(option => devices.find(device => device.id === option.value))
-              .filter((user): user is Device => user !== undefined);
+              .filter((user): user is ApiDevice => user !== undefined);
 
             onChange(selectedDevices);
           }
