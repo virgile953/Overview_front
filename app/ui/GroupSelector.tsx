@@ -1,8 +1,8 @@
 "use client";
-import { useSession } from "@/lib/auth-client";
-import { getGroups, Group } from "@/lib/groups/groups";
 import { useEffect, useState } from "react";
 import Select from "react-select";
+import { GroupBase } from "@/lib/db/schema";
+import { getGroups } from "@/lib/groups/groups";
 
 
 
@@ -13,29 +13,18 @@ interface GroupSelectorProps {
 
 export default function GroupSelector({ onChange, selectedGroupIds = [] }: GroupSelectorProps) {
 
-  const { data } = useSession();
-
-  const [groups, setGroups] = useState<Group[]>([]);
+  const [groups, setGroups] = useState<GroupBase[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const orgId = data?.session.activeOrganizationId;
-    if (!orgId) {
-      setError("No active organization");
-      setLoading(false);
-      return;
-    }
     async function fetchGroups() {
       try {
         setLoading(true);
         setError(null);
-        const coucou = await getGroups(orgId!);
-        console.log(coucou);
-        const res = await fetch("/api/groups");
-        if (!res.ok) throw new Error("Failed to fetch groups");
-        const data = await res.json();
-        setGroups(data);
+        const res = await getGroups("");
+        if (res == null) throw new Error("Failed to fetch groups");
+        setGroups(res);
       } catch (error) {
         console.error("Error fetching groups:", error);
         setError(error instanceof Error ? error.message : "Unknown error occurred");

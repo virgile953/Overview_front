@@ -1,13 +1,25 @@
 "use server";
 import Drizzle from "../db/db";
-import { NewUsers, Users, users } from "../db/schema";
+import { NewUsers, Users, users, UserWithGroups, GroupBase } from "../db/schema";
 import { and, eq, count } from "drizzle-orm";
+import { getGroupsForUser } from "../groups/groups";
 
-export async function getUsers(organizationId: string): Promise<Users[]> {
+export async function getUsers(organizationId: string): Promise<UserWithGroups[]> {
   const dbUsers = await Drizzle.select()
     .from(users)
     .where(eq(users.organizationId, organizationId));
-  return dbUsers;
+
+  const usersWithGroups: UserWithGroups[] = await Promise.all(
+    dbUsers.map(async (user) => {
+      const groups: GroupBase[] = await getGroupsForUser(user.id);
+      return {
+        ...user,
+        groups
+      };
+    })
+  );
+
+  return usersWithGroups;
 }
 
 export async function getUserById(userId: string, organizationId: string): Promise<Users | null> {

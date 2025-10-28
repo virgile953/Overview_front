@@ -1,13 +1,13 @@
 "use client";
 import { useState, createContext, useContext } from "react";
-import { User } from "@/models/server/users";
 import NewUserModal from "./NewUserModal";
 import UserModal from "./UserModal";
 import { useRouter } from "next/navigation";
+import { UserWithGroups } from "@/lib/db/schema";
 
 interface UsersContextType {
   openNewUserModal: () => void;
-  editUser: (user: User) => void;
+  editUser: (user: UserWithGroups) => void;
 }
 
 const UsersContext = createContext<UsersContextType | null>(null);
@@ -26,7 +26,7 @@ interface UsersClientWrapperProps {
 
 export default function UsersClientWrapper({ children }: UsersClientWrapperProps) {
   const [isNewUserModalOpen, setIsNewUserModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithGroups | null>(null);
   const router = useRouter();
 
   const handleUserCreated = () => {
@@ -38,12 +38,16 @@ export default function UsersClientWrapper({ children }: UsersClientWrapperProps
     setSelectedUser(null);
     router.refresh(); // Refresh server component data
   };
+  // const handleUserDeleted = () => {
+  //   setSelectedUser(null);
+  //   router.refresh(); // Refresh server component data
+  // };
 
   const openNewUserModal = () => {
     setIsNewUserModalOpen(true);
   };
 
-  const editUser = (user: User) => {
+  const editUser = (user: UserWithGroups) => {
     setSelectedUser(user);
   };
 
@@ -55,13 +59,13 @@ export default function UsersClientWrapper({ children }: UsersClientWrapperProps
   return (
     <UsersContext.Provider value={contextValue}>
       {children}
-      
+
       <NewUserModal
         isOpen={isNewUserModalOpen}
         onClose={() => setIsNewUserModalOpen(false)}
         onUserCreated={handleUserCreated}
       />
-      
+
       {selectedUser && (
         <UserModal
           user={selectedUser}

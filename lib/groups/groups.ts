@@ -2,19 +2,20 @@
 
 import { eq, and } from "drizzle-orm";
 import Drizzle from "../db/db";
-import { Device, groups, groupDevices, groupUsers, users, Users, devices } from "../db/schema";
+import {
+  Device,
+  groups,
+  groupDevices,
+  groupUsers,
+  users,
+  devices,
+  GroupWithRelations,
+  GroupBase,
+  UserBase,
+} from "../db/schema";
 
-export interface Group {
-  id?: string;
-  name: string;
-  localisation: string;
-  description: string;
-  users?: Users[];
-  devices?: Device[];
-}
-
-async function getUsersForGroup(groupId: string): Promise<Users[]> {
-  const groupUsersList: { user: Users }[] = await Drizzle.select({
+async function getUsersForGroup(groupId: string): Promise<UserBase[]> {
+  const groupUsersList: { user: UserBase }[] = await Drizzle.select({
     user: users,
   })
     .from(groupUsers)
@@ -22,6 +23,19 @@ async function getUsersForGroup(groupId: string): Promise<Users[]> {
     .where(eq(groupUsers.groupId, groupId));
 
   return groupUsersList.map(gu => gu.user);
+}
+
+export async function getGroupsForUser(userId: string): Promise<GroupBase[]> {
+  const userGroupList: {
+    groups: GroupBase
+  }[] = await Drizzle.select({
+    groups: groups,
+  })
+    .from(groupUsers)
+    .innerJoin(groups, eq(groupUsers.groupId, groups.id))
+    .where(eq(groupUsers.userId, userId));
+
+  return userGroupList.map(gu => gu.groups);
 }
 
 async function getDevicesForGroup(groupId: string): Promise<Device[]> {
@@ -35,18 +49,14 @@ async function getDevicesForGroup(groupId: string): Promise<Device[]> {
   return groupDevicesList.map(gd => gd.device);
 }
 
-export async function getGroups(orgId: string): Promise<Group[]> {
-  // Get all groups for the organization
+export async function getGroups(orgId: string): Promise<GroupWithRelations[]> {
   const orgGroups = await Drizzle.select()
     .from(groups)
     .where(eq(groups.organizationId, orgId));
 
-  // For each group, get users and devices
   const groupsWithRelations = await Promise.all(
     orgGroups.map(async (group) => {
-      // Get users for this group
       const groupUsersList = await getUsersForGroup(group.id);
-      // Get devices for this group
       const groupDevicesList = await getDevicesForGroup(group.id);
 
       return {
@@ -60,7 +70,6 @@ export async function getGroups(orgId: string): Promise<Group[]> {
   return groupsWithRelations;
 }
 
-// Add user to group
 export async function addUserToGroup(groupId: string, userId: string)
   : Promise<{
     groupId: string;
@@ -73,7 +82,6 @@ export async function addUserToGroup(groupId: string, userId: string)
   }).returning();
 }
 
-// Remove user from group
 export async function removeUserFromGroup(groupId: string, userId: string) {
   return await Drizzle.delete(groupUsers)
     .where(
@@ -81,7 +89,6 @@ export async function removeUserFromGroup(groupId: string, userId: string) {
     );
 }
 
-// Add device to group
 export async function addDeviceToGroup(groupId: string, deviceId: string) {
   return await Drizzle.insert(groupDevices).values({
     groupId,
@@ -89,7 +96,6 @@ export async function addDeviceToGroup(groupId: string, deviceId: string) {
   }).returning();
 }
 
-// Remove device from group
 export async function removeDeviceFromGroup(groupId: string, deviceId: string) {
   return await Drizzle.delete(groupDevices)
     .where(
@@ -97,38 +103,37 @@ export async function removeDeviceFromGroup(groupId: string, deviceId: string) {
     );
 }
 
-export async function createGroup(group: Omit<Group, 'id'> & { organizationId: string }): Promise<Group> {
-
-  const newGroup: Group = await Drizzle.insert(groups).values({
+export async function createGroup(group: Omit<GroupWithRelations, 'id' | "createdAt" | "updatedAt"> & { organizationId: string }): Promise<GroupWithRelations> {
+  const [newGroup] = await Drizzle.insert(groups).values({
     name: group.name,
     localisation: group.localisation,
     description: group.description,
     organizationId: group.organizationId,
-  }).returning().then(results => results[0]);
+  }).returning();
 
-  newGroup.users = [];
-  newGroup.devices = [];
-  return newGroup;
+  return {
+    ...newGroup,
+    users: [],
+    devices: [],
+  };
 }
 
-export async function deleteGroup(groupId: string): Promise<Group | null> {
-  // First, retrieve the group to return later
+export async function deleteGroup(groupId: string): Promise<GroupBase | null> {
   const groupToDelete = await Drizzle.select().from(groups).where(eq(groups.id, groupId)).then(results => results[0]);
 
   if (!groupToDelete) {
     return null;
   }
-
+  groupUsers
   await Drizzle.delete(groupUsers).where(eq(groupUsers.groupId, groupId));
   await Drizzle.delete(groupDevices).where(eq(groupDevices.groupId, groupId));
 
-  // Delete the group itself
   await Drizzle.delete(groups).where(eq(groups.id, groupId));
 
   return groupToDelete;
 }
 
-export async function updateGroup(groupId: string, updates: Partial<Group>): Promise<Group | null> {
+export async function updateGroup(groupId: string, updates: Partial<GroupBase>): Promise<GroupWithRelations | null> {
   const filteredUpdates: Record<string, unknown> = {};
   if (updates.name !== undefined) filteredUpdates['name'] = updates.name;
   if (updates.localisation !== undefined) filteredUpdates['localisation'] = updates.localisation;
@@ -137,6 +142,7 @@ export async function updateGroup(groupId: string, updates: Partial<Group>): Pro
   if (Object.keys(filteredUpdates).length === 0) {
     throw new Error('No valid updates provided');
   }
+
   const [updatedGroup] = await Drizzle.update(groups)
     .set(filteredUpdates)
     .where(eq(groups.id, groupId))
@@ -146,7 +152,6 @@ export async function updateGroup(groupId: string, updates: Partial<Group>): Pro
     return null;
   }
 
-  // Fetch updated users and devices
   const groupUsersList = await getUsersForGroup(updatedGroup.id);
   const groupDevicesList = await getDevicesForGroup(updatedGroup.id);
 

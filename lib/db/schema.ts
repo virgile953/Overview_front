@@ -305,3 +305,29 @@ export type GroupUser = typeof groupUsers.$inferSelect;
 export type NewGroupUser = typeof groupUsers.$inferInsert;
 export type GroupDevice = typeof groupDevices.$inferSelect;
 export type NewGroupDevice = typeof groupDevices.$inferInsert;
+
+// Utility types to avoid circular references
+export type GroupBase = Omit<Group, 'users' | 'devices'>;
+export type UserBase = Omit<Users, 'groups'>;
+
+// Extended types with relations
+export type GroupWithUsers = GroupBase & {
+  users: UserBase[];
+};
+
+export type GroupWithDevices = GroupBase & {
+  devices: Device[];
+};
+
+export type GroupWithRelations = GroupBase & {
+  users: UserBase[];
+  devices: Device[];
+};
+
+export type UserWithGroups = UserBase & {
+  groups: GroupBase[];
+};
+
+export type UserWithFullGroups = UserBase & {
+  groups: GroupWithRelations[];
+};

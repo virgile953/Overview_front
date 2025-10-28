@@ -1,18 +1,18 @@
 "use client";
 import { SquarePen } from "lucide-react";
-import { User } from "@/models/server/users";
 import { useUsersContext } from "./UsersClientWrapper";
+import { UserWithGroups } from "@/lib/db/schema";
 
 interface EditUserButtonProps {
-  user: User;
+  user: UserWithGroups;
 }
 
 export default function EditUserButton({ user }: EditUserButtonProps) {
   const { editUser } = useUsersContext();
 
   return (
-    <button 
-      onClick={() => editUser(user)} 
+    <button
+      onClick={() => editUser(user)}
       aria-label="Edit User"
       className="absolute bottom-2 right-2"
     >

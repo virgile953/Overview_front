@@ -46,7 +46,9 @@ export async function POST(request: Request) {
     if (!name || typeof name !== 'string' || name.trim() === '') {
       return NextResponse.json({ error: 'Invalid group name' }, { status: 400 });
     }
-    const newGroup = await createGroup({ name, localisation, description, users, devices, organizationId });
+    const newGroup = await createGroup({
+      name, localisation, description, users, devices, organizationId,
+    });
     return NextResponse.json(newGroup, { status: 201 });
   } catch (error) {
     return NextResponse.json({ error: (error as Error).message }, { status: 500 });

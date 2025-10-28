@@ -1,17 +1,17 @@
-import { User } from "@/models/server/users";
+import { UserWithGroups } from "@/lib/db/schema";
 import EditUserButton from "./EditUserButton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface UserCardProps {
-  user: User;
+  user: UserWithGroups;
 }
 
 export default function UserCard({ user }: UserCardProps) {
   return (
     <div className="border relative border-border bg-sidebar-accent rounded-lg p-4 h-full w-full">
       <h3 className="text-lg font-semibold">{user.name}</h3>
-      {user.last_name && (
-        <p className="text-sm text-muted-foreground">{user.last_name}</p>
+      {user.lastName && (
+        <p className="text-sm text-muted-foreground">{user.lastName}</p>
       )}
       <p className="text-sm text-muted-foreground">{user.email}</p>
 

@@ -1,22 +1,22 @@
 import Modal from "@/app/ui/Modal/Modal";
 import InputField from "@/app/ui/InputField";
-import { User } from "@/models/server/users";
 import { useEffect, useState } from "react";
 import GroupSelector from "@/app/ui/GroupSelector";
+import { UserWithGroups } from "@/lib/db/schema";
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (user: User) => void;
-  user: User;
+  onSave: (user: UserWithGroups) => void;
+  user: UserWithGroups;
 }
 
 export default function UserModal({ isOpen, onClose, onSave, user }: UserModalProps) {
 
-  const [localUser, setLocalUser] = useState<User>(user);
+  const [localUser, setLocalUser] = useState<UserWithGroups>(user);
 
   async function handleSave() {
-    const ret = await fetch(`/api/users/${localUser.$id}`, {
+    const ret = await fetch(`/api/users/${localUser.id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
@@ -54,8 +54,8 @@ export default function UserModal({ isOpen, onClose, onSave, user }: UserModalPr
           <InputField
             type="text"
             placeholder="Last Name"
-            value={localUser.last_name || ""}
-            onChange={(e) => setLocalUser({ ...localUser, last_name: e.target.value })}
+            value={localUser.lastName || ""}
+            onChange={(e) => setLocalUser({ ...localUser, lastName: e.target.value })}
           />
         </div>
 
