@@ -58,7 +58,7 @@ export function DevicesClient({ initialDevices, organizationId }: DevicesClientP
   const session = useSession();
 
   useEffect(() => {
-    if (session.isRefetching == false) {
+    if (session.isPending == false) {
       const newOrg = session.data!.session.activeOrganizationId!;
       if (newOrg !== orgId) {
         setOrganizationId(newOrg);

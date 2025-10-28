@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
+import SettingsForm from "./SettingsForm";
 
 export default async function SettingsPage() {
   
@@ -18,9 +19,13 @@ export default async function SettingsPage() {
  
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Settings</h1>
-      <p>Manage your account and application settings here.</p>
-      {/* Additional settings components can be added here */}
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold">Settings</h1>
+        <p className="text-muted-foreground mt-1">
+          Manage your notification preferences and system settings.
+        </p>
+      </div>
+      <SettingsForm />
     </div>
   );
 }
