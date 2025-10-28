@@ -1,10 +1,7 @@
 "use server";
 import { auth } from '@/lib/auth';
-import Drizzle from '@/lib/db/db';
-import { devices } from '@/lib/db/schema';
 import { headers } from 'next/headers';
 import { DeviceCacheManager } from '@/lib/deviceCacheManager';
-import { eq } from 'drizzle-orm';
 
 export async function fetchDevices() {
   const session = await auth.api.getSession({
@@ -18,20 +15,11 @@ export async function fetchDevices() {
     throw new Error('No active organization');
   }
 
-  let cachedDevices = await DeviceCacheManager.getAll(organizationId);
+  // Initialize cache from database if empty
+  await DeviceCacheManager.initializeFromDb(organizationId);
 
-  if (cachedDevices.size === 0) {
-    // If no devices in cache, populate cache from DB
-    const dbDevices = await Drizzle.select().from(devices).where(eq(devices.organizationId, organizationId));
-    for (const dbDevice of dbDevices) {
-      await DeviceCacheManager.set(dbDevice.macAddress, {
-        device: dbDevice,
-        lastSeen: new Date(dbDevice.lastActive),
-        status: 'offline',
-      });
-    }
-    cachedDevices = await DeviceCacheManager.getAll(organizationId);
-  }
+  // Get cached devices
+  const cachedDevices = await DeviceCacheManager.getAll(organizationId);
 
   return cachedDevices;
 }

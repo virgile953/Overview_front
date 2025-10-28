@@ -44,6 +44,13 @@ export interface singleDeviceResponse {
   dbId?: string;
 }
 
+export async function getDbDevices(organizationId: string): Promise<Device[]> {
+  const dbDevicesResponse = await Drizzle.select().from(devices).where(
+    eq(devices.organizationId, organizationId)
+  );
+  return dbDevicesResponse;
+}
+
 export async function getDevices(organizationId: string): Promise<DeviceResponse> {
   const cachedDevices = await DeviceCacheManager.getAll(organizationId);
   const devicesArray = Array.from(cachedDevices.values()).map(data => ({

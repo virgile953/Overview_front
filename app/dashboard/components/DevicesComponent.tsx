@@ -2,34 +2,23 @@ import { twMerge } from 'tailwind-merge'
 import { EllipsisVertical, SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { DeviceCacheManager } from '@/lib/deviceCacheManager';
-import { getDevices } from '@/lib/devices/devices';
-import { headers } from 'next/headers';
-import { auth } from '@/lib/auth';
+import { getDbDevices } from '@/lib/devices/devices';
 
 export default async function DevicesDashboard({ orgId, className }: { orgId: string; className?: string }) {
 
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
-  if (!session) {
-    throw new Error('Unauthorized');
-  }
-  const organizationId = session.session.activeOrganizationId;
-  if (!organizationId) {
-    throw new Error('No active organization');
-  }
-
   const allCacheDevices = await DeviceCacheManager.getAll(orgId);
-  const dbDevices = await getDevices(organizationId);
+  const dbDevices = await getDbDevices(orgId);
   const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
-  const dbOnlyDevices = dbDevices.devices.filter(device => !cacheDeviceMACs.has(device.macAddress!));
+  const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress!));
   const stats = await {
     ...DeviceCacheManager.getStats(orgId),
     dbOnly: dbOnlyDevices.length
   };
   stats.total += dbOnlyDevices.length;
   stats.offline += dbOnlyDevices.length;
-
+  console.log('DevicesDashboard stats:', stats);
+  console.log('cache devices:', allCacheDevices);
+  console.log('db only devices count:', dbDevices);
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>
       <div className="flex items-center mb-4">
@@ -40,7 +29,7 @@ export default async function DevicesDashboard({ orgId, className }: { orgId: st
       </div>
       {stats && (
         <>
-          <div className="text-3xl font-bold text-foreground">{stats ? stats.total : 0}</div>
+          <div className="text-3xl font-bold text-foreground">{stats && stats.total ? stats.total : 0}</div>
           <div className="mt-2 text-sm text-muted-foreground mb-4">Total Devices</div>
         </>
       )
@@ -52,7 +41,7 @@ export default async function DevicesDashboard({ orgId, className }: { orgId: st
           className="relative bg-green-600/20 border border-green-600/30 p-2 rounded flex flex-col items-center hover:bg-green-600/30 transition-colors"
         >
           <span className="text-lg font-bold text-green-600 dark:text-green-400">
-            {stats ? stats.online : 0}
+            {stats && stats.online ? stats.online : 0}
           </span>
           <span className="text-xs text-green-600 dark:text-green-400">Online</span>
           <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-green-600 dark:text-green-300" size={12} />
@@ -64,7 +53,7 @@ export default async function DevicesDashboard({ orgId, className }: { orgId: st
           className="relative bg-red-600/20 border border-red-600/30 p-2 rounded flex flex-col items-center hover:bg-red-600/30 transition-colors"
         >
           <span className="text-lg font-bold text-red-600 dark:text-red-400">
-            {stats ? stats.offline : 0}
+            {stats && stats.offline ? stats.offline : 0}
           </span>
           <span className="text-xs text-red-500 dark:text-red-400">Offline</span>
           <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-red-600 dark:text-red-300" size={12} />
@@ -75,7 +64,7 @@ export default async function DevicesDashboard({ orgId, className }: { orgId: st
           className="relative bg-yellow-600/20 border border-yellow-600/30 p-2 rounded flex flex-col items-center hover:bg-yellow-600/30 transition-colors"
         >
           <span className="text-lg font-bold text-yellow-600 dark:text-yellow-400">
-            {stats ? stats.cacheOnly : 0}
+            {stats && stats.cacheOnly ? stats.cacheOnly : 0}
           </span>
           <span className="text-xs text-yellow-500 dark:text-yellow-400">Cache Only</span>
           <SquareArrowOutUpRight className="absolute bottom-2 right-2 text-yellow-600 dark:text-yellow-300" size={12} />

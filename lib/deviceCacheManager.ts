@@ -1,4 +1,6 @@
-import { Device } from "./db/schema";
+import Drizzle from "./db/db";
+import { Device, devices } from "./db/schema";
+import { getDbDevices } from "./devices/devices";
 import { getRedisClient } from "./redis";
 import { emitDeviceUpdate } from './socketUtils';
 
@@ -326,5 +328,63 @@ export class DeviceCacheManager {
       connected: !!redis,
       url: process.env.REDIS_URL || 'redis://localhost:6379',
     };
+  }
+
+  // Initialize cache from database for an organization
+  static async initializeFromDb(organizationId: string): Promise<void> {
+    try {
+      // Check if cache already has devices for this org
+      const cachedDevices = await this.getAll(organizationId);
+      
+      if (cachedDevices.size > 0) {
+        console.log(`Cache already initialized for org ${organizationId} with ${cachedDevices.size} devices`);
+        return;
+      }
+
+      // Fetch all devices from database
+      const dbDevices = await getDbDevices(organizationId);
+      
+      if (dbDevices.length === 0) {
+        console.log(`No devices in database for org ${organizationId}`);
+        return;
+      }
+
+      // Populate cache with database devices
+      for (const device of dbDevices) {
+        await this.set(device.macAddress, {
+          device: device,
+          lastSeen: new Date(device.lastActive),
+          status: 'offline', // Default to offline until we receive updates
+        });
+      }
+
+      console.log(`Initialized cache for org ${organizationId} with ${dbDevices.length} devices from database`);
+    } catch (error) {
+      console.error('Failed to initialize cache from database:', error);
+    }
+  }
+
+  // Initialize cache for all organizations (useful on server startup)
+  static async initializeAllOrganizations(): Promise<void> {
+    try {
+      // Import dynamically to avoid circular dependency
+
+      // Get distinct organization IDs from devices table
+      const organizations = await Drizzle
+        .selectDistinct({ organizationId: devices.organizationId })
+        .from(devices);
+
+      console.log(`Initializing cache for ${organizations.length} organizations`);
+
+      for (const org of organizations) {
+        if (org.organizationId) {
+          await this.initializeFromDb(org.organizationId);
+        }
+      }
+
+      console.log('Cache initialization complete for all organizations');
+    } catch (error) {
+      console.error('Failed to initialize cache for all organizations:', error);
+    }
   }
 }

@@ -278,36 +278,36 @@ export default function SettingsForm() {
                     </FieldLabel>
                     <div className="flex gap-2">
                       <Input
-                        {...field}
-                        id="cooldownPeriod"
-                        type="number"
-                        min={1}
-                        aria-invalid={fieldState.invalid}
-                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
-                        className="max-w-[150px]"
+                      {...field}
+                      id="cooldownPeriod"
+                      type="number"
+                      min={1}
+                      step={1}
+                      onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
+                      className="max-w-[150px]"
                       />
                       <Controller
-                        name="cooldownUnit"
-                        control={form.control}
-                        render={({ field: unitField }) => (
-                          <Select
-                            value={unitField.value}
-                            onValueChange={(e) => {
-                              unitField.onChange(e);
-                              form.trigger("cooldownPeriod");
-                            }
-                            }
-                          >
-                            <SelectTrigger className="max-w-[150px]">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="seconds">Seconds</SelectItem>
-                              <SelectItem value="minutes">Minutes</SelectItem>
-                              <SelectItem value="hours">Hours</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
+                      name="cooldownUnit"
+                      control={form.control}
+                      render={({ field: unitField }) => (
+                        <Select
+                        value={unitField.value}
+                        onValueChange={(e) => {
+                          unitField.onChange(e);
+                          form.trigger("cooldownPeriod");
+                        }
+                        }
+                        >
+                        <SelectTrigger className="max-w-[150px]">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seconds">Seconds</SelectItem>
+                          <SelectItem value="minutes">Minutes</SelectItem>
+                          <SelectItem value="hours">Hours</SelectItem>
+                        </SelectContent>
+                        </Select>
+                      )}
                       />
                     </div>
                     <FieldDescription>
