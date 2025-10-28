@@ -1,12 +1,11 @@
 import { auth } from "@/lib/auth";
 import Drizzle from "@/lib/db/db";
 import { users, groupUsers, NewUsers } from "@/lib/db/schema";
-import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: request.headers,
   });
 
   if (!session) {
@@ -35,7 +34,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: request.headers,
   });
 
   if (!session) {

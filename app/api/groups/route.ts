@@ -1,11 +1,10 @@
 import { auth } from "@/lib/auth";
 import { createGroup, deleteGroup, getGroups } from "@/lib/groups/groups";
-import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: request.headers,
   });
 
   if (!session) {
@@ -31,7 +30,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const session = await auth.api.getSession({
-    headers: await headers(),
+    headers: request.headers,
   });
   if (!session) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
