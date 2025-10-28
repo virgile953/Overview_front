@@ -38,10 +38,12 @@ export default function DeviceSelector() {
                   key={device.id}
                   value={device.id}
                   onSelect={() => {
+                    if (!device.id) return;
+                    
                     if (devices && devices.some(d => d.id === device.id)) {
                       setDevices(devices.filter(d => d.id !== device.id));
                     } else {
-                      setDevices([...(devices || []), device]);
+                      setDevices([...(devices || []), {...device, id: device.id!}]);
                     }
 
                   }}

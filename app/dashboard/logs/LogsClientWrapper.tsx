@@ -3,12 +3,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { fetchLogsForChart } from "./actions";
 import { ApiDevice } from "@/lib/devices/devices";
-import { Device } from "@/lib/db/schema";
 
 interface LogsContextType {
   initialDevices?: ApiDevice[];
-  devices?: Device[];
-  setDevices: (devices: Device[]) => void;
+  devices?: ApiDevice[];
+  setDevices: (devices: ApiDevice[]) => void;
   count: number;
   setCount: (count: number) => void;
   chartData: ChartData[];
@@ -59,13 +58,13 @@ export default function LogsClientWrapper({
     })(),
     to: new Date(),
   })
-  const [devices, setDevices] = useState<Device[] | undefined>(undefined);
+  const [devices, setDevices] = useState<ApiDevice[]>([]);
   const [isLoadingChartData, setIsLoadingChartData] = useState(true);
   useEffect(() => {
     if (dateRange && dateRange.from && dateRange.to) {
       setIsLoadingChartData(true);
 
-      fetchLogsForChart(dateRange.from, dateRange.to, "hour", devices?.map(d => d.id)).then(data => {
+      fetchLogsForChart(dateRange.from, dateRange.to, "hour", devices?.map(d => d.id!)).then(data => {
         console.log(data.length);
         setChartData(data);
       });
