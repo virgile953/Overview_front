@@ -1,13 +1,32 @@
-import { getUsers } from "@/models/server/users";
+import { getUsers as getUsersOld } from "@/models/server/users";
 import UserCard from "./UserCard";
 import CreateUserButton from "./CreateUserButton";
 import UsersClientWrapper from "./UsersClientWrapper";
+import { getUsers } from "@/lib/users/users";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 export default async function Users() {
-  const users = await getUsers();
 
+  const session = await auth.api.getSession({
+    headers: await headers()
+  });
+  if (!auth) {
+    return <div>Unauthorized</div>;
+  }
+
+  const organizationId = session?.session.activeOrganizationId;
+  if (!organizationId) {
+    return <div>No active organization</div>;
+  }
+
+
+  const users = await getUsersOld();
+  const coucou = await getUsers(organizationId);
   return (
     <UsersClientWrapper>
+
+      {coucou.map(user => (user.email))}
       <div className="relative">
         <h1 className="text-2xl font-bold text-foreground mb-4">Users</h1>
 

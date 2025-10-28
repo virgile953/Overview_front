@@ -3,19 +3,30 @@ import { createGroup, deleteGroup, getGroups } from "@/lib/groups/groups";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
   if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401 });
   }
+
   const organizationId = session.session.activeOrganizationId;
   if (!organizationId) {
-    return NextResponse.json({ error: "No active organization" }, { status: 400 });
+    return new Response(JSON.stringify({ error: "No active organization" }), { status: 400 });
   }
-  const groups = await getGroups(organizationId);
-  return NextResponse.json(groups);
+
+  try {
+    const groupsData = await getGroups(organizationId);
+    return new Response(JSON.stringify(groupsData), { status: 200 });
+  } catch (error) {
+    console.error("Error fetching groups:", error);
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch groups" }),
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(request: Request) {

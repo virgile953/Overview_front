@@ -1,24 +1,37 @@
 "use client";
-import { Group } from "@/lib/groups/groups";
+import { useSession } from "@/lib/auth-client";
+import { getGroups, Group } from "@/lib/groups/groups";
 import { useEffect, useState } from "react";
 import Select from "react-select";
 
+
+
 interface GroupSelectorProps {
-  onChange?: (selected: Group[]) => void;
-  initialValue?: Group[]; // Added initialValue prop to set selected groups from outside
+  onChange?: (selectedGroupIds: string[]) => void;
+  selectedGroupIds?: string[];
 }
 
-export default function GroupSelector({ onChange, initialValue }: GroupSelectorProps) {
+export default function GroupSelector({ onChange, selectedGroupIds = [] }: GroupSelectorProps) {
 
-  const [groups, setGroups] = useState<Group[] | null>(null);
+  const { data } = useSession();
+
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const orgId = data?.session.activeOrganizationId;
+    if (!orgId) {
+      setError("No active organization");
+      setLoading(false);
+      return;
+    }
     async function fetchGroups() {
       try {
         setLoading(true);
         setError(null);
+        const coucou = await getGroups(orgId!);
+        console.log(coucou);
         const res = await fetch("/api/groups");
         if (!res.ok) throw new Error("Failed to fetch groups");
         const data = await res.json();
@@ -33,9 +46,16 @@ export default function GroupSelector({ onChange, initialValue }: GroupSelectorP
     fetchGroups();
   }, []);
 
+  const options = groups.map((group) => ({
+    value: group.id,
+    label: group.name,
+  }));
+
+  const selectedOptions = options.filter(opt => opt.value && selectedGroupIds.includes(opt.value));
+
   return (
     <div className="p-4 border border-gray-300 rounded">
-      <h2 className="text-lg font-semibold mb-4">Select Group</h2>
+      <h2 className="text-lg font-semibold mb-4">Select Groups</h2>
 
       {error && (
         <div className="text-red-600 text-sm bg-red-50 p-2 rounded mb-4">
@@ -44,25 +64,12 @@ export default function GroupSelector({ onChange, initialValue }: GroupSelectorP
       )}
 
       <Select
-        options={
-          groups ? groups.map((group) => ({
-            value: group.id,
-            label: group.name,
-          })) : []
-        }
-        value={
-          initialValue ? initialValue.map(group => ({
-            value: group.id,
-            label: group.name,
-          })) : null
-        }
+        options={options}
+        value={selectedOptions}
         onChange={(selectedOptions) => {
           if (onChange) {
-            const selectedGroups = (selectedOptions as { value: string; label: string }[]).map(option => {
-              const group = groups?.find(g => g.id === option.value);
-              return group!;
-            });
-            onChange(selectedGroups);
+            const ids = (selectedOptions as { value: string; label: string }[]).map(opt => opt.value);
+            onChange(ids);
           }
         }}
         isMulti
