@@ -2,13 +2,28 @@ import { getLogCount } from "@/models/server/logs";
 import LogChart from "./chart";
 import DatesSelector from "./DatesSelector";
 import LogsClientWrapper from "./LogsClientWrapper";
-import { getDevices } from "@/models/server/devices";
 import DeviceSelector from "./DeviceSelector";
-export const dynamic = 'force-dynamic'
+import { getDevices } from "@/lib/devices/devices";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
 export default async function Logs() {
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session) {
+    return <div>Unauthorized</div>;
+  }
+
+  const organizationId = session.session.activeOrganizationId;
+  if (!organizationId) {
+    return <div>No active organization</div>;
+  }
+
   const [devices, count] = await Promise.all([
-    getDevices(),
+    (await getDevices(organizationId)).devices,
     getLogCount(),
   ]);
 

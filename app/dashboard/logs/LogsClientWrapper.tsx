@@ -2,10 +2,11 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { DateRange } from "react-day-picker";
 import { fetchLogsForChart } from "./actions";
+import { ApiDevice } from "@/lib/devices/devices";
 import { Device } from "@/lib/db/schema";
 
 interface LogsContextType {
-  initialDevices?: Device[];
+  initialDevices?: ApiDevice[];
   devices?: Device[];
   setDevices: (devices: Device[]) => void;
   count: number;
@@ -39,7 +40,7 @@ export const useLogsContext = () => {
 interface LogsClientWrapperProps {
   children: React.ReactNode;
   initialCount: number;
-  initialDevices?: Device[];
+  initialDevices?: ApiDevice[];
 }
 
 export default function LogsClientWrapper({
