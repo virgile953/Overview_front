@@ -11,7 +11,7 @@ export async function PUT(
     if (!id || typeof id !== 'string') {
       return NextResponse.json({ error: 'Invalid group ID' }, { status: 400 });
     }
-    const updatedGroup = await updateGroup(id, { name, localisation, description });
+    const updatedGroup = await updateGroup(id, { name, localisation, description }, users, devices);
     if (!updatedGroup) {
       return NextResponse.json({ error: 'Group not found' }, { status: 404 });
     }

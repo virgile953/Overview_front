@@ -1,9 +1,8 @@
 import EditGroupButton from "./EditGroupButton";
-import { Device, Users } from "@/lib/db/schema";
-import { Group } from "@/lib/groups/groups";
+import { Device, GroupWithRelations, Users } from "@/lib/db/schema";
 
 interface GroupCardProps {
-  group: Group;
+  group: GroupWithRelations;
 }
 
 export default function GroupCard({ group }: GroupCardProps) {

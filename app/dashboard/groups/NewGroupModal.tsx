@@ -3,8 +3,9 @@ import InputField from "@/app/ui/InputField";
 import { useEffect, useState } from "react";
 import UserSelector from "@/app/ui/UserSelector";
 import DeviceSelector from "@/app/ui/DeviceSelector";
-import { createGroup, Group } from "@/lib/groups/groups";
+import { createGroup } from "@/lib/groups/groups";
 import { useSession } from "@/lib/auth-client";
+import { GroupWithRelations } from "@/lib/db/schema";
 
 interface NewGroupModalProps {
   isOpen: boolean;
@@ -17,7 +18,7 @@ export default function NewGroupModal({ isOpen, onClose, onGroupCreated }: NewGr
   const [error, setError] = useState<string | null>(null);
   const session = useSession();
   // Form state with string arrays for easier form handling
-  const [formData, setFormData] = useState<Partial<Group>>({
+  const [formData, setFormData] = useState<Partial<GroupWithRelations>>({
     name: "",
     localisation: "",
     description: "",

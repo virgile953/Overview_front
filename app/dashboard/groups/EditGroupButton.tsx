@@ -1,10 +1,10 @@
 "use client";
 import { SquarePen } from "lucide-react";
 import { useGroupsContext } from "./GroupsClientWrapper";
-import { Group } from "@/lib/groups/groups";
+import { GroupWithRelations } from "@/lib/db/schema";
 
 interface EditGroupButtonProps {
-  group: Group;
+  group: GroupWithRelations;
 }
 
 export default function EditGroupButton({ group }: EditGroupButtonProps) {
