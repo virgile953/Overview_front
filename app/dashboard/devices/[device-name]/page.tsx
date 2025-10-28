@@ -1,9 +1,11 @@
-import { getDevice } from "@/models/server/devices";
-import { getDeviceLogs } from "@/models/server/logs";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 
 import { ArrowLeft, Activity, Calendar, MapPin, Network, Settings } from "lucide-react";
+import { getDeviceLogs } from "@/lib/logs";
+import { getDevice } from "@/lib/devices/devices";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 interface DevicePageProps {
   params: {
     'device-name': string;
@@ -11,15 +13,28 @@ interface DevicePageProps {
 }
 
 const DevicePage = async ({ params }: DevicePageProps) => {
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  })
+  if (!session) {
+    return <div>Unauthorized</div>;
+  }
+
+  const organizationId = session.session.activeOrganizationId;
+  if (!organizationId) {
+    return <div>No active organization</div>;
+  }
+
   const { 'device-name': deviceName } = await params;
-  
-  const device = await getDevice(deviceName);
+
+  const device = await getDevice(organizationId, deviceName);
 
   if (!device) {
     notFound();
   }
 
-  const logs = await getDeviceLogs(device.id, 50);
+  const logs = await getDeviceLogs(device.id!, 50);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
@@ -74,9 +89,11 @@ const DevicePage = async ({ params }: DevicePageProps) => {
             <Activity className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Status</p>
-              <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(device.status)}`}>
-                {device.status.toUpperCase()}
-              </span>
+              {device.status &&
+                <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(device.status)}`}>
+                  {device.status.toUpperCase()}
+                </span>
+              }
             </div>
           </div>
         </div>
@@ -106,14 +123,17 @@ const DevicePage = async ({ params }: DevicePageProps) => {
             <Calendar className="h-5 w-5 text-muted-foreground" />
             <div>
               <p className="text-sm text-muted-foreground">Last Active</p>
-              <p className="font-medium text-sm">
-                {new Date(device.lastActive).toLocaleString("fr-FR", {
-                  month: "short",
-                  day: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
-              </p>
+              {device.lastActive &&
+
+                <p className="font-medium text-sm">
+                  {new Date(device.lastActive).toLocaleString("fr-FR", {
+                    month: "short",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit"
+                  })}
+                </p>
+              }
             </div>
           </div>
         </div>

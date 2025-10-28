@@ -2,13 +2,27 @@ import { twMerge } from 'tailwind-merge'
 import { EllipsisVertical, SquareActivity, SquareArrowOutUpRight } from 'lucide-react';
 import Link from 'next/link';
 import { DeviceCacheManager } from '@/lib/deviceCacheManager';
-import { getDevices } from '@/models/server/devices';
+import { getDevices } from '@/lib/devices/devices';
+import { headers } from 'next/headers';
+import { auth } from '@/lib/auth';
 
 export default async function DevicesDashboard({ orgId, className }: { orgId: string; className?: string }) {
+
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session) {
+    throw new Error('Unauthorized');
+  }
+  const organizationId = session.session.activeOrganizationId;
+  if (!organizationId) {
+    throw new Error('No active organization');
+  }
+
   const allCacheDevices = await DeviceCacheManager.getAll(orgId);
-  const dbDevices = await getDevices();
+  const dbDevices = await getDevices(organizationId);
   const cacheDeviceMACs = new Set(Array.from(allCacheDevices.keys()));
-  const dbOnlyDevices = dbDevices.filter(device => !cacheDeviceMACs.has(device.macAddress));
+  const dbOnlyDevices = dbDevices.devices.filter(device => !cacheDeviceMACs.has(device.macAddress!));
   const stats = await {
     ...DeviceCacheManager.getStats(orgId),
     dbOnly: dbOnlyDevices.length

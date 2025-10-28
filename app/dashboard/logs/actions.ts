@@ -1,4 +1,4 @@
-import { getLogCount, getLogsForChart } from "@/models/server/logs";
+import { getLogCount, getLogsForChart } from "@/lib/logs";
 
 export async function fetchLogCount(): Promise<number> {
   return await getLogCount();

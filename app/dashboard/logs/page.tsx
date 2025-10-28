@@ -1,4 +1,3 @@
-import { getLogCount } from "@/models/server/logs";
 import LogChart from "./chart";
 import DatesSelector from "./DatesSelector";
 import LogsClientWrapper from "./LogsClientWrapper";
@@ -6,6 +5,7 @@ import DeviceSelector from "./DeviceSelector";
 import { getDevices } from "@/lib/devices/devices";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
+import { getLogCount } from "@/lib/logs";
 
 export default async function Logs() {
 

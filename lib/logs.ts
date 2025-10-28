@@ -1,6 +1,6 @@
 "use server";
-import { deviceLogs } from '../../drizzle/schema';
-import Drizzle from '../../lib/db/db';
+import { deviceLogs } from '../drizzle/schema';
+import Drizzle from '../lib/db/db';
 import { eq, desc, count, and, inArray } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 

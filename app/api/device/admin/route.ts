@@ -1,4 +1,4 @@
-import { addDevice, deleteDevice } from "@/models/server/devices";
+import { addDevice, deleteDevice } from "@/lib/devices";
 import { DeviceCacheManager } from "@/lib/deviceCacheManager";
 
 // Admin route to manually add devices to the database
