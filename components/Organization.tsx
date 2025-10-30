@@ -1,3 +1,4 @@
+"use client";
 import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -13,6 +14,7 @@ import { Separator } from "./ui/separator";
 import { Session } from "@/lib/db/schema";
 import Image from "next/image";
 import { Organization } from "better-auth/plugins";
+import { useRouter } from "next/navigation";
 
 const organizationSchema = z.object({
   name: z.string().min(1, {
@@ -40,11 +42,10 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
   // Use reactive data if available, otherwise fall back to props
   const currentSession = sessionData?.session || initialSession;
   const currentOrgs = organizationsData || initialOrgs; // Organizations list stays the same
-
   // Get the active organization - prefer reactive data
   const activeOrgId = activeOrgData?.id || currentSession?.activeOrganizationId || null;
   const activeOrg = currentOrgs?.find(org => org.id === activeOrgId);
-
+  const router = useRouter();
   return (
     <>
       <Popover open={open} onOpenChange={setOpen}>
@@ -86,6 +87,7 @@ export function OrganizationMenu({ orgs: initialOrgs, session: initialSession }:
                       organizationId: org.id
                     });
                     setOpen(false);
+                    router.refresh();
                   }}
                 >
                   <div className="flex items-center gap-2 w-full">
