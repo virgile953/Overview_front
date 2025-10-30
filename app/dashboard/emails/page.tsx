@@ -66,8 +66,8 @@ export default async function EmailsPage() {
         <div className="flex-1 overflow-auto">
           {/* Default tab content */}
           <TabsContent value="default" className="w-full mt-0">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold mb-4 place-content-between flex flex-col md:flex-row">
+            <div className="@container">
+              <h2 className="text-xl font-semibold mb-4 place-content-between gap-2 sm:gap-0 flex flex-col sm:flex-row">
                 <div>Default Templates ({templateCountByGroup["Default"] || 0})</div>
                 <CreateTemplate />
               </h2>
@@ -84,7 +84,7 @@ export default async function EmailsPage() {
           {groups.map((group) => (
             <TabsContent key={group.id} value={group.id} className="w-full mt-0">
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4 place-content-between flex flex-col md:flex-row">
+                <h2 className="text-xl font-semibold mb-4 place-content-between flex flex-col xs:flex-row">
                   <div>{group.name} Templates ({templateCountByGroup[group.id] || 0})</div>
                   <CreateTemplate />
                 </h2>

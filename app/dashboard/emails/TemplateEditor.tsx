@@ -46,7 +46,9 @@ export default function TemplateEditor({ organizationId, baseTemplate }: Templat
                   ...sanitizeHtml.defaults.allowedAttributes,
                   img: ['src', 'alt', 'width', 'height', 'style'],
                   '*': ['style']
-                }
+                },
+                allowVulnerableTags: true
+
               }
             )
           }}
