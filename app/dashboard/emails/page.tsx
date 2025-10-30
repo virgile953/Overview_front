@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { getTemplates } from "@/lib/email/emails";
 import { getGroups } from "@/lib/groups/groups";
 import { headers } from "next/headers";
+import TemplateEditor from "./TemplateEditor";
 
 export default async function EmailsPage() {
 
@@ -29,24 +30,22 @@ export default async function EmailsPage() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="p-6 h-full flex flex-col">
+    <div className="h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Email Templates</h1>
       <p className="mb-6">WYSWIG email editor incoming, for now, set the HTML manually.</p>
 
       <Tabs defaultValue={"default"} className="flex flex-col lg:flex-row gap-6 flex-1 overflow-hidden">
         <TabsList className="flex flex-row gap-2 h-auto w-full border-b pr-0 pb overflow-x-auto
                lg:flex-col lg:h-full lg:w-52 lg:border-b-0 lg:border-r lg:pr-4 lg:pb-0 lg:overflow-y-auto lg:items-start lg:justify-start">
-          {templateCountByGroup["default"] > 0 && (
-            <TabsTrigger
-              value="default"
-              className="flex flex-row justify-between w-auto lg:w-full px-4 py-2 whitespace-nowrap"
-            >
-              <div className="truncate">Default</div>
-              <div className="ml-2 px-2 py-0.5 rounded-full bg-muted text-xs">
-                {templateCountByGroup["default"]}
-              </div>
-            </TabsTrigger>
-          )}
+          <TabsTrigger
+            value="default"
+            className="flex flex-row justify-between w-auto lg:w-full px-4 py-2 whitespace-nowrap"
+          >
+            <div className="truncate">Default</div>
+            <div className="ml-2 px-2 py-0.5 rounded-full bg-muted text-xs">
+              {templateCountByGroup["default"]}
+            </div>
+          </TabsTrigger>
 
           {groups.length > 0 &&
             groups.map((group) => (
@@ -75,22 +74,7 @@ export default async function EmailsPage() {
                 {templates
                   .filter(template => !template.groupId)
                   .map((template) => (
-                    <div key={template.id} className="p-4 border rounded-lg">
-                      <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
-                      <p className="mb-2">
-                        <strong>Subject:</strong> {template.subject}
-                      </p>
-                      <div>
-                        <strong>HTML Content:</strong>
-                        <div className="mt-1 p-2 bg-accent rounded">
-                          <pre className="whitespace-pre-wrap text-sm">{template.html}</pre>
-                        </div>
-                        <div
-                          dangerouslySetInnerHTML={{ __html: template.html }}
-                          className="mt-4 p-4 border rounded bg-accent"
-                        />
-                      </div>
-                    </div>
+                    <TemplateEditor organizationId={organizationId} baseTemplate={template} key={template.id} />
                   ))}
               </div>
             </TabsContent>
@@ -106,22 +90,7 @@ export default async function EmailsPage() {
                 {templates
                   .filter(template => template.groupId === group.id)
                   .map((template) => (
-                    <div key={template.id} className="p-4 border rounded-lg">
-                      <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
-                      <p className="mb-2">
-                        <strong>Subject:</strong> {template.subject}
-                      </p>
-                      <div>
-                        <strong>HTML Content:</strong>
-                        <div className="mt-1 p-2 bg-accent rounded">
-                          <pre className="whitespace-pre-wrap text-sm">{template.html}</pre>
-                        </div>
-                        <div
-                          dangerouslySetInnerHTML={{ __html: template.html }}
-                          className="mt-4 p-4 border rounded bg-accent"
-                        />
-                      </div>
-                    </div>
+                    <TemplateEditor organizationId={organizationId} baseTemplate={template} key={template.id} />
                   ))}
 
                 {(!templateCountByGroup[group.id] || templateCountByGroup[group.id] === 0) && (
