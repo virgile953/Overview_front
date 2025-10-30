@@ -29,17 +29,17 @@ export default async function EmailsPage() {
   }, {} as Record<string, number>);
 
   return (
-    <div className="p-6">
+    <div className="p-6 h-full flex flex-col">
       <h1 className="text-2xl font-bold mb-4">Email Templates</h1>
       <p className="mb-6">WYSWIG email editor incoming, for now, set the HTML manually.</p>
 
-      <Tabs defaultValue={groups[0]?.id || "default"} className="flex flex-row gap-6">
-        <TabsList className="flex flex-col gap-2 h-fit w-64 border-r pr-4">
-          {/* Default tab for templates without groupId */}
+      <Tabs defaultValue={"default"} className="flex flex-col lg:flex-row gap-6 flex-1 overflow-hidden">
+        <TabsList className="flex flex-row gap-2 h-auto w-full border-b pr-0 pb overflow-x-auto
+               lg:flex-col lg:h-full lg:w-52 lg:border-b-0 lg:border-r lg:pr-4 lg:pb-0 lg:overflow-y-auto lg:items-start lg:justify-start">
           {templateCountByGroup["default"] > 0 && (
             <TabsTrigger
               value="default"
-              className="flex flex-row justify-between w-full px-4 py-2"
+              className="flex flex-row justify-between w-auto lg:w-full px-4 py-2 whitespace-nowrap"
             >
               <div className="truncate">Default</div>
               <div className="ml-2 px-2 py-0.5 rounded-full bg-muted text-xs">
@@ -47,13 +47,13 @@ export default async function EmailsPage() {
               </div>
             </TabsTrigger>
           )}
-          
+
           {groups.length > 0 &&
             groups.map((group) => (
               <TabsTrigger
                 key={group.id}
                 value={group.id}
-                className="flex flex-row justify-between w-full px-4 py-2"
+                className="flex flex-row justify-between w-auto lg:w-full px-4 py-2 whitespace-nowrap"
               >
                 <div className="truncate">{group.name}</div>
                 <div className="ml-2 px-2 py-0.5 rounded-full bg-muted text-xs">
@@ -63,7 +63,7 @@ export default async function EmailsPage() {
             ))}
         </TabsList>
 
-        <div className="flex-1">
+        <div className="flex-1 overflow-auto">
           {/* Default tab content */}
           {templateCountByGroup["default"] > 0 && (
             <TabsContent value="default" className="w-full mt-0">
