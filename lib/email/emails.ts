@@ -1,6 +1,6 @@
 "use server";
 
-import Drizzle from "../db/db";
+// import Drizzle from "../db/db";
 
 export interface EmailTemplate {
   id: string;

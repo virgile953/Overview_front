@@ -9,9 +9,20 @@ interface TemplateEditorProps {
   organizationId: string;
   baseTemplate: EmailTemplate;
 }
+
+// export interface EmailTemplate {
+//   id: string;
+//   name: string;
+//   subject: string;
+//   html: string;
+//   n_reminder?: number;
+//   groupId?: string;
+//   organizationId: string;
+// }
+
 export default function TemplateEditor({ organizationId, baseTemplate }: TemplateEditorProps) {
 
-  const [template, setTemplate] = useState<EmailTemplate>(baseTemplate);
+  const [template] = useState<EmailTemplate>(baseTemplate);
   return (
     <div key={template.id} className="p-4 border rounded-lg">
       <h3 className="text-lg font-semibold mb-2">{template.name}</h3>
@@ -27,20 +38,28 @@ export default function TemplateEditor({ organizationId, baseTemplate }: Templat
           Preview
         </strong>
         <div
-          dangerouslySetInnerHTML={{ __html: sanitizeHtml(template.html,
-        { 
-          allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style']), 
-          allowedAttributes: { 
-            ...sanitizeHtml.defaults.allowedAttributes, 
-            img: ['src', 'alt', 'width', 'height', 'style'],
-            '*': ['style']
-          }
-        }
-          ) }}
+          dangerouslySetInnerHTML={{
+            __html: sanitizeHtml(template.html,
+              {
+                allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style']),
+                allowedAttributes: {
+                  ...sanitizeHtml.defaults.allowedAttributes,
+                  img: ['src', 'alt', 'width', 'height', 'style'],
+                  '*': ['style']
+                }
+              }
+            )
+          }}
           className="mt-1 p-2 border rounded bg-accent"
         />
       </div>
-      < Button className="mt-4" >
+      < Button
+        className="mt-4"
+        onClick={() => {
+          // Placeholder save logic
+          alert(`Template "${template.name}" saved for org ${organizationId}`);
+        }}
+      >
         Save Changes
       </Button >
     </div>

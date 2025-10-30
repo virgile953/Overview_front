@@ -4,6 +4,7 @@ import { getTemplates } from "@/lib/email/emails";
 import { getGroups } from "@/lib/groups/groups";
 import { headers } from "next/headers";
 import TemplateEditor from "./TemplateEditor";
+import CreateTemplate from "./createTemplate";
 
 export default async function EmailsPage() {
 
@@ -64,27 +65,28 @@ export default async function EmailsPage() {
 
         <div className="flex-1 overflow-auto">
           {/* Default tab content */}
-          {templateCountByGroup["default"] > 0 && (
-            <TabsContent value="default" className="w-full mt-0">
-              <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">
-                  Default Templates ({templateCountByGroup["default"]})
-                </h2>
+          <TabsContent value="default" className="w-full mt-0">
+            <div className="space-y-4">
+              <h2 className="text-xl font-semibold mb-4 place-content-between flex flex-col md:flex-row">
+                <div>Default Templates ({templateCountByGroup["Default"] || 0})</div>
+                <CreateTemplate />
+              </h2>
 
-                {templates
-                  .filter(template => !template.groupId)
-                  .map((template) => (
-                    <TemplateEditor organizationId={organizationId} baseTemplate={template} key={template.id} />
-                  ))}
-              </div>
-            </TabsContent>
-          )}
+
+              {templates
+                .filter(template => !template.groupId)
+                .map((template) => (
+                  <TemplateEditor organizationId={organizationId} baseTemplate={template} key={template.id} />
+                ))}
+            </div>
+          </TabsContent>
 
           {groups.map((group) => (
             <TabsContent key={group.id} value={group.id} className="w-full mt-0">
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold mb-4">
-                  {group.name} Templates ({templateCountByGroup[group.id] || 0})
+                <h2 className="text-xl font-semibold mb-4 place-content-between flex flex-col md:flex-row">
+                  <div>{group.name} Templates ({templateCountByGroup[group.id] || 0})</div>
+                  <CreateTemplate />
                 </h2>
 
                 {templates
