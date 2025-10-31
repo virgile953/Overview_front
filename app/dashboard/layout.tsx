@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { SidebarLayout, SidebarProvider } from "../ui/Sidebar/ShadcnSidebar";
 import { headers } from "next/headers";
+import { Toaster } from "@/components/ui/sonner"
 
 
 export default async function Layout({
@@ -22,8 +23,8 @@ export default async function Layout({
   }
   return (
     <SidebarProvider>
-      <SidebarLayout 
-        user={session.user} 
+      <SidebarLayout
+        user={session.user}
         session={{
           ...session.session,
           ipAddress: session.session.ipAddress ?? null,
@@ -37,6 +38,8 @@ export default async function Layout({
         }))}
       >
         {children}
+        <Toaster />
+
       </SidebarLayout>
     </SidebarProvider>
   );
