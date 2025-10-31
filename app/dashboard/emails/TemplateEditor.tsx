@@ -3,12 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EmailTemplate, updateTemplate } from "@/lib/email/emails";
+import { deleteTemplate, EmailTemplate, updateTemplate } from "@/lib/email/emails";
 import { useState } from "react";
 import sanitizeHtml from 'sanitize-html';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 interface TemplateEditorProps {
   baseTemplate: EmailTemplate;
@@ -17,7 +18,8 @@ interface TemplateEditorProps {
 export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
   const [template, setTemplate] = useState<EmailTemplate>(baseTemplate);
   const [isSaving, setIsSaving] = useState(false);
-
+  const [isDeleting, setIsDeleting] = useState(false);
+  const router = useRouter();
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -29,8 +31,26 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
       console.error('Save error:', error);
     } finally {
       setIsSaving(false);
+      router.refresh();
     }
   };
+
+  const handleDelete = async () => {
+    if (!confirm(`Are you sure you want to delete the template "${template.name}"? This action cannot be undone.`)) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      deleteTemplate(template.id);
+      toast.success(`Template "${template.name}" deleted successfully`);
+    } catch (error) {
+      toast.error('Failed to delete template');
+      console.error('Delete error:', error);
+    } finally {
+      setIsDeleting(false);
+      router.refresh();
+    }
+  }
 
   return (
     <div key={template.id} className="p-4 border rounded-lg space-y-4">
@@ -105,19 +125,28 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-2">
+      <div className="flex justify-between items-center">
+        <div className="flex w-full gap-2">
+          <Button
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setTemplate(baseTemplate)}
+            disabled={isSaving}
+          >
+            Reset
+          </Button>
+        </div>
         <Button
-          onClick={handleSave}
-          disabled={isSaving}
+          variant="destructive"
+          onClick={() => handleDelete()}
+          disabled={isDeleting}
         >
-          {isSaving ? 'Saving...' : 'Save Changes'}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={() => setTemplate(baseTemplate)}
-          disabled={isSaving}
-        >
-          Reset
+          delete
         </Button>
       </div>
     </div>

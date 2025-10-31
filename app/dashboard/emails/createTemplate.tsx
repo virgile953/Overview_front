@@ -4,11 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Input } from "@/components/ui/input"
 import { GroupWithRelations } from "@/lib/db/schema";
-import { EmailTemplate } from "@/lib/email/emails";
+import { createDefaultTemplate, createFromTemplate, EmailTemplate } from "@/lib/email/emails";
 import { ChevronDown, FileText, Copy } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Label } from "@/components/ui/label";
 
 
 interface CreateTemplateProps {
@@ -29,8 +32,9 @@ export default function CreateTemplate({ group, templates }: CreateTemplateProps
     setCreationType('template');
     setIsCreating(true);
   };
-
+  const router = useRouter();
   const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+  const [newTemplateName, setNewTemplateName] = useState<string>('');
 
   return (
     <div className="">
@@ -63,7 +67,15 @@ export default function CreateTemplate({ group, templates }: CreateTemplateProps
           <DialogDescription asChild>
             <div>
               {creationType === 'scratch' && (
-                <p>Create a new email template from scratch.</p>
+                <div className="space-y-2">
+                  <Label htmlFor="templateName">Template Name</Label>
+                  <Input
+                    id="templateName"
+                    value={newTemplateName}
+                    onChange={(e) => setNewTemplateName(e.target.value)}
+                    placeholder="Enter template name"
+                  />
+                </div>
               )}
               {creationType === 'template' && (
 
@@ -71,7 +83,7 @@ export default function CreateTemplate({ group, templates }: CreateTemplateProps
                   <ToggleGroup type="single" className="flex flex-col"
                     onValueChange={(templateId) => {
                       console.log('Selected template:', templateId);
-                      // setSelectedTemplate
+                      setSelectedTemplate(templateId)
                     }}>
                     {templates.map((template) => (
                       <ToggleGroupItem key={template.id} value={template.id} onChange={
@@ -95,11 +107,35 @@ export default function CreateTemplate({ group, templates }: CreateTemplateProps
             </div>
           </DialogDescription>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setIsCreating(false)}>Cancel</Button>
-            <Button onClick={() => {
-              toast.success('Template created successfully!' + (selectedTemplate ? ` from ${selectedTemplate}` : ''));
+            <Button variant="secondary" onClick={() => {
               setIsCreating(false);
-              setCreationType(null);
+              setSelectedTemplate(null);
+            }}>Cancel</Button>
+            <Button onClick={async () => {
+              console.log('Creation type:', creationType);
+              if (creationType == 'template') {
+                if (!selectedTemplate) return;
+                const res = await createFromTemplate(templates.filter((t) => t.id == selectedTemplate)[0], group ? group.id : null);
+                if (!res) {
+                  toast.error('Failed to create template from selected template.');
+                  return;
+                }
+                toast.success('Template created successfully!' + (selectedTemplate ? ` from ${selectedTemplate}` : ''));
+                setIsCreating(false);
+                setCreationType(null);
+                router.refresh();
+              }
+              else if (creationType == 'scratch') {
+                const res = await createDefaultTemplate(newTemplateName, group ? group.id : null);
+                if (!res) {
+                  toast.error('Failed to create template from scratch.');
+                  return;
+                }
+                toast.success('Template created successfully from scratch!');
+                setIsCreating(false);
+                setCreationType(null);
+                router.refresh();
+              }
             }}>Create</Button>
           </DialogFooter>
         </DialogContent>

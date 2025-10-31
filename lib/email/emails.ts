@@ -130,7 +130,7 @@ export async function updateTemplate(templateId: string, template: EmailTemplate
   };
 }
 
-export async function createTemplate(template: Omit<EmailTemplate, 'id' | 'organizationId'>): Promise<EmailTemplate> {
+export async function createDefaultTemplate(name: string, groupId: string | null): Promise<EmailTemplate> {
 
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session) {
@@ -144,12 +144,21 @@ export async function createTemplate(template: Omit<EmailTemplate, 'id' | 'organ
   const [newTemplate] = await Drizzle
     .insert(emailTemplates)
     .values({
-      name: template.name,
-      type: template.type,
-      subject: template.subject,
-      html: template.html,
-      nReminder: template.n_reminder,
-      groupId: template.groupId,
+      name: name,
+      type: "first_alert",
+      subject: "Machine down alert",
+      html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f4f4f4; padding: 20px;">
+  <div style="background-color: #ffffff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h1 style="color: #e74c3c; margin-bottom: 20px; font-size: 28px;">Oulala!!1! %MachineName% is down!</h1>
+    <br/>
+    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">We haven't heard from it since %LastSeen%.</p>
+    <br/>
+    <p style="color: #555555; font-size: 16px; line-height: 1.6; margin-bottom: 15px;">The location is %MachineLocation%.</p>
+    <p style="color: #555555; font-size: 16px; line-height: 1.6; font-weight: bold;">Please check on it as soon as possible.</p>
+  </div>
+</div>`,
+      nReminder: 0,
+      groupId: groupId,
       organizationId: orgId,
     })
     .returning();
@@ -186,7 +195,7 @@ export async function deleteTemplate(templateId: string): Promise<void> {
     );
 }
 
-export async function createFromTemplate(template: EmailTemplate, groupId: string): Promise<EmailTemplate | null> {
+export async function createFromTemplate(template: EmailTemplate, groupId: string | null): Promise<EmailTemplate | null> {
   const session = await auth.api.getSession({ headers: await headers() })
   if (!session) {
     throw new Error("Unauthorized");
