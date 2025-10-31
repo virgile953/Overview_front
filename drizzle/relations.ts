@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm/relations";
-import { organization, groups, devices, groupDevices, groupUsers, users, user, account, twoFactor, apikey, invitation, member, session } from "./schema";
+import { organization, groups, devices, groupDevices, groupUsers, users, emailTemplates, user, account, twoFactor, apikey, invitation, member, session } from "./schema";
 
 export const groupsRelations = relations(groups, ({one, many}) => ({
 	organization: one(organization, {
@@ -8,11 +8,13 @@ export const groupsRelations = relations(groups, ({one, many}) => ({
 	}),
 	groupDevices: many(groupDevices),
 	groupUsers: many(groupUsers),
+	emailTemplates: many(emailTemplates),
 }));
 
 export const organizationRelations = relations(organization, ({many}) => ({
 	groups: many(groups),
 	users: many(users),
+	emailTemplates: many(emailTemplates),
 	devices: many(devices),
 	invitations: many(invitation),
 	members: many(member),
@@ -52,6 +54,17 @@ export const usersRelations = relations(users, ({one, many}) => ({
 	groupUsers: many(groupUsers),
 	organization: one(organization, {
 		fields: [users.organizationId],
+		references: [organization.id]
+	}),
+}));
+
+export const emailTemplatesRelations = relations(emailTemplates, ({one}) => ({
+	group: one(groups, {
+		fields: [emailTemplates.groupId],
+		references: [groups.id]
+	}),
+	organization: one(organization, {
+		fields: [emailTemplates.organizationId],
 		references: [organization.id]
 	}),
 }));

@@ -239,10 +239,35 @@ export const groupDevices = pgTable('group_devices', {
 	index('group_devices_device_idx').using('btree', table.deviceId),
 ]);
 
+// Email templates table
+export const emailTemplates = pgTable('email_templates', {
+	id: uuid('id').primaryKey().defaultRandom(),
+	organizationId: text("organization_id")
+		.notNull()
+		.references(() => organization.id, { onDelete: "cascade" }),
+	groupId: uuid('group_id')
+		.references(() => groups.id, { onDelete: "set null" }),
+	name: text('name').notNull(),
+	type: text('type').notNull(),
+	subject: text('subject').notNull(),
+	html: text('html').notNull(),
+	nReminder: integer('n_reminder'),
+	createdAt: timestamp('created_at').defaultNow().notNull(),
+	updatedAt: timestamp('updated_at')
+		.defaultNow()
+		.$onUpdate(() => new Date())
+		.notNull(),
+}, (table) => [
+	index('email_templates_org_idx').using('btree', table.organizationId),
+	index('email_templates_group_idx').using('btree', table.groupId),
+	index('email_templates_type_idx').using('btree', table.type),
+]);
+
 // Add relations after table definitions
 export const groupsRelations = relations(groups, ({ many }) => ({
 	groupUsers: many(groupUsers),
 	groupDevices: many(groupDevices),
+	emailTemplates: many(emailTemplates),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -272,6 +297,17 @@ export const groupDevicesRelations = relations(groupDevices, ({ one }) => ({
 	device: one(devices, {
 		fields: [groupDevices.deviceId],
 		references: [devices.id],
+	}),
+}));
+
+export const emailTemplatesRelations = relations(emailTemplates, ({ one }) => ({
+	organization: one(organization, {
+		fields: [emailTemplates.organizationId],
+		references: [organization.id],
+	}),
+	group: one(groups, {
+		fields: [emailTemplates.groupId],
+		references: [groups.id],
 	}),
 }));
 
@@ -305,6 +341,8 @@ export type GroupUser = typeof groupUsers.$inferSelect;
 export type NewGroupUser = typeof groupUsers.$inferInsert;
 export type GroupDevice = typeof groupDevices.$inferSelect;
 export type NewGroupDevice = typeof groupDevices.$inferInsert;
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type NewEmailTemplate = typeof emailTemplates.$inferInsert;
 
 // Utility types to avoid circular references
 export type GroupBase = Omit<Group, 'users' | 'devices'>;

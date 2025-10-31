@@ -20,7 +20,7 @@ export default async function EmailsPage() {
   if (!organizationId) {
     return <div>No active organization</div>;
   }
-  const templates = await getTemplates(organizationId)
+  const templates = await getTemplates()
   const groups = await getGroups(organizationId);
 
   // Count templates per group, including undefined groupId as "default"
@@ -69,14 +69,14 @@ export default async function EmailsPage() {
             <div className="@container">
               <h2 className="text-xl font-semibold mb-4 place-content-between gap-2 sm:gap-0 flex flex-col sm:flex-row">
                 <div>Default Templates ({templateCountByGroup["Default"] || 0})</div>
-                <CreateTemplate />
+                <CreateTemplate templates={templates} />
               </h2>
 
 
               {templates
                 .filter(template => !template.groupId)
                 .map((template) => (
-                  <TemplateEditor organizationId={organizationId} baseTemplate={template} key={template.id} />
+                  <TemplateEditor baseTemplate={template} key={template.id} />
                 ))}
             </div>
           </TabsContent>
@@ -86,13 +86,13 @@ export default async function EmailsPage() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold mb-4 place-content-between gap-2 sm:gap-0 flex flex-col sm:flex-row">
                   <div>{group.name} Templates ({templateCountByGroup[group.id] || 0})</div>
-                  <CreateTemplate />
+                  <CreateTemplate group={group} templates={templates} />
                 </h2>
 
                 {templates
                   .filter(template => template.groupId === group.id)
                   .map((template) => (
-                    <TemplateEditor organizationId={organizationId} baseTemplate={template} key={template.id} />
+                    <TemplateEditor baseTemplate={template} key={template.id} />
                   ))}
 
                 {(!templateCountByGroup[group.id] || templateCountByGroup[group.id] === 0) && (

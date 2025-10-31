@@ -1,4 +1,7 @@
-import { pgTable, index, foreignKey, uuid, text, timestamp, unique, boolean, integer, primaryKey } from "drizzle-orm/pg-core"
+import { pgTable, index, foreignKey, uuid, text, timestamp, integer, unique, boolean, primaryKey } from "drizzle-orm/pg-core"
+import { sql } from "drizzle-orm"
+
+
 
 export const groups = pgTable("groups", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
@@ -80,6 +83,33 @@ export const users = pgTable("users", {
 		}).onDelete("cascade"),
 ]);
 
+export const emailTemplates = pgTable("email_templates", {
+	id: uuid().defaultRandom().primaryKey().notNull(),
+	organizationId: text("organization_id").notNull(),
+	groupId: uuid("group_id"),
+	name: text().notNull(),
+	type: text().notNull(),
+	subject: text().notNull(),
+	html: text().notNull(),
+	nReminder: integer("n_reminder"),
+	createdAt: timestamp("created_at", { mode: 'string' }).defaultNow().notNull(),
+	updatedAt: timestamp("updated_at", { mode: 'string' }).defaultNow().notNull(),
+}, (table) => [
+	index("email_templates_group_idx").using("btree", table.groupId.asc().nullsLast().op("uuid_ops")),
+	index("email_templates_org_idx").using("btree", table.organizationId.asc().nullsLast().op("text_ops")),
+	index("email_templates_type_idx").using("btree", table.type.asc().nullsLast().op("text_ops")),
+	foreignKey({
+			columns: [table.groupId],
+			foreignColumns: [groups.id],
+			name: "email_templates_group_id_groups_id_fk"
+		}).onDelete("set null"),
+	foreignKey({
+			columns: [table.organizationId],
+			foreignColumns: [organization.id],
+			name: "email_templates_organization_id_organization_id_fk"
+		}).onDelete("cascade"),
+]);
+
 export const account = pgTable("account", {
 	id: text().primaryKey().notNull(),
 	accountId: text("account_id").notNull(),
@@ -125,7 +155,7 @@ export const devices = pgTable("devices", {
 	macAddress: text("mac_address").notNull(),
 	serialNumber: text("serial_number").notNull(),
 	firmwareVersion: text("firmware_version").notNull(),
-	lastActive: timestamp("last_active", { mode: 'date' }).notNull(),
+	lastActive: timestamp("last_active", { mode: 'string' }).notNull(),
 	organizationId: text("organization_id").notNull(),
 }, (table) => [
 	index("devices_id_idx").using("btree", table.id.asc().nullsLast().op("uuid_ops")),
