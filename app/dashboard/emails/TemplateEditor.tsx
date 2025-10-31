@@ -20,6 +20,7 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const router = useRouter();
+  
   const handleSave = async () => {
     setIsSaving(true);
     try {
