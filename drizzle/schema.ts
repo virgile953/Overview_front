@@ -1,7 +1,4 @@
 import { pgTable, index, foreignKey, uuid, text, timestamp, integer, unique, boolean, primaryKey } from "drizzle-orm/pg-core"
-import { sql } from "drizzle-orm"
-
-
 
 export const groups = pgTable("groups", {
 	id: uuid().defaultRandom().primaryKey().notNull(),
