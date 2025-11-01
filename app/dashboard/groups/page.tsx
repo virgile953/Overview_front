@@ -21,7 +21,7 @@ export default async function Groups() {
     return <div>No active organization</div>;
   }
 
-  const groups = await getGroups(organizationId);
+  const groups = await getGroups();
   return (
     <GroupsClientWrapper>
       <div>

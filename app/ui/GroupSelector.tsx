@@ -22,7 +22,7 @@ export default function GroupSelector({ onChange, selectedGroupIds = [] }: Group
       try {
         setLoading(true);
         setError(null);
-        const res = await getGroups("");
+        const res = await getGroups();
         if (res == null) throw new Error("Failed to fetch groups");
         setGroups(res);
       } catch (error) {

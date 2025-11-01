@@ -5,6 +5,7 @@ import { getGroups } from "@/lib/groups/groups";
 import { headers } from "next/headers";
 import TemplateEditor from "./TemplateEditor";
 import CreateTemplate from "./createTemplate";
+import { getDevices } from "@/lib/devices/devices";
 
 export default async function EmailsPage() {
 
@@ -21,7 +22,8 @@ export default async function EmailsPage() {
     return <div>No active organization</div>;
   }
   const templates = await getTemplates()
-  const groups = await getGroups(organizationId);
+  const groups = await getGroups();
+  const devices = await getDevices(organizationId);
 
   // Count templates per group, including undefined groupId as "default"
   const templateCountByGroup = templates.reduce((acc, template) => {

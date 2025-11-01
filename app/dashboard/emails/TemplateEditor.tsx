@@ -19,8 +19,9 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
   const [template, setTemplate] = useState<EmailTemplate>(baseTemplate);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
   const router = useRouter();
-  
+
   const handleSave = async () => {
     setIsSaving(true);
     try {
@@ -108,7 +109,18 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
 
       {/* Preview */}
       <div className="space-y-2">
-        <Label>Preview</Label>
+        <div className="flex flex-row w-full justify-between">
+          <Label>Preview</Label>
+          <Select>
+            <SelectTrigger className="w-auto">
+              Preview
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="desktop">Desktop</SelectItem>
+              <SelectItem value="mobile">Mobile</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div
           dangerouslySetInnerHTML={{
             __html: sanitizeHtml(template.html, {

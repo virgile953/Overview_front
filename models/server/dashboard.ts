@@ -9,7 +9,7 @@ export async function getUsersStats(organizationId: string) {
 }
 
 export async function getGroupsStats(organizationId: string) {
-  const result = await getGroups(organizationId);
+  const result = await getGroups();
   return result.length;
 }
 

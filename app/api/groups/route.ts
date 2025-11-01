@@ -17,7 +17,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    const groupsData = await getGroups(organizationId);
+    const groupsData = await getGroups();
     return new Response(JSON.stringify(groupsData), { status: 200 });
   } catch (error) {
     console.error("Error fetching groups:", error);

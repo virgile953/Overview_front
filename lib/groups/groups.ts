@@ -13,6 +13,8 @@ import {
   GroupBase,
   UserBase,
 } from "../db/schema";
+import { auth } from "../auth";
+import { headers } from "next/headers";
 
 async function getUsersForGroup(groupId: string): Promise<UserBase[]> {
   const groupUsersList: { user: UserBase }[] = await Drizzle.select({
@@ -49,7 +51,16 @@ async function getDevicesForGroup(groupId: string): Promise<Device[]> {
   return groupDevicesList.map(gd => gd.device);
 }
 
-export async function getGroups(orgId: string): Promise<GroupWithRelations[]> {
+export async function getGroups(): Promise<GroupWithRelations[]> {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+  const orgId = session.session.activeOrganizationId;
+  if (!orgId) {
+    throw new Error("No active organization");
+  }
+
   const orgGroups = await Drizzle.select()
     .from(groups)
     .where(eq(groups.organizationId, orgId));
