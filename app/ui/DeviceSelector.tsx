@@ -29,7 +29,7 @@ export default function DeviceSelector({ onChange, initialValue }: DeviceSelecto
       try {
         setLoading(true);
         setError(null);
-        const res = await getDevices(data!.session!.activeOrganizationId!);
+        const res = await getDevices();
         if (res == null) throw new Error("Failed to fetch devices");
         setDevices(res.devices);
         console.log("Fetched Devices:", data);

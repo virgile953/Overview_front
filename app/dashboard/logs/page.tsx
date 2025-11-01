@@ -23,7 +23,7 @@ export default async function Logs() {
   }
 
   const [devices, count] = await Promise.all([
-    (await getDevices(organizationId)).devices,
+    (await getDevices()).devices,
     getLogCount(),
   ]);
 

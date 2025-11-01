@@ -18,7 +18,7 @@ export async function GET() {
   }
 
   try {
-    const deviceData = await getDevices(organizationId);
+    const deviceData = await getDevices();
     return new Response(JSON.stringify(deviceData), { status: 200 });
   } catch (error) {
     console.error('Error fetching devices:', error);

@@ -5,6 +5,8 @@ import Drizzle from "../db/db";
 import { eq, and } from 'drizzle-orm';
 import { DeviceCacheManager } from "../deviceCacheManager";
 import { Device } from "../db/schema";
+import { auth } from "../auth";
+import { headers } from "next/headers";
 
 export interface ApiDevice extends Partial<Device> {
   deviceId?: string;
@@ -51,8 +53,16 @@ export async function getDbDevices(organizationId: string): Promise<Device[]> {
   return dbDevicesResponse;
 }
 
-export async function getDevices(organizationId: string): Promise<DeviceResponse> {
-  const cachedDevices = await DeviceCacheManager.getAll(organizationId);
+export async function getDevices(): Promise<DeviceResponse> {
+  const session = await auth.api.getSession({ headers: await headers() })
+  if (!session) {
+    throw new Error("Unauthorized");
+  }
+  const orgId = session.session.activeOrganizationId;
+  if (!orgId) {
+    throw new Error("No active organization");
+  }
+  const cachedDevices = await DeviceCacheManager.getAll(orgId);
   const devicesArray = Array.from(cachedDevices.values()).map(data => ({
     deviceId: data.device.macAddress,
     ...data.device,
@@ -61,7 +71,7 @@ export async function getDevices(organizationId: string): Promise<DeviceResponse
     source: data.device.id ? ('database+cache' as const) : ('cache-only' as const),
   }));
 
-  const stats = await DeviceCacheManager.getStats(organizationId);
+  const stats = await DeviceCacheManager.getStats(orgId);
 
   return {
     devices: devicesArray,
@@ -144,7 +154,7 @@ export async function updateDevice(deviceId: string, organizationId: string, dev
       eq(devices.organizationId, organizationId)
     ))
     .returning();
-    
+
   if (updatedDevice) {
     // Update cache - this will automatically emit socket update
     const existing = await DeviceCacheManager.get(updatedDevice.macAddress);

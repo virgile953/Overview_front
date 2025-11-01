@@ -22,7 +22,7 @@ export async function POST(request: Request) {
     : new Date();
 
   try {
-    const dbDevicesResponse = await getDevices(organizationId);
+    const dbDevicesResponse = await getDevices();
     const existingDbDevice = dbDevicesResponse.devices.find(d => d.macAddress === macAddress);
 
     let dbId: string | undefined;

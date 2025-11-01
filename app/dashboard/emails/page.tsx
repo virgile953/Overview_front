@@ -23,7 +23,7 @@ export default async function EmailsPage() {
   }
   const templates = await getTemplates()
   const groups = await getGroups();
-  const devices = await getDevices(organizationId);
+  const devices = await getDevices();
 
   // Count templates per group, including undefined groupId as "default"
   const templateCountByGroup = templates.reduce((acc, template) => {
