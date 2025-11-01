@@ -4,8 +4,8 @@ import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 
 
-export async function GroupsComponent({ className, orgId }: { className?: string; orgId: string }) {
-  const groupCount = await getGroupsStats(orgId);
+export async function GroupsComponent({ className }: { className?: string }) {
+  const groupCount = await getGroupsStats();
 
   return (
     <div className={twMerge("p-4 bg-sidebar-accent rounded-lg shadow-md", className)}>
