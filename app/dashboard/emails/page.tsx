@@ -23,7 +23,7 @@ export default async function EmailsPage() {
   }
   const templates = await getTemplates()
   const groups = await getGroups();
-  const devices = await getDevices();
+  const devices = (await getDevices()).devices;
 
   // Count templates per group, including undefined groupId as "default"
   const templateCountByGroup = templates.reduce((acc, template) => {
@@ -78,7 +78,7 @@ export default async function EmailsPage() {
               {templates
                 .filter(template => !template.groupId)
                 .map((template) => (
-                  <TemplateEditor baseTemplate={template} key={template.id} />
+                  <TemplateEditor baseTemplate={template} key={template.id} devices={devices} />
                 ))}
             </div>
           </TabsContent>
@@ -94,7 +94,7 @@ export default async function EmailsPage() {
                 {templates
                   .filter(template => template.groupId === group.id)
                   .map((template) => (
-                    <TemplateEditor baseTemplate={template} key={template.id} />
+                    <TemplateEditor baseTemplate={template} key={template.id} devices={devices} />
                   ))}
 
                 {(!templateCountByGroup[group.id] || templateCountByGroup[group.id] === 0) && (

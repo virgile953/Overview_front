@@ -4,22 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { deleteTemplate, EmailTemplate, updateTemplate } from "@/lib/email/emails";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import sanitizeHtml from 'sanitize-html';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { ApiDevice } from "@/lib/devices/devices";
+import { Info } from "lucide-react";
+import PlaceholdersDialog from "./PlaceholdersDialog";
 
 interface TemplateEditorProps {
   baseTemplate: EmailTemplate;
+  devices?: ApiDevice[];
 }
 
-export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
+export default function TemplateEditor({ baseTemplate, devices }: TemplateEditorProps) {
   const [template, setTemplate] = useState<EmailTemplate>(baseTemplate);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [selectedMachine, setSelectedMachine] = useState<string | null>(null);
+  const [selectedMachine, setSelectedMachine] = useState<ApiDevice | null>(null);
+
   const router = useRouter();
 
   const handleSave = async () => {
@@ -37,6 +42,29 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
     }
   };
 
+
+  function replacePlaceholders(html: string, device: ApiDevice | null): string {
+    if (!device) return html;
+
+    let replacedHtml = html;
+    const placeholders: { [key: string]: string | undefined } = {
+      '%device_name%': device.name,
+      '%device_mac%': device.macAddress,
+      '%device_ip%': device.ipAddress,
+      '%device_status%': device.status,
+      '%last_seen%': device.lastSeen ? new Date(device.lastSeen).toLocaleString("FR-fr") : undefined,
+      '%device_location%': device.location,
+    };
+
+    for (const [placeholder, value] of Object.entries(placeholders)) {
+      const safeValue = value ?? '';
+      const regex = new RegExp(placeholder, 'g');
+      replacedHtml = replacedHtml.replace(regex, safeValue);
+    }
+
+    return replacedHtml;
+  }
+
   const handleDelete = async () => {
     if (!confirm(`Are you sure you want to delete the template "${template.name}"? This action cannot be undone.`)) {
       return;
@@ -53,6 +81,17 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
       router.refresh();
     }
   }
+
+  useEffect(() => {
+    console.log(selectedMachine);
+
+    if (selectedMachine) {
+      const newHtml = replacePlaceholders(baseTemplate.html, selectedMachine);
+      setTemplate(prev => ({ ...prev, html: newHtml }));
+    } else {
+      setTemplate(baseTemplate);
+    }
+  }, [selectedMachine, baseTemplate]);
 
   return (
     <div key={template.id} className="p-4 border rounded-lg space-y-4">
@@ -97,7 +136,10 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
 
       {/* HTML Content */}
       <div className="space-y-2">
-        <Label htmlFor="htmlContent">HTML Content</Label>
+        <div className="flex flex-row justify-between">
+          <Label htmlFor="htmlContent">HTML Content</Label>
+          <PlaceholdersDialog />
+        </div>
         <Textarea
           id="htmlContent"
           value={template.html}
@@ -111,15 +153,30 @@ export default function TemplateEditor({ baseTemplate }: TemplateEditorProps) {
       <div className="space-y-2">
         <div className="flex flex-row w-full justify-between">
           <Label>Preview</Label>
-          <Select>
-            <SelectTrigger className="w-auto">
-              Preview
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="desktop">Desktop</SelectItem>
-              <SelectItem value="mobile">Mobile</SelectItem>
-            </SelectContent>
-          </Select>
+          {devices &&
+            (
+              <Select onValueChange={(macAddr) => {
+                setSelectedMachine(devices.find(d => d.macAddress === macAddr) || null);
+              }}>
+                <SelectTrigger className="w-auto">
+                  Preview
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="null" onClick={() => setSelectedMachine(null)}>
+                    No Device (Base Template)
+                  </SelectItem>
+                  {devices && devices.map((device) => (
+                    <SelectItem
+                      key={device.macAddress}
+                      value={device.macAddress!}
+                      onClick={() => setSelectedMachine(device)}
+                    >
+                      {device.name} ({device.macAddress})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
         </div>
         <div
           dangerouslySetInnerHTML={{
