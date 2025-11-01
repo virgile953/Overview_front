@@ -9,7 +9,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Info } from "lucide-react";
+import { Ghost, Info } from "lucide-react";
+import { CopyButton } from "@/components/ui/shadcn-io/copy-button";
+import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipContent } from "@radix-ui/react-tooltip";
 
 const placeholders = [
   {
@@ -71,6 +74,13 @@ export default function PlaceholdersDialog() {
                 <code className="px-2 py-1 bg-muted rounded text-sm font-mono font-semibold">
                   {placeholder.name}
                 </code>
+                <Tooltip defaultOpen={false}>
+                  <TooltipTrigger asChild>
+                    <CopyButton variant={"ghost"} content={placeholder.name} />
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="bg-background p-2 rounded-lg">Copy to clipboard</TooltipContent>
+                </Tooltip>
+
               </div>
               <p className="text-sm text-muted-foreground">
                 {placeholder.description}

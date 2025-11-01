@@ -36,7 +36,7 @@
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
     "ioredis": "^5.7.0",
-    "lucide-react": "^0.542.0",
+    "lucide-react": "^0.552.0",
     "motion": "^12.23.24",
     "next": "^16.0.0",
     "next-client-cookies": "^2.1.0",

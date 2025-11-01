@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ApiDevice } from "@/lib/devices/devices";
-import { Info } from "lucide-react";
 import PlaceholdersDialog from "./PlaceholdersDialog";
 
 interface TemplateEditorProps {
@@ -24,7 +23,7 @@ export default function TemplateEditor({ baseTemplate, devices }: TemplateEditor
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [selectedMachine, setSelectedMachine] = useState<ApiDevice | null>(null);
-
+  const [newHtml, setNewHtml] = useState<string>(baseTemplate.html);
   const router = useRouter();
 
   const handleSave = async () => {
@@ -41,7 +40,6 @@ export default function TemplateEditor({ baseTemplate, devices }: TemplateEditor
       router.refresh();
     }
   };
-
 
   function replacePlaceholders(html: string, device: ApiDevice | null): string {
     if (!device) return html;
@@ -86,12 +84,12 @@ export default function TemplateEditor({ baseTemplate, devices }: TemplateEditor
     console.log(selectedMachine);
 
     if (selectedMachine) {
-      const newHtml = replacePlaceholders(baseTemplate.html, selectedMachine);
-      setTemplate(prev => ({ ...prev, html: newHtml }));
+      const replacedHtml = replacePlaceholders(template.html, selectedMachine);
+      setNewHtml(replacedHtml);
     } else {
-      setTemplate(baseTemplate);
+      setNewHtml(template.html);
     }
-  }, [selectedMachine, baseTemplate]);
+  }, [selectedMachine, template.html]);
 
   return (
     <div key={template.id} className="p-4 border rounded-lg space-y-4">
@@ -159,7 +157,13 @@ export default function TemplateEditor({ baseTemplate, devices }: TemplateEditor
                 setSelectedMachine(devices.find(d => d.macAddress === macAddr) || null);
               }}>
                 <SelectTrigger className="w-auto">
-                  Preview
+                  { selectedMachine ? (
+                    <span>
+                      {selectedMachine.name} ({selectedMachine.macAddress})
+                    </span>
+                  ) : (
+                    <span>No Device (Base Template)</span>
+                  ) }
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="null" onClick={() => setSelectedMachine(null)}>
@@ -180,7 +184,7 @@ export default function TemplateEditor({ baseTemplate, devices }: TemplateEditor
         </div>
         <div
           dangerouslySetInnerHTML={{
-            __html: sanitizeHtml(template.html, {
+            __html: sanitizeHtml(newHtml, {
               allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'style']),
               allowedAttributes: {
                 ...sanitizeHtml.defaults.allowedAttributes,
